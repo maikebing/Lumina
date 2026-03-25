@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Lumina.App/Lumina.App.csproj" />
+  <Project Path="Lumina.Ext/Lumina.Ext.csproj" />
+</Solution>
