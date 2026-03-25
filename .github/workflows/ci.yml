@@ -27,6 +27,16 @@ jobs:
       - name: Build
         run: dotnet build Lumina.slnx -c Release --no-restore
 
+      - name: Test
+        run: dotnet test Lumina.Tests/Lumina.Tests.csproj -c Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: Lumina.Tests/TestResults/test-results.trx
+
       - name: Pack SDK packages
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
@@ -40,15 +50,38 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          dotnet nuget push nupkgs/*.nupkg \
-            --api-key $env:NUGET_API_KEY \
-            --source https://api.nuget.org/v3/index.json \
+          dotnet nuget push nupkgs/*.nupkg `
+            --api-key $env:NUGET_API_KEY `
+            --source https://api.nuget.org/v3/index.json `
             --skip-duplicate
 
       - name: Build Lumina.App (Native AOT)
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           dotnet publish Lumina.App/Lumina.App.csproj -c Release -r win-x64 -o publish/
+
+      - name: Build Inno Setup installer
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          choco install innosetup --no-progress -y
+          iscc installer/Lumina.iss
+
+      - name: Build MSIX
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          cd msix
+          .\build-msix.ps1 -PublishDir ..\publish -OutputDir dist
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            installer/dist/Lumina-*-x64-setup.exe
+            msix/dist/Lumina-*-x64.msix
+            nupkgs/*.nupkg
+          generate_release_notes: true
 
       - name: Upload App artifact
         if: startsWith(github.ref, 'refs/tags/v')

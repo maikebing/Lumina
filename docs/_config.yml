@@ -1,0 +1,69 @@
+title: Lumina
+description: 为 Windows 应用注入 Mica、Acrylic、Aero 等视觉效果的 SDK 与桌面工具。
+lang: zh-CN
+timezone: Asia/Shanghai
+url: https://lumina.maikebing.com
+baseurl: ""
+markdown: kramdown
+show_excerpts: false
+locales:
+  - code: zh
+    root: /zh/
+    label: 中文
+  - code: en
+    root: /en/
+    label: English
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+      ui_home_url: /zh/
+      ui_docs_url: /zh/navigation/
+      ui_news_url: /zh/news/
+      ui_blog_url: /zh/blog/
+      ui_about_url: /zh/about/
+      ui_getting_started_url: /zh/getting-started/
+      ui_brand_subtitle: Windows 视觉效果 SDK
+      ui_docs_label: 文档
+      ui_news_label: 新闻
+      ui_blog_label: 博客
+      ui_about_label: 关于
+      ui_source_label: 源码
+      ui_switch_label: 语言
+      ui_footer_intro: Lumina 是面向 Windows 开发者的视觉效果 SDK，支持 Mica、Acrylic、Aero、自定义模糊，兼容 WinForms、WPF 与原生 Win32。
+      ui_footer_docs_title: 文档
+      ui_footer_project_title: 项目
+      ui_footer_doc_map_label: 文档导航
+      ui_footer_getting_started_label: 快速开始
+      ui_footer_news_label: 新闻
+      ui_footer_blog_label: 博客
+      ui_translation_caption: 语言
+      ui_translation_small: Also available in
+      ui_translation_target_label: English
+  - scope:
+      path: en
+    values:
+      ui_home_url: /en/
+      ui_docs_url: /en/navigation/
+      ui_news_url: /en/news/
+      ui_blog_url: /en/blog/
+      ui_about_url: /en/about/
+      ui_getting_started_url: /en/getting-started/
+      ui_brand_subtitle: Windows Visual Effects SDK
+      ui_docs_label: Docs
+      ui_news_label: News
+      ui_blog_label: Blog
+      ui_about_label: About
+      ui_source_label: Source
+      ui_switch_label: Language
+      ui_footer_intro: Lumina is a visual effects SDK for Windows developers, supporting Mica, Acrylic, Aero, and custom blur for WinForms, WPF, and native Win32.
+      ui_footer_docs_title: Docs
+      ui_footer_project_title: Project
+      ui_footer_doc_map_label: Documentation map
+      ui_footer_getting_started_label: Getting started
+      ui_footer_news_label: News
+      ui_footer_blog_label: Blog
+      ui_translation_caption: Language
+      ui_translation_small: 亦有
+      ui_translation_target_label: 中文
