@@ -47,8 +47,8 @@ internal static partial class NativeMethods
         [MarshalAs(UnmanagedType.Bool)] out bool pfOpaqueBlend);
 
     // ── 版本 ─────────────────────────────────────────────────
-    [LibraryImport("ntdll.dll")]
-    internal static partial int RtlGetVersion(ref OsVersionInfo lpVersionInformation);
+    [DllImport("ntdll.dll")]
+    internal static extern int RtlGetVersion(ref OsVersionInfo lpVersionInformation);
 
     // ── 常量 ─────────────────────────────────────────────────
     internal const uint PAGE_EXECUTE_READWRITE = 0x40;

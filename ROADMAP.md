@@ -12,8 +12,8 @@ This document outlines the planned development phases for Lumina.
 - [x] Win32 / DWM P/Invoke definitions (`NativeMethods.cs`)
 - [x] OS build number detection (`OsVersion.cs`)
 - [x] DLL entry point (`ExtMain.cs`)
-- [ ] Basic DLL injection into `dwm.exe`
-- [ ] Symbol offset table for `udwm.dll` (per Windows build)
+- [x] Basic DLL injection into `dwm.exe`
+- [x] Symbol offset table for `udwm.dll` (per Windows build)
 
 ## Phase 2 — Effects Core
 

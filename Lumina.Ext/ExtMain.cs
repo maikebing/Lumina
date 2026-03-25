@@ -27,11 +27,11 @@ internal static class ExtMain
 
     private static void Startup()
     {
-        // TODO: 初始化 Hook、加载配置
+        DWM.UdwmOffsets.Load();
     }
 
     private static void Shutdown()
     {
-        // TODO: 卸载所有 Hook
+        // Phase 2: 卸载所有 Hook
     }
 }
