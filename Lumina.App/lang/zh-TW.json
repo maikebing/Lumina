@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — 視窗視覺增強器",
+  "tray.settings":       "設定",
+  "tray.toggle.enable":  "啟用效果",
+  "tray.toggle.disable": "停用效果",
+  "tray.exit":           "結束",
+  "settings.title":      "Lumina 設定",
+  "settings.preset":     "效果預設",
+  "settings.color":      "混合色",
+  "settings.apply":      "套用",
+  "settings.close":      "關閉",
+  "error.noAdmin":       "需要系統管理員權限，請以系統管理員身份執行。",
+  "error.noDwm":         "找不到 dwm.exe 處理程序。",
+  "error.noExt":         "找不到 Lumina.Ext.dll。"
+}

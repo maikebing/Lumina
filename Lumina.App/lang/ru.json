@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — Визуальный улучшитель окон",
+  "tray.settings":       "Настройки",
+  "tray.toggle.enable":  "Включить эффекты",
+  "tray.toggle.disable": "Отключить эффекты",
+  "tray.exit":           "Выход",
+  "settings.title":      "Настройки Lumina",
+  "settings.preset":     "Пресет эффекта",
+  "settings.color":      "Цвет смешивания",
+  "settings.apply":      "Применить",
+  "settings.close":      "Закрыть",
+  "error.noAdmin":       "Требуются права администратора. Запустите от имени администратора.",
+  "error.noDwm":         "Процесс dwm.exe не найден.",
+  "error.noExt":         "Файл Lumina.Ext.dll не найден."
+}

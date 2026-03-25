@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — Window Visual Enhancer",
+  "tray.settings":       "Settings",
+  "tray.toggle.enable":  "Enable Effects",
+  "tray.toggle.disable": "Disable Effects",
+  "tray.exit":           "Exit",
+  "settings.title":      "Lumina Settings",
+  "settings.preset":     "Effect Preset",
+  "settings.color":      "Blend Color",
+  "settings.apply":      "Apply",
+  "settings.close":      "Close",
+  "error.noAdmin":       "Administrator privileges required. Please run as administrator.",
+  "error.noDwm":         "Cannot find dwm.exe process.",
+  "error.noExt":         "Cannot find Lumina.Ext.dll."
+}

@@ -10,8 +10,6 @@
     <Platforms>x64</Platforms>
     <InvariantGlobalization>true</InvariantGlobalization>
     <SelfContained>true</SelfContained>
-    <!-- AppConfig 仅序列化基元类型，XmlSerializer 在 AOT 下实际可用 -->
-    <NoWarn>$(NoWarn);IL3050</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="lang\*.xml">
+    <Content Include="lang\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

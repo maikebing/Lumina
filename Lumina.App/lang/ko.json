@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — 창 시각 효과 향상기",
+  "tray.settings":       "설정",
+  "tray.toggle.enable":  "효과 활성화",
+  "tray.toggle.disable": "효과 비활성화",
+  "tray.exit":           "종료",
+  "settings.title":      "Lumina 설정",
+  "settings.preset":     "효과 프리셋",
+  "settings.color":      "혼합 색상",
+  "settings.apply":      "적용",
+  "settings.close":      "닫기",
+  "error.noAdmin":       "관리자 권한이 필요합니다. 관리자로 실행하세요.",
+  "error.noDwm":         "dwm.exe 프로세스를 찾을 수 없습니다.",
+  "error.noExt":         "Lumina.Ext.dll을 찾을 수 없습니다."
+}

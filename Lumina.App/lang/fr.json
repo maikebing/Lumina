@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — Améliorateur visuel de fenêtres",
+  "tray.settings":       "Paramètres",
+  "tray.toggle.enable":  "Activer les effets",
+  "tray.toggle.disable": "Désactiver les effets",
+  "tray.exit":           "Quitter",
+  "settings.title":      "Paramètres Lumina",
+  "settings.preset":     "Préréglage d'effet",
+  "settings.color":      "Couleur de fusion",
+  "settings.apply":      "Appliquer",
+  "settings.close":      "Fermer",
+  "error.noAdmin":       "Privilèges administrateur requis. Veuillez exécuter en tant qu'administrateur.",
+  "error.noDwm":         "Processus dwm.exe introuvable.",
+  "error.noExt":         "Lumina.Ext.dll introuvable."
+}

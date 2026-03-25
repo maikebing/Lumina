@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — ウィンドウビジュアルエンハンサー",
+  "tray.settings":       "設定",
+  "tray.toggle.enable":  "エフェクトを有効にする",
+  "tray.toggle.disable": "エフェクトを無効にする",
+  "tray.exit":           "終了",
+  "settings.title":      "Lumina 設定",
+  "settings.preset":     "エフェクトプリセット",
+  "settings.color":      "ブレンドカラー",
+  "settings.apply":      "適用",
+  "settings.close":      "閉じる",
+  "error.noAdmin":       "管理者権限が必要です。管理者として実行してください。",
+  "error.noDwm":         "dwm.exe プロセスが見つかりません。",
+  "error.noExt":         "Lumina.Ext.dll が見つかりません。"
+}

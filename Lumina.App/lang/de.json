@@ -1,0 +1,15 @@
+{
+  "tray.tooltip":        "Lumina — Visueller Fensterverstärker",
+  "tray.settings":       "Einstellungen",
+  "tray.toggle.enable":  "Effekte aktivieren",
+  "tray.toggle.disable": "Effekte deaktivieren",
+  "tray.exit":           "Beenden",
+  "settings.title":      "Lumina Einstellungen",
+  "settings.preset":     "Effekt-Voreinstellung",
+  "settings.color":      "Mischfarbe",
+  "settings.apply":      "Übernehmen",
+  "settings.close":      "Schließen",
+  "error.noAdmin":       "Administratorrechte erforderlich. Bitte als Administrator ausführen.",
+  "error.noDwm":         "dwm.exe-Prozess nicht gefunden.",
+  "error.noExt":         "Lumina.Ext.dll nicht gefunden."
+}
