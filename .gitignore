@@ -419,3 +419,6 @@ FodyWeavers.xsd
 
 # AOT
 native/
+
+# Claude Code tooling
+.claude/
