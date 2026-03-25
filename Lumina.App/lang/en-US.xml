@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Strings language="en-US">
+  <String key="tray.tooltip">Lumina — Window Visual Enhancer</String>
+  <String key="tray.settings">Settings</String>
+  <String key="tray.toggle.enable">Enable Effects</String>
+  <String key="tray.toggle.disable">Disable Effects</String>
+  <String key="tray.exit">Exit</String>
+  <String key="settings.title">Lumina Settings</String>
+  <String key="settings.preset">Effect Preset</String>
+  <String key="settings.color">Blend Color</String>
+  <String key="settings.apply">Apply</String>
+  <String key="settings.close">Close</String>
+  <String key="error.noAdmin">Administrator privileges required. Please run as administrator.</String>
+  <String key="error.noDwm">Cannot find dwm.exe process.</String>
+  <String key="error.noExt">Cannot find Lumina.Ext.dll.</String>
+</Strings>

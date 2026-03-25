@@ -10,10 +10,19 @@
     <Platforms>x64</Platforms>
     <InvariantGlobalization>true</InvariantGlobalization>
     <SelfContained>true</SelfContained>
+    <!-- AppConfig 仅序列化基元类型，XmlSerializer 在 AOT 下实际可用 -->
+    <NoWarn>$(NoWarn);IL3050</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Lumina.Ext/Lumina.Ext.csproj" />
+    <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="lang\*.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

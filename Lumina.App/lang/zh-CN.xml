@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Strings language="zh-CN">
+  <String key="tray.tooltip">Lumina — 窗口视觉增强</String>
+  <String key="tray.settings">设置</String>
+  <String key="tray.toggle.enable">启用效果</String>
+  <String key="tray.toggle.disable">禁用效果</String>
+  <String key="tray.exit">退出</String>
+  <String key="settings.title">Lumina 设置</String>
+  <String key="settings.preset">效果预设</String>
+  <String key="settings.color">混合色</String>
+  <String key="settings.apply">应用</String>
+  <String key="settings.close">关闭</String>
+  <String key="error.noAdmin">需要管理员权限，请以管理员身份运行。</String>
+  <String key="error.noDwm">找不到 dwm.exe 进程。</String>
+  <String key="error.noExt">找不到 Lumina.Ext.dll。</String>
+</Strings>

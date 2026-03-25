@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Lumina.App.GUI;
 using Lumina.App.Inject;
 
 if (!IsElevated())
@@ -32,12 +33,17 @@ if (hProcess == 0)
 
 try
 {
-    return Inject(hProcess, extDll);
+    int result = Inject(hProcess, extDll);
+    if (result != 0) return result;
 }
 finally
 {
     NativeMethods.CloseHandle(hProcess);
 }
+
+Console.WriteLine("[Lumina] 注入成功，进入托盘模式。");
+TrayIcon.Run();
+return 0;
 
 // ── 注入逻辑 ──────────────────────────────────────────────────
 static int Inject(nint hProcess, string dllPath)
