@@ -7,10 +7,27 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x64</Platforms>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NuGet 包元数据 -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Lumina.WinForms</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Lumina Contributors</Authors>
+    <Description>WinForms adapter for Lumina — one-line extension methods to apply Mica, Acrylic, Aero and custom blur effects to any Form.</Description>
+    <PackageTags>winforms;mica;acrylic;blur;aero;dwm;windows;visual-effects</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>

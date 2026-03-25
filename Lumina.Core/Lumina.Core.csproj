@@ -7,6 +7,23 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NuGet 包元数据 -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Lumina</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Lumina Contributors</Authors>
+    <Description>Standard-mode window visual effects for WinForms, WPF, Win32 and borderless windows. No admin rights required.</Description>
+    <PackageTags>mica;acrylic;blur;aero;dwm;windows;visual-effects</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
 </Project>
