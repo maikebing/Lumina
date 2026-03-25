@@ -18,6 +18,8 @@ internal static partial class SettingsWindow
     private const int IDC_EXCLUDE_BTN   = 2005;
     private const int IDC_APPLY_BTN     = 2006;
     private const int IDC_CLOSE_BTN     = 2007;
+    private const int IDC_IMPORT_BTN    = 2008;
+    private const int IDC_EXPORT_BTN    = 2009;
 
     private const uint WS_OVERLAPPED   = 0x00000000;
     private const uint WS_CAPTION       = 0x00C00000;
@@ -62,7 +64,7 @@ internal static partial class SettingsWindow
         _hwnd = CreateWindowExW(
             0, ClassName, "Lumina 设置",
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
-            CW_USEDEFAULT, CW_USEDEFAULT, 380, 260,
+            CW_USEDEFAULT, CW_USEDEFAULT, 380, 300,
             0, 0, hInst, 0);
 
         if (_hwnd == 0) return;
@@ -125,6 +127,16 @@ internal static partial class SettingsWindow
         CreateWindowExW(0, "BUTTON", "关闭",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
             280, 180, 80, 28, hWnd, IDC_CLOSE_BTN, hInst, 0);
+
+        // 按钮：导入配置
+        CreateWindowExW(0, "BUTTON", "导入配置...",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+            16, 220, 110, 28, hWnd, IDC_IMPORT_BTN, hInst, 0);
+
+        // 按钮：导出配置
+        CreateWindowExW(0, "BUTTON", "导出配置...",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+            136, 220, 110, 28, hWnd, IDC_EXPORT_BTN, hInst, 0);
     }
 
     [UnmanagedCallersOnly]
@@ -143,6 +155,12 @@ internal static partial class SettingsWindow
                     break;
                 case IDC_APPLY_BTN:
                     ApplySettings(hWnd);
+                    break;
+                case IDC_IMPORT_BTN:
+                    ImportConfig(hWnd);
+                    break;
+                case IDC_EXPORT_BTN:
+                    ExportConfig(hWnd);
                     break;
                 case IDC_CLOSE_BTN:
                     DestroyWindow(hWnd);
@@ -168,6 +186,56 @@ internal static partial class SettingsWindow
         _pendingPreset    = sel;
         _pendingBlendColor = _blendColor;
         // TODO(Phase 4): 通过命名管道/共享内存将配置推送到 Lumina.Ext
+    }
+
+    private static void ImportConfig(nint hWnd)
+    {
+        Span<char> buf = stackalloc char[260];
+        var ofn = new OPENFILENAMEW
+        {
+            lStructSize = (uint)Marshal.SizeOf<OPENFILENAMEW>(),
+            hwndOwner   = hWnd,
+            lpstrFilter = "Lumina 配置 (*.json)\0*.json\0所有文件 (*.*)\0*.*\0",
+            nFilterIndex = 1,
+            Flags       = 0x00001000 /* OFN_FILEMUSTEXIST */,
+        };
+        unsafe { fixed (char* p = buf) ofn.lpstrFile = p; }
+        ofn.nMaxFile = (uint)buf.Length;
+
+        if (!GetOpenFileNameW(ref ofn)) return;
+        string path = new string(buf[..buf.IndexOf('\0')]);
+        try
+        {
+            var cfg = Config.AppConfig.Import(path);
+            cfg.Save();
+            // 更新下拉框预设
+            nint hCombo = GetDlgItem(hWnd, IDC_PRESET_COMBO);
+            SendMessageW(hCombo, CB_SETCURSEL, (int)cfg.ActiveEffect, 0);
+            _blendColor = cfg.BlendColor;
+        }
+        catch { /* 静默忽略无效文件 */ }
+    }
+
+    private static void ExportConfig(nint hWnd)
+    {
+        Span<char> buf = stackalloc char[260];
+        "lumina-config.json".AsSpan().CopyTo(buf);
+        var ofn = new OPENFILENAMEW
+        {
+            lStructSize  = (uint)Marshal.SizeOf<OPENFILENAMEW>(),
+            hwndOwner    = hWnd,
+            lpstrFilter  = "Lumina 配置 (*.json)\0*.json\0所有文件 (*.*)\0*.*\0",
+            nFilterIndex = 1,
+            lpstrDefExt  = "json",
+            Flags        = 0x00000002 /* OFN_OVERWRITEPROMPT */,
+        };
+        unsafe { fixed (char* p = buf) ofn.lpstrFile = p; }
+        ofn.nMaxFile = (uint)buf.Length;
+
+        if (!GetSaveFileNameW(ref ofn)) return;
+        string path = new string(buf[..buf.IndexOf('\0')]);
+        try { Config.AppConfig.Load().Export(path); }
+        catch { /* 静默忽略 */ }
     }
 
     // ── P/Invoke ─────────────────────────────────────────────────
@@ -213,6 +281,42 @@ internal static partial class SettingsWindow
 
     [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
     private static partial nint GetModuleHandleW(string? lpModuleName);
+
+    [DllImport("comdlg32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetOpenFileNameW(ref OPENFILENAMEW lpofn);
+
+    [DllImport("comdlg32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetSaveFileNameW(ref OPENFILENAMEW lpofn);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private unsafe struct OPENFILENAMEW
+    {
+        public uint   lStructSize;
+        public nint   hwndOwner;
+        public nint   hInstance;
+        public string? lpstrFilter;
+        public char*  lpstrCustomFilter;
+        public uint   nMaxCustFilter;
+        public uint   nFilterIndex;
+        public char*  lpstrFile;
+        public uint   nMaxFile;
+        public char*  lpstrFileTitle;
+        public uint   nMaxFileTitle;
+        public string? lpstrInitialDir;
+        public string? lpstrTitle;
+        public uint   Flags;
+        public ushort nFileOffset;
+        public ushort nFileExtension;
+        public string? lpstrDefExt;
+        public nint   lCustData;
+        public nint   lpfnHook;
+        public string? lpTemplateName;
+        public nint   pvReserved;
+        public uint   dwReserved;
+        public uint   FlagsEx;
+    }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private unsafe struct WNDCLASSEXW

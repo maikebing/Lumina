@@ -81,14 +81,14 @@ Lumina.sln
 - [x] XML 配置文件读写（效果预设持久化）— `Config/AppConfig.cs`
 - [x] 多语言支持（XML 语言文件）— `Config/Strings.cs` + `lang/zh-CN.xml` + `lang/en-US.xml`
 - [x] 开机自启（写入 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`）— `Config/AutoStart.cs`，托盘菜单集成
-- [ ] 导入 / 导出配置
+- [x] 导入 / 导出配置 — 设置窗口内置文件对话框（`GetOpenFileNameW` / `GetSaveFileNameW`）
 
 ### Phase 4-B：Lumina SDK
 
 - [x] `EffectProfile` 序列化（JSON / XML）— `Lumina.Core/EffectProfile.cs`
 - [x] XML 文档注释（IntelliSense 支持）— `Lumina.Core` / `Lumina.WinForms` / `Lumina.Wpf`
 - [x] README 快速上手示例（WinForms / WPF / Win32 / 无边框各一份）— `docs/quickstart.md`
-- [ ] 排除窗口列表 API（`LuminaAdvanced.Exclude(hwnd)`）
+- [x] 排除窗口列表 API（`LuminaAdvanced.Exclude(hwnd)` / `Include` / `IsExcluded`）— `Lumina.Core.Advanced/LuminaAdvanced.cs`
 
 ## Phase 5 — 发布
 
