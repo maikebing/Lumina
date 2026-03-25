@@ -1,0 +1,13 @@
+# Build results
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# NuGet
+*.nupkg
+packages/
+
+# AOT
+native/
