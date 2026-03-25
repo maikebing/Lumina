@@ -25,30 +25,56 @@ if (Test-Path "$PublishDir\lang") {
 # 拷贝 manifest 和占位资产
 Copy-Item "Package.appxmanifest" $pkgDir
 
-# 生成占位资产图（如果真实图片不存在）
-$assetSizes = @{
-    "StoreLogo.png"         = "50x50"
-    "Square44x44Logo.png"   = "44x44"
-    "Square150x150Logo.png" = "150x150"
-    "Wide310x150Logo.png"   = "310x150"
-    "SplashScreen.png"      = "620x300"
+# 从 lumina-glass.svg 生成 MSIX 所需资产图
+# 方形图标：直接渲染 SVG；宽图/启动屏：SVG 居中放置在对应尺寸画布上
+$svgIcon   = Resolve-Path "Assets\lumina-glass.svg"
+
+# 检测 Inkscape
+$inkscape = Get-Command inkscape -ErrorAction SilentlyContinue
+if (-not $inkscape) {
+    $inkscape = Get-Command "C:\Program Files\Inkscape\bin\inkscape.exe" -ErrorAction SilentlyContinue
 }
-$realAssetsDir = "Assets"
-foreach ($asset in $assetSizes.Keys) {
-    $src = Join-Path $realAssetsDir $asset
-    if (Test-Path $src) {
-        Copy-Item $src "$pkgDir\Assets\$asset"
-    } else {
-        Write-Warning "Asset not found: $src — copy a real PNG before submitting to Store."
-        # 创建 1x1 占位 PNG（仅用于本地测试）
-        $bytes = [byte[]](0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A,0x00,0x00,0x00,0x0D,0x49,0x48,0x44,0x52,
-                          0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53,
-                          0xDE,0x00,0x00,0x00,0x0C,0x49,0x44,0x41,0x54,0x08,0xD7,0x63,0xF8,0xCF,0xC0,0x00,
-                          0x00,0x00,0x02,0x00,0x01,0xE2,0x21,0xBC,0x33,0x00,0x00,0x00,0x00,0x49,0x45,0x4E,
-                          0x44,0xAE,0x42,0x60,0x82)
-        [IO.File]::WriteAllBytes("$pkgDir\Assets\$asset", $bytes)
-    }
+if (-not $inkscape) {
+    throw "未找到 Inkscape，请安装 Inkscape 并确保其在 PATH 中，或手动提供 Assets PNG 文件。"
 }
+$ink = $inkscape.Source
+
+function Export-Svg {
+    param([string]$Svg, [string]$Out, [int]$W, [int]$H)
+    & $ink --export-type=png --export-filename="$Out" -w $W -h $H "$Svg" 2>$null
+    if (-not (Test-Path $Out)) { throw "Inkscape 导出失败: $Out" }
+}
+
+# 方形图标（直接从 SVG 导出）
+Export-Svg $svgIcon "$pkgDir\Assets\StoreLogo.png"         50  50
+Export-Svg $svgIcon "$pkgDir\Assets\Square44x44Logo.png"   44  44
+Export-Svg $svgIcon "$pkgDir\Assets\Square150x150Logo.png" 150 150
+
+# 宽图标 310x150：SVG 居中在深色背景上
+$tmpWide = [IO.Path]::GetTempFileName() + ".svg"
+@"
+<svg xmlns="http://www.w3.org/2000/svg" width="310" height="150">
+  <rect width="310" height="150" fill="#0c1445"/>
+  <image href="$($svgIcon -replace '\\','/')"
+         x="80" y="0" width="150" height="150"/>
+</svg>
+"@ | Set-Content $tmpWide -Encoding UTF8
+Export-Svg $tmpWide "$pkgDir\Assets\Wide310x150Logo.png" 310 150
+Remove-Item $tmpWide
+
+# 启动屏 620x300：SVG 居中在深色背景上
+$tmpSplash = [IO.Path]::GetTempFileName() + ".svg"
+@"
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="300">
+  <rect width="620" height="300" fill="#0c1445"/>
+  <image href="$($svgIcon -replace '\\','/')"
+         x="185" y="25" width="250" height="250"/>
+</svg>
+"@ | Set-Content $tmpSplash -Encoding UTF8
+Export-Svg $tmpSplash "$pkgDir\Assets\SplashScreen.png" 620 300
+Remove-Item $tmpSplash
+
+Write-Host "Assets generated from lumina-glass.svg"
 
 # 构建 MSIX
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir | Out-Null }
