@@ -17,12 +17,12 @@ This document outlines the planned development phases for Lumina.
 
 ## Phase 2 — Effects Core
 
-- [ ] SystemBackdrop effect (Mica / Acrylic via `DwmSetWindowAttribute`)
-- [ ] AccentBlur effect (Hook `CAccent::UpdateAccentPolicy`)
-- [ ] CustomBlur effect (Hook `CTopLevelWindow`, `Windows.UI.Composition` graph)
-- [ ] Aero reflection + parallax
-- [ ] Blur radius / color customization
-- [ ] Light/Dark mode auto-switching
+- [x] SystemBackdrop effect (Mica / Acrylic via `DwmSetWindowAttribute`)
+- [x] AccentBlur effect (Hook `CAccent::UpdateAccentPolicy`)
+- [x] CustomBlur effect (Hook `CTopLevelWindow`, `Windows.UI.Composition` graph)
+- [x] Aero reflection + parallax
+- [x] Blur radius / color customization
+- [x] Light/Dark mode auto-switching
 
 ## Phase 3 — GUI
 
