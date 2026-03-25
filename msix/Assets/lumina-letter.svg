@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0a1e"/>
+      <stop offset="100%" stop-color="#1e1040"/>
+    </linearGradient>
+    <linearGradient id="Lgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#f0abfc"/>
+      <stop offset="40%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+
+  <!-- Glow halo behind L -->
+  <rect x="72" y="52" width="30" height="150" rx="8" fill="#818cf8" opacity="0.3" filter="url(#glow)"/>
+  <rect x="72" y="172" width="114" height="30" rx="8" fill="#818cf8" opacity="0.3" filter="url(#glow)"/>
+
+  <!-- Letter L -->
+  <rect x="72" y="52" width="30" height="150" rx="6" fill="url(#Lgrad)" filter="url(#softglow)"/>
+  <rect x="72" y="172" width="114" height="32" rx="6" fill="url(#Lgrad)" filter="url(#softglow)"/>
+
+  <!-- Highlight shimmer on L -->
+  <rect x="72" y="52" width="14" height="150" rx="6" fill="white" opacity="0.15"/>
+  <rect x="72" y="172" width="114" height="14" rx="6" fill="white" opacity="0.15"/>
+
+  <!-- Small sparkle dots -->
+  <circle cx="196" cy="72" r="4" fill="#f0abfc" opacity="0.9" filter="url(#softglow)"/>
+  <circle cx="210" cy="56" r="2.5" fill="#38bdf8" opacity="0.8" filter="url(#softglow)"/>
+  <circle cx="185" cy="58" r="2" fill="#fbbf24" opacity="0.7" filter="url(#softglow)"/>
+</svg>
