@@ -424,5 +424,8 @@ native/
 .claude/
 
 # MSIX build artifacts
-msix/GenAssets/
+msix/GenAssets/bin/
+msix/GenAssets/obj/
 msix/dist/
+msix/dist-verify/
+.dotnet-home/
