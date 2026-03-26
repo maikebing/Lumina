@@ -13,10 +13,10 @@ public enum ThemeMode
     /// <summary>
     /// Force light appearance.
     /// </summary>
-    Light,
+    Light = 1,
 
     /// <summary>
     /// Force dark appearance.
     /// </summary>
-    Dark,
+    Dark = 2,
 }

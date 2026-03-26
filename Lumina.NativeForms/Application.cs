@@ -2,10 +2,14 @@ using Microsoft.Win32;
 
 namespace Lumina.NativeForms;
 
+/// <summary>
+/// Provides the NativeForms application bootstrap surface, including message loop startup and application-wide visual style defaults.
+/// </summary>
 public static class Application
 {
     private const string PersonalizeRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private static bool s_visualStylesEnabled;
+    private static bool s_compatibleTextRenderingDefault;
 
     /// <summary>
     /// Gets the mutable application-wide visual style settings used for new NativeForms windows.
@@ -28,13 +32,17 @@ public static class Application
     /// <summary>
     /// Matches the WinForms compatibility API. NativeForms renders using native Win32 text, so this is currently a no-op.
     /// </summary>
+    /// <param name="defaultValue">Ignored for compatibility with the WinForms API.</param>
     public static void SetCompatibleTextRenderingDefault(bool defaultValue)
     {
+        s_compatibleTextRenderingDefault = defaultValue;
     }
 
     /// <summary>
     /// Starts the application message loop with the provided main form.
     /// </summary>
+    /// <param name="form">The main form to show and use as the message loop owner.</param>
+    /// <returns>The exit code returned by the thread message loop.</returns>
     public static int Run(Form form)
     {
         ArgumentNullException.ThrowIfNull(form);
@@ -47,6 +55,7 @@ public static class Application
     /// <summary>
     /// Runs the shared Win32 message loop for the current thread.
     /// </summary>
+    /// <returns>The exit code returned by the Win32 message loop.</returns>
     public static int RunMessageLoop()
     {
         EnsureVisualStylesInitialized();
@@ -63,10 +72,38 @@ public static class Application
     /// <summary>
     /// Applies a batch of visual style changes to the application defaults.
     /// </summary>
+    /// <param name="configure">A delegate that updates <see cref="VisualStyleSettings"/>.</param>
     public static void ConfigureVisualStyles(Action<ApplicationVisualStyleSettings> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         configure(VisualStyleSettings);
+    }
+
+    /// <summary>
+    /// Applies a file-driven theme to future NativeForms windows.
+    /// </summary>
+    /// <param name="theme">The theme to activate.</param>
+    public static void UseTheme(NativeTheme theme)
+    {
+        ArgumentNullException.ThrowIfNull(theme);
+        VisualStyleSettings.Theme = theme;
+    }
+
+    /// <summary>
+    /// Loads a JSON theme file and applies it to future NativeForms windows.
+    /// </summary>
+    /// <param name="path">The JSON theme file path.</param>
+    public static void LoadTheme(string path)
+    {
+        UseTheme(NativeTheme.LoadJson(path));
+    }
+
+    /// <summary>
+    /// Clears the currently active file-driven theme.
+    /// </summary>
+    public static void ResetTheme()
+    {
+        VisualStyleSettings.Theme = null;
     }
 
     internal static void EnsureVisualStylesInitialized()
@@ -82,7 +119,8 @@ public static class Application
         var themeMode = ResolveThemeMode(VisualStyleSettings.ThemeMode);
         var effectKind = ResolveEffectKind(VisualStyleSettings);
         var effectOptions = ResolveEffectOptions(VisualStyleSettings, effectKind, themeMode);
-        return new ResolvedVisualStyle(themeMode, effectKind, effectOptions);
+        var palette = ResolvePalette(VisualStyleSettings, themeMode);
+        return new ResolvedVisualStyle(themeMode, effectKind, effectOptions, VisualStyleSettings.Theme, palette);
     }
 
     internal static ThemeMode ResolveThemeMode(ThemeMode requestedThemeMode)
@@ -91,7 +129,12 @@ public static class Application
         {
             ThemeMode.Light => ThemeMode.Light,
             ThemeMode.Dark => ThemeMode.Dark,
-            _ => DetectSystemThemeMode(),
+            _ => VisualStyleSettings.Theme?.ThemeMode switch
+            {
+                ThemeMode.Light => ThemeMode.Light,
+                ThemeMode.Dark => ThemeMode.Dark,
+                _ => DetectSystemThemeMode(),
+            },
         };
     }
 
@@ -127,6 +170,11 @@ public static class Application
         if (settings.PreferredEffect is { } preferredEffect)
         {
             return preferredEffect;
+        }
+
+        if (settings.Theme?.PreferredEffect is { } themedEffect)
+        {
+            return themedEffect;
         }
 
         if (!OperatingSystem.IsWindows())
@@ -167,6 +215,11 @@ public static class Application
             return settings.PreferredEffectOptions;
         }
 
+        if (settings.Theme?.PreferredEffectOptions is not null)
+        {
+            return settings.Theme.PreferredEffectOptions;
+        }
+
         return effectKind switch
         {
             EffectKind.Blur => new EffectOptions { BlurRadius = 20 },
@@ -178,5 +231,17 @@ public static class Application
             },
             _ => null,
         };
+    }
+
+    private static ThemePalette ResolvePalette(ApplicationVisualStyleSettings settings, ThemeMode themeMode)
+    {
+        if (settings.Theme?.Palette is not null)
+        {
+            return settings.Theme.Palette;
+        }
+
+        return themeMode == ThemeMode.Dark
+            ? ThemePalette.CreateDark()
+            : ThemePalette.CreateLight();
     }
 }

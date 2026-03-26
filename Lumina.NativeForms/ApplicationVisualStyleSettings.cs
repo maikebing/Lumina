@@ -24,4 +24,9 @@ public sealed class ApplicationVisualStyleSettings
     /// Gets or sets the options used for the preferred effect. When omitted, NativeForms chooses sensible defaults.
     /// </summary>
     public EffectOptions? PreferredEffectOptions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the active file-driven theme. When set, it can supply a preferred theme mode, effect, and palette.
+    /// </summary>
+    public NativeTheme? Theme { get; set; }
 }

@@ -1,0 +1,30 @@
+{
+  "Name": "Lumina Native Light",
+  "Description": "Built-in light palette for NativeForms.",
+  "Author": "Lumina",
+  "ThemeMode": 1,
+  "PreferredEffect": 5,
+  "PreferredEffectOptions": {
+    "BlendColor": 2147483648,
+    "BlurRadius": 18,
+    "Opacity": 0.9
+  },
+  "Palette": {
+    "WindowBackground": 4294443001,
+    "WindowForeground": 4280032284,
+    "SurfaceBackground": 4294967295,
+    "SurfaceForeground": 4280032284,
+    "ControlBackground": 4294967295,
+    "ControlForeground": 4280032284,
+    "ControlBorder": 4291348684,
+    "Accent": 4278869232,
+    "AccentForeground": 4294967295,
+    "Selection": 856318192,
+    "SelectionForeground": 4279179050,
+    "DisabledForeground": 4286342272,
+    "MutedForeground": 4284372582,
+    "Success": 4288064330,
+    "Warning": 4292441862,
+    "Danger": 4292619830
+  }
+}

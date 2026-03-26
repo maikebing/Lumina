@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
+    <ProjectReference Include="../Lumina.NativeForms/Lumina.NativeForms.csproj" />
   </ItemGroup>
 
 </Project>

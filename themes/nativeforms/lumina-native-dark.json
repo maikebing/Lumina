@@ -1,0 +1,25 @@
+{
+  "Name": "Lumina Native Dark",
+  "Description": "Built-in dark palette for NativeForms.",
+  "Author": "Lumina",
+  "ThemeMode": 2,
+  "PreferredEffect": 2,
+  "Palette": {
+    "WindowBackground": 4280295460,
+    "WindowForeground": 4294179831,
+    "SurfaceBackground": 4280955440,
+    "SurfaceForeground": 4294179831,
+    "ControlBackground": 4281284405,
+    "ControlForeground": 4294179831,
+    "ControlBorder": 4283050576,
+    "Accent": 4283210495,
+    "AccentForeground": 4278979597,
+    "Selection": 1716296447,
+    "SelectionForeground": 4294967295,
+    "DisabledForeground": 4287267472,
+    "MutedForeground": 4290160318,
+    "Success": 4283095165,
+    "Warning": 4294152783,
+    "Danger": 4293949816
+  }
+}

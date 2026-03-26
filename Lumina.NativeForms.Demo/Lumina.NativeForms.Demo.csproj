@@ -23,9 +23,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseNativeForms)' == 'true'">
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
     <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
-    <Using Include="Lumina.NativeForms" />
     <ProjectReference Include="..\Lumina.NativeForms.Analyzers\Lumina.NativeForms.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="PublishAot;RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun" />
+    <Using Include="Lumina.NativeForms" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,8 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
-    <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
+    
   </ItemGroup>
 
   <ItemGroup>

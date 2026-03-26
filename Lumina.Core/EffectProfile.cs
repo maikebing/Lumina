@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace Lumina;
 
+/// <summary>
+/// Provides source-generated JSON serialization metadata for <see cref="EffectProfile"/>.
+/// </summary>
 [JsonSerializable(typeof(EffectProfile))]
 public partial class EffectProfileJsonContext : JsonSerializerContext { }
 

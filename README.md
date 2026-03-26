@@ -25,6 +25,42 @@ Unlike similar tools built in C++, Lumina is written entirely in **C# with Nativ
 - Multi-language UI (XML-based language files)
 - Native Win32 GUI — no WPF, no WinForms, no external UI framework
 
+## NativeForms
+
+`Lumina.NativeForms` is the AOT-friendly companion layer for WinForms-style desktop apps.
+It keeps familiar names such as `Application`, `Form`, `Button`, `TextBox`, `ComboBox`,
+`CheckBox`, `RadioButton`, `ListBox`, and `GroupBox` so older apps can migrate with
+minimal namespace and project-file changes.
+
+### Demo Targets
+
+`Lumina.NativeForms.Demo` now uses two targets:
+
+- `net10.0-windows`: WinForms path, kept friendly to the Visual Studio designer
+- `net10.0`: NativeForms path, intended for Native AOT and Win32-native controls
+
+The demo project uses both `UseWinForms` and `UseNativeForms` so the same solution
+can validate migration behavior on both sides.
+
+### Themes
+
+NativeForms supports:
+
+- OS-aware default backdrops through `Application.EnableVisualStyles()`
+- System light/dark tracking
+- App-level visual overrides through `Application.ConfigureVisualStyles(...)`
+- JSON theme files through `NativeTheme` and `ThemePalette`
+
+Sample theme files live under [`themes/nativeforms/`](themes/nativeforms).
+
+### Docs
+
+- [Quick Start](docs/quickstart.md)
+- [NativeForms Overview](docs/zh/nativeforms.md)
+- [NativeForms Migration Guide](docs/zh/nativeforms-migration.md)
+- [NativeForms Theme Guide](docs/zh/nativeforms-themes.md)
+- [NativeForms Support Matrix](docs/zh/nativeforms-support-matrix.md)
+
 ## Architecture
 
 ```

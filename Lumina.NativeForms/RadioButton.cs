@@ -1,9 +1,9 @@
 namespace Lumina.NativeForms;
 
 /// <summary>
-/// Represents a standard two-state check box control.
+/// Represents a standard radio button control.
 /// </summary>
-public class CheckBox : Control
+public class RadioButton : Control
 {
     private bool _checked;
 
@@ -13,7 +13,7 @@ public class CheckBox : Control
     public event EventHandler? CheckedChanged;
 
     /// <summary>
-    /// Gets or sets a value indicating whether the check box is checked.
+    /// Gets or sets a value indicating whether the radio button is selected.
     /// </summary>
     public bool Checked
     {
@@ -34,7 +34,7 @@ public class CheckBox : Control
     protected override string ClassName => "BUTTON";
 
     /// <inheritdoc />
-    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_TABSTOP | Win32.BS_AUTOCHECKBOX;
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_TABSTOP | Win32.BS_AUTORADIOBUTTON;
 
     /// <inheritdoc />
     protected override void OnHandleCreated()
@@ -51,8 +51,13 @@ public class CheckBox : Control
             return false;
         }
 
-        _checked = Win32.SendMessageW(Handle, Win32.BM_GETCHECK, 0, 0) == (nint)Win32.BST_CHECKED;
-        CheckedChanged?.Invoke(this, EventArgs.Empty);
+        bool currentValue = Win32.SendMessageW(Handle, Win32.BM_GETCHECK, 0, 0) == (nint)Win32.BST_CHECKED;
+        if (_checked != currentValue)
+        {
+            _checked = currentValue;
+            CheckedChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         return true;
     }
 

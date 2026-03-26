@@ -1,5 +1,7 @@
+using System.Buffers;
+using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Lumina.NativeForms;
 
@@ -41,7 +43,9 @@ internal static class Win32
 
     public const uint BS_PUSHBUTTON = 0x00000000;
     public const uint BS_AUTOCHECKBOX = 0x00000003;
+    public const uint BS_AUTORADIOBUTTON = 0x00000009;
     public const uint BS_GROUPBOX = 0x00000007;
+    public const uint LBS_NOTIFY = 0x0001;
 
     public const int SW_SHOW = 5;
     public const int SW_HIDE = 0;
@@ -55,6 +59,7 @@ internal static class Win32
 
     public const int BN_CLICKED = 0;
     public const int CBN_SELCHANGE = 1;
+    public const int LBN_SELCHANGE = 1;
     public const int BM_GETCHECK = 0x00F0;
     public const int BM_SETCHECK = 0x00F1;
     public const int BST_UNCHECKED = 0;
@@ -64,12 +69,18 @@ internal static class Win32
     public const int CB_RESETCONTENT = 0x014B;
     public const int CB_GETCURSEL = 0x0147;
     public const int CB_SETCURSEL = 0x014E;
+    public const int LB_ADDSTRING = 0x0180;
+    public const int LB_RESETCONTENT = 0x0184;
+    public const int LB_GETCURSEL = 0x0188;
+    public const int LB_SETCURSEL = 0x0186;
 
     public const int COLOR_WINDOW = 5;
     public const int DEFAULT_GUI_FONT = 17;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
     public const int GWLP_USERDATA = -21;
+    public const int LOGPIXELSX = 88;
+    public const int LOGPIXELSY = 90;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct WNDCLASSEXW
@@ -135,6 +146,31 @@ internal static class Win32
         public int Width => Right - Left;
 
         public int Height => Bottom - Top;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct TEXTMETRICW
+    {
+        public int tmHeight;
+        public int tmAscent;
+        public int tmDescent;
+        public int tmInternalLeading;
+        public int tmExternalLeading;
+        public int tmAveCharWidth;
+        public int tmMaxCharWidth;
+        public int tmWeight;
+        public int tmOverhang;
+        public int tmDigitizedAspectX;
+        public int tmDigitizedAspectY;
+        public char tmFirstChar;
+        public char tmLastChar;
+        public char tmDefaultChar;
+        public char tmBreakChar;
+        public byte tmItalic;
+        public byte tmUnderlined;
+        public byte tmStruckOut;
+        public byte tmPitchAndFamily;
+        public byte tmCharSet;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -217,11 +253,17 @@ internal static class Win32
     internal static extern int GetWindowTextLengthW(nint hWnd);
 
     [DllImport("user32.dll", EntryPoint = "GetWindowTextW", CharSet = CharSet.Unicode, SetLastError = true)]
-    internal static extern int GetWindowTextW(nint hWnd, StringBuilder lpString, int nMaxCount);
+    private static extern unsafe int GetWindowTextW(nint hWnd, char* lpString, int nMaxCount);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetClientRect(nint hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern nint GetDC(nint hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern int ReleaseDC(nint hWnd, nint hDc);
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern nint GetSysColorBrush(int nIndex);
@@ -236,17 +278,30 @@ internal static class Win32
     [DllImport("gdi32.dll", SetLastError = true)]
     internal static extern nint GetStockObject(int i);
 
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern nint SelectObject(nint hdc, nint h);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetTextMetricsW(nint hdc, out TEXTMETRICW lptm);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern int GetDeviceCaps(nint hdc, int index);
+
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
 
     [DllImport("dwmapi.dll")]
     internal static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
 
+    [DllImport("user32.dll")]
+    internal static extern uint GetDpiForSystem();
+
     internal static int LowWord(nint value) => unchecked((ushort)(nuint)value);
 
     internal static int HighWord(nint value) => unchecked((ushort)(((nuint)value >> 16) & 0xFFFF));
 
-    internal static string GetText(nint hwnd)
+    internal static unsafe string GetText(nint hwnd)
     {
         int length = GetWindowTextLengthW(hwnd);
         if (length <= 0)
@@ -254,8 +309,114 @@ internal static class Win32
             return string.Empty;
         }
 
-        var builder = new StringBuilder(length + 1);
-        _ = GetWindowTextW(hwnd, builder, builder.Capacity);
-        return builder.ToString();
+        int bufferLength = length + 1;
+        if (bufferLength <= InlineCharBuffer.Capacity)
+        {
+            InlineCharBuffer inlineBuffer = default;
+            Span<char> buffer = inlineBuffer;
+            int written = FillWindowText(hwnd, buffer[..bufferLength]);
+            return written <= 0 ? string.Empty : new string(buffer[..written]);
+        }
+
+        char[] rented = ArrayPool<char>.Shared.Rent(bufferLength);
+        try
+        {
+            Span<char> buffer = rented.AsSpan(0, bufferLength);
+            int written = FillWindowText(hwnd, buffer);
+            return written <= 0 ? string.Empty : new string(buffer[..written]);
+        }
+        finally
+        {
+            rented.AsSpan(0, bufferLength).Clear();
+            ArrayPool<char>.Shared.Return(rented);
+        }
+    }
+
+    private static unsafe int FillWindowText(nint hwnd, Span<char> buffer)
+    {
+        ref char firstCharacter = ref MemoryMarshal.GetReference(buffer);
+        fixed (char* bufferPointer = &firstCharacter)
+        {
+            return GetWindowTextW(hwnd, bufferPointer, buffer.Length);
+        }
+    }
+
+    internal static SizeF GetSystemDpiScaleDimensions()
+    {
+        try
+        {
+            uint dpi = GetDpiForSystem();
+            if (dpi > 0)
+            {
+                return new SizeF(dpi, dpi);
+            }
+        }
+        catch (EntryPointNotFoundException)
+        {
+        }
+
+        nint screenDc = GetDC(0);
+        if (screenDc == 0)
+        {
+            return new SizeF(96f, 96f);
+        }
+
+        try
+        {
+            int dpiX = GetDeviceCaps(screenDc, LOGPIXELSX);
+            int dpiY = GetDeviceCaps(screenDc, LOGPIXELSY);
+            return new SizeF(
+                dpiX > 0 ? dpiX : 96f,
+                dpiY > 0 ? dpiY : 96f);
+        }
+        finally
+        {
+            _ = ReleaseDC(0, screenDc);
+        }
+    }
+
+    internal static SizeF GetDefaultFontScaleDimensions()
+    {
+        nint screenDc = GetDC(0);
+        if (screenDc == 0)
+        {
+            return new SizeF(8f, 20f);
+        }
+
+        nint fontHandle = GetStockObject(DEFAULT_GUI_FONT);
+        nint previousObject = 0;
+
+        try
+        {
+            if (fontHandle != 0)
+            {
+                previousObject = SelectObject(screenDc, fontHandle);
+            }
+
+            if (GetTextMetricsW(screenDc, out TEXTMETRICW metrics))
+            {
+                float width = metrics.tmAveCharWidth > 0 ? metrics.tmAveCharWidth : 8f;
+                float height = metrics.tmHeight > 0 ? metrics.tmHeight : 20f;
+                return new SizeF(width, height);
+            }
+        }
+        finally
+        {
+            if (previousObject != 0)
+            {
+                _ = SelectObject(screenDc, previousObject);
+            }
+
+            _ = ReleaseDC(0, screenDc);
+        }
+
+        return new SizeF(8f, 20f);
+    }
+
+    [InlineArray(Capacity)]
+    private struct InlineCharBuffer
+    {
+        public const int Capacity = 260;
+        private char _character;
     }
 }

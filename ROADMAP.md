@@ -130,6 +130,7 @@ Lumina.sln
 - [ ] 对齐 WinForms 的属性名、方法名、事件名、默认值与行为语义，目标是大部分旧项目仅切换引用与命名空间即可迁移
 - [ ] 为暂未兼容的能力提供最小替代层、兼容说明与迁移清单
 - [ ] 补充无 WinForms 依赖的 AOT 构建样例、兼容性测试与回归用例
+- [ ] 新增 `Lumina.NativeForms.Analyzers`，提供启动约束、`Application.Run` 用法、`partial Form` 约束与迁移友好规则
 
 ### Phase 6-B：系统风格与主题
 

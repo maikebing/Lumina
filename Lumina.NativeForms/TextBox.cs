@@ -1,14 +1,25 @@
 namespace Lumina.NativeForms;
 
+/// <summary>
+/// Represents a single-line or multi-line edit control.
+/// </summary>
 public class TextBox : Control
 {
     private bool _multiline;
     private bool _readOnly;
 
+    /// <summary>
+    /// Initializes a single-line editable text box.
+    /// </summary>
     public TextBox()
     {
     }
 
+    /// <summary>
+    /// Initializes a text box with the requested multi-line and read-only behavior.
+    /// </summary>
+    /// <param name="multiline">Whether the control should use a multi-line edit window.</param>
+    /// <param name="readOnly">Whether the control should reject user edits.</param>
     public TextBox(bool multiline, bool readOnly = false)
     {
         _multiline = multiline;
@@ -20,20 +31,28 @@ public class TextBox : Control
         }
     }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the text box is multi-line.
+    /// </summary>
     public bool Multiline
     {
         get => _multiline;
         set => _multiline = value;
     }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the text box is read-only.
+    /// </summary>
     public bool ReadOnly
     {
         get => _readOnly;
         set => _readOnly = value;
     }
 
+    /// <inheritdoc />
     protected override string ClassName => "EDIT";
 
+    /// <inheritdoc />
     protected override uint Style
     {
         get
@@ -57,16 +76,23 @@ public class TextBox : Control
         }
     }
 
+    /// <inheritdoc />
     protected override uint ExStyle => Win32.WS_EX_CLIENTEDGE;
 
+    /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
         => _multiline ? Math.Max(48, requestedHeight) : Math.Max(24, requestedHeight);
 
+    /// <summary>
+    /// Appends text to the current text box contents.
+    /// </summary>
+    /// <param name="value">The text to append.</param>
     public void AppendText(string value)
     {
         Text += value;
     }
 
+    /// <inheritdoc />
     protected override void ApplyTheme()
     {
         _ = Win32.SetWindowTheme(Handle, "Explorer", null);

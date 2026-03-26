@@ -5,11 +5,13 @@ namespace Lumina.NativeForms;
 /// </summary>
 public sealed class ResolvedVisualStyle
 {
-    internal ResolvedVisualStyle(ThemeMode themeMode, EffectKind effectKind, EffectOptions? effectOptions)
+    internal ResolvedVisualStyle(ThemeMode themeMode, EffectKind effectKind, EffectOptions? effectOptions, NativeTheme? theme, ThemePalette palette)
     {
         ThemeMode = themeMode;
         EffectKind = effectKind;
         EffectOptions = effectOptions;
+        Theme = theme;
+        Palette = palette;
     }
 
     /// <summary>
@@ -31,4 +33,14 @@ public sealed class ResolvedVisualStyle
     /// Gets the options associated with the resolved effect, if any.
     /// </summary>
     public EffectOptions? EffectOptions { get; }
+
+    /// <summary>
+    /// Gets the active file-driven theme, if one was supplied by the application.
+    /// </summary>
+    public NativeTheme? Theme { get; }
+
+    /// <summary>
+    /// Gets the resolved semantic palette for the current visual style.
+    /// </summary>
+    public ThemePalette Palette { get; }
 }

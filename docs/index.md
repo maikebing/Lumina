@@ -1,8 +1,11 @@
 ---
 title: "Lumina Docs"
-description: "选择中文或英文文档。"
+description: "Lumina documentation home."
 permalink: /
 layout: default
 ---
 
-[中文文档](/zh/) · [English Documentation](/en/)
+# Lumina Documentation
+
+- [Quick Start](/quickstart/)
+- [中文文档](/zh/)
