@@ -4,17 +4,15 @@
     <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- NuGet 包元数据 -->
     <IsPackable>true</IsPackable>
-    <PackageId>Lumina</PackageId>
+    <PackageId>Lumina.NativeForms</PackageId>
     <Version>0.1.0</Version>
     <Authors>Lumina Contributors</Authors>
-    <Description>Standard-mode window visual effects for WinForms, WPF, Win32 and borderless windows. No admin rights required.</Description>
-    <PackageTags>mica;acrylic;blur;aero;dwm;windows;visual-effects</PackageTags>
+    <Description>A native Win32 forms layer for Lumina, designed for AOT-friendly desktop windows and controls.</Description>
+    <PackageTags>win32;native;forms;aot;mica;acrylic;windows;visual-effects</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
@@ -24,9 +22,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="/" />
-    <None Include="../THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
-    <None Include="../assets/nuget-icon.png" Pack="true" PackagePath="/" />
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="/" />
+    <None Include="..\THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
+    <None Include="..\assets\nuget-icon.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>

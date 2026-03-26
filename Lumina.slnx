@@ -4,6 +4,8 @@
   <Project Path="Lumina.Core/Lumina.Core.csproj" />
   <Project Path="Lumina.Core.Advanced/Lumina.Core.Advanced.csproj" />
   <Project Path="Lumina.WinForms/Lumina.WinForms.csproj" />
+  <Project Path="Lumina.NativeForms/Lumina.NativeForms.csproj" />
+  <Project Path="Lumina.NativeForms.Demo/Lumina.NativeForms.Demo.csproj" />
   <Project Path="Lumina.Wpf/Lumina.Wpf.csproj" />
   <Project Path="Lumina.Tests/Lumina.Tests.csproj" />
 </Solution>
