@@ -117,3 +117,50 @@ Lumina.sln
 
 - [x] 文档站结构（Jekyll 格式，`docs/` 目录，中英双语）
 - [ ] 文档站部署（GitHub Pages，域名 `lumina.maikebing.com`）
+
+## Phase 6 - NativeForms 与迁移兼容
+
+### Phase 6-A：Lumina.NativeForms 核心
+
+- [x] 新增 `Lumina.NativeForms` 项目并纳入解决方案
+- [x] 公开 WinForms 风格命名入口：`Application` / `Form` / `Control` / `Button` / `Label` / `TextBox` / `ComboBox` / `CheckBox` / `GroupBox`
+- [x] 删除旧 `Native*` 文件命名，降低旧项目迁移成本
+- [x] 将窗口过程封送改为托管委托，避免 `unsafe` 向 Demo 与使用方传染
+- [ ] 按 WinForms 迁移优先级继续补齐常用控件族，优先覆盖旧项目高频控件
+- [ ] 对齐 WinForms 的属性名、方法名、事件名、默认值与行为语义，目标是大部分旧项目仅切换引用与命名空间即可迁移
+- [ ] 为暂未兼容的能力提供最小替代层、兼容说明与迁移清单
+- [ ] 补充无 WinForms 依赖的 AOT 构建样例、兼容性测试与回归用例
+
+### Phase 6-B：系统风格与主题
+
+- [ ] 将默认视觉初始化入口收敛到 `Application.EnableVisualStyles()`
+- [ ] 根据操作系统版本自动选择最贴近系统的窗口效果与外观：
+  - Windows 7：Aero / Glass
+  - Windows 8 / 8.1：贴近系统的扁平风格
+  - Windows 10：Fluent / Blur / Acrylic 风格回退
+  - Windows 11：Mica / MicaAlt
+- [ ] 保留应用级与窗口级覆盖口，允许用户显式指定效果、主题模式与调色板
+- [ ] 首先支持跟随系统浅色 / 深色模式
+- [ ] 设计可扩展主题模型：语义颜色 token、状态色、标题栏、边框、背景、文本、控件层级
+- [ ] 支持 JSON 主题文件的加载、保存、导入、导出，为用户与 AI 生成主题预留空间
+- [ ] 参考 `SkiaShell.Theme` 的 palette 组织方式，整理 Lumina 自己的主题 token / palette 架构
+- [ ] 为系统主题跟随、效果回退、主题切换补充示例与验证
+
+### Phase 6-C：Demo 与设计器友好
+
+- [ ] `Lumina.NativeForms.Demo` 改为 `net10.0-windows` + `net10.0` 双目标
+- [ ] `net10.0-windows` 目标使用 WinForms，并保持 Visual Studio 设计器友好
+- [ ] `net10.0` 目标使用 `Lumina.NativeForms` 的同名控件
+- [ ] 增加 `UseNativeForms` MSBuild 属性，与 `UseWinForms` 区分，便于条件编译与后续扩展
+- [ ] 拆分 WinForms / NativeForms 两套入口与窗体文件，避免互相影响
+- [ ] 将称台模拟器（`WdsScaleSimulator`）界面迁移为 NativeForms Demo，并保留原有交互流程作为迁移样板
+- [ ] 在 Demo 中覆盖目前已实现的全部控件、事件、属性与典型布局，验证与 WinForms API / 行为的一致性
+- [ ] 提供“旧 WinForms 应用切换引用与命名空间”的迁移示例
+- [ ] 验证 Demo 在 VS 设计器、运行时与 AOT 场景下的可用性
+
+### Phase 6-D：文档与开发者体验
+
+- [ ] 为 `Lumina.NativeForms` 公开类型、属性、方法、事件补齐 XML 注释，帮助使用者理解 Win32 实现与兼容性边界
+- [ ] 更新 README、quickstart 与 migration 文档，补充 NativeForms 章节
+- [ ] 新增控件支持矩阵、兼容差异清单、主题配置说明
+- [ ] 补充 Demo 截图 / 录屏、构建说明、回归测试与后续发布准备
