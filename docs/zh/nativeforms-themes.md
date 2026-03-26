@@ -8,11 +8,11 @@ layout: default
 
 ## 目标
 
-主题系统先解决三件事：
+NativeForms 的主题系统优先解决三件事：
 
 - 跟随系统浅色 / 深色
-- 为应用提供默认效果与主题覆盖口
-- 为用户和 AI 生成主题预留文件格式与语义色板
+- 根据操作系统版本选择最接近系统的默认视觉风格
+- 为用户主题和 AI 生成主题预留稳定的 JSON 文件格式
 
 ## 核心类型
 
@@ -21,20 +21,43 @@ layout: default
 - `NativeTheme`
 - `ThemePalette`
 - `ThemeMode`
+- `VisualStyleKind`
+
+## 调色板组织方式
+
+`ThemePalette` 采用“窗口 / 标题栏 / 表面 / 控件 / 状态色”的语义分层，而不是只暴露零散颜色值。这个组织思路参考了 `SkiaShell.Theme` 里按区域和状态分组 palette 的方式，方便后续继续扩展主题文件、Owner-draw 控件和 AI 生成模板。
+
+当前主要 token 包括：
+
+- 窗口层：`WindowBackground`、`WindowForeground`、`WindowBorder`
+- 标题栏：`TitleBarBackground`、`TitleBarForeground`、`TitleBarBorder`
+- 表面层：`SurfaceBackground`、`SurfaceForeground`、`SurfaceBorder`
+- 控件层：`ControlBackground`、`ControlForeground`、`ControlBorder`
+- 状态层：`ControlHoverBackground`、`ControlPressedBackground`、`Selection`、`FocusBorder`
+- 语义色：`Accent`、`Success`、`Warning`、`Danger`
 
 ## 代码示例
 
 ```csharp
 using Lumina.NativeForms;
 
-Application.EnableVisualStyles();
+ApplicationConfiguration.Initialize();
 Application.ConfigureVisualStyles(settings =>
 {
     settings.ThemeMode = ThemeMode.System;
+    settings.PreferredVisualStyle = VisualStyleKind.System;
     settings.ApplyBackdropEffects = true;
 });
 
-Application.LoadTheme("themes/lumina-native-dark.json");
+using var form = new MainForm();
+form.UseTheme(NativeTheme.CreateDarkTheme());
+form.SetPalette(new ThemePalette
+{
+    Accent = 0xFFFF7A00,
+    FocusBorder = 0xFFFF7A00,
+});
+
+Application.Run(form);
 ```
 
 ## JSON 示例
@@ -45,28 +68,27 @@ Application.LoadTheme("themes/lumina-native-dark.json");
   "Description": "Built-in dark palette for NativeForms.",
   "Author": "Lumina",
   "ThemeMode": 2,
+  "PreferredVisualStyle": 5,
   "PreferredEffect": 2,
   "Palette": {
     "WindowBackground": 4280295460,
     "WindowForeground": 4294179831,
-    "Accent": 4283210495
+    "WindowBorder": 4281940288,
+    "TitleBarBackground": 3860865060,
+    "TitleBarForeground": 4294179831,
+    "ControlBackground": 4281284405,
+    "ControlBorder": 4283050576,
+    "Accent": 4283210495,
+    "FocusBorder": 4285970175
   }
 }
 ```
 
+未在 JSON 中显式写出的 token 会回落到类型初始化时的默认值，因此主题文件既可以写成完整调色板，也可以只覆盖少量关键颜色。
+
 ## 示例主题文件
 
-仓库内置了两个示例主题文件：
+仓库内置了两份示例主题文件：
 
 - `themes/nativeforms/lumina-native-light.json`
 - `themes/nativeforms/lumina-native-dark.json`
-
-## 现阶段说明
-
-当前主题文件已经可以驱动：
-
-- 应用级主题模式
-- 应用级默认效果
-- 语义色板持久化
-
-原生公共控件的深度自定义着色仍会继续演进，因此目前色板更多承担“统一主题描述”和“未来 owner-draw/custom control 扩展”的角色。

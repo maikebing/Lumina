@@ -10,6 +10,14 @@ public class Button : Control
     /// </summary>
     public event EventHandler? Click;
 
+    /// <summary>
+    /// Programmatically raises the button click action.
+    /// </summary>
+    public void PerformClick()
+    {
+        OnClick(EventArgs.Empty);
+    }
+
     /// <inheritdoc />
     protected override string ClassName => "BUTTON";
 
@@ -28,7 +36,7 @@ public class Button : Control
             return false;
         }
 
-        Click?.Invoke(this, EventArgs.Empty);
+        OnClick(EventArgs.Empty);
         return true;
     }
 
@@ -36,5 +44,14 @@ public class Button : Control
     protected override void ApplyTheme()
     {
         _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="Click"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnClick(EventArgs e)
+    {
+        Click?.Invoke(this, e);
     }
 }

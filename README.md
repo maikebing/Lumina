@@ -29,7 +29,7 @@ Unlike similar tools built in C++, Lumina is written entirely in **C# with Nativ
 
 `Lumina.NativeForms` is the AOT-friendly companion layer for WinForms-style desktop apps.
 It keeps familiar names such as `Application`, `Form`, `Button`, `TextBox`, `ComboBox`,
-`CheckBox`, `RadioButton`, `ListBox`, and `GroupBox` so older apps can migrate with
+`CheckBox`, `RadioButton`, `ListBox`, `GroupBox`, and `Panel` so older apps can migrate with
 minimal namespace and project-file changes.
 
 ### Demo Targets
@@ -47,9 +47,15 @@ can validate migration behavior on both sides.
 NativeForms supports:
 
 - OS-aware default backdrops through `Application.EnableVisualStyles()`
-- System light/dark tracking
+- OS-aware visual style families through `VisualStyleKind` (`Classic`, `AeroGlass`, `Modern`, `Fluent`, `Mica`)
+- WinForms-style startup compatibility through `ApplicationConfiguration.Initialize()`
+- System light/dark tracking and live refresh for open windows
 - App-level visual overrides through `Application.ConfigureVisualStyles(...)`
-- JSON theme files through `NativeTheme` and `ThemePalette`
+- Window-level overrides through `UseTheme(...)`, `SetThemeMode(...)`, and `SetPalette(...)`
+- JSON theme files through `NativeTheme` and semantic `ThemePalette` tokens
+- WinForms-like collection helpers such as `Controls.AddRange(...)`, `Controls.Find(...)`, `Items.AddRange(...)`, and `SelectedItem`
+- Compatibility analyzers through `Lumina.NativeForms.Analyzers`
+- WinForms-style autoscaling through `AutoScaleMode`, `AutoScaleDimensions`, and `PerformAutoScale()`
 
 Sample theme files live under [`themes/nativeforms/`](themes/nativeforms).
 
@@ -58,6 +64,7 @@ Sample theme files live under [`themes/nativeforms/`](themes/nativeforms).
 - [Quick Start](docs/quickstart.md)
 - [NativeForms Overview](docs/zh/nativeforms.md)
 - [NativeForms Migration Guide](docs/zh/nativeforms-migration.md)
+- [NativeForms Compatibility Notes](docs/zh/nativeforms-compatibility.md)
 - [NativeForms Theme Guide](docs/zh/nativeforms-themes.md)
 - [NativeForms Support Matrix](docs/zh/nativeforms-support-matrix.md)
 

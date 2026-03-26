@@ -15,6 +15,54 @@
 - Resource release semantics should follow `IDisposable`; do not introduce a separate custom release API for forms.
 - Scaling behavior such as `AutoScaleMode` should match WinForms expectations as closely as practical.
 - Native interop should stay AOT-friendly and prefer modern .NET 10 patterns such as `Span<T>`, `InlineArray`, and `MemoryMarshal` where they improve safety or performance.
+- Native interop should stay AOT-friendly and prefer modern .NET 10 patterns such as `Span<T>`, `InlineArray`, and `MemoryMarshal` where they improve safety or performance.
+
+## Phase 6 Status Refresh
+
+This section is the current readable Phase 6 snapshot for NativeForms work.
+
+### Phase 6-A: Lumina.NativeForms Core
+
+- [x] Added `Lumina.NativeForms` to the solution.
+- [x] Exposed WinForms-style entry points and current core type names.
+- [x] Removed temporary `Native*` type names to reduce migration friction.
+- [x] Kept `unsafe` interop details contained inside the library instead of leaking into the Demo or consumer code.
+- [x] Expanded the current compatibility surface for high-frequency controls, collections, item lists, events, and nested containers.
+- [x] Aligned common WinForms names, properties, methods, events, and default behavior for the controls currently implemented.
+- [x] Added compatibility notes, migration guidance, and a clear checklist for unsupported or still-growing areas.
+- [x] Added AOT-friendly compatibility and regression tests for autoscaling, containers, item collections, themes, and event behavior.
+- [x] Added `Lumina.NativeForms.Analyzers` with startup, `Application.Run`, `partial Form`, and migration-friendly rules.
+- [ ] Expand the user-owned Demo to showcase every supported control while preserving the fixed dual-target structure.
+
+### Phase 6-B: System Visual Styles and Themes
+
+- [x] Consolidated default visual initialization through `Application.EnableVisualStyles()`.
+- [x] Automatically chose the closest OS-aligned visual style and default effect by Windows version.
+- [x] Kept both application-level and window-level override hooks for effect, theme mode, visual style, and palette.
+- [x] Supported system light and dark mode first.
+- [x] Designed an extensible theme model with semantic tokens for windows, title bars, surfaces, controls, and state colors.
+- [x] Supported JSON theme loading, saving, import, and export so user-authored and AI-generated themes have a stable file format.
+- [x] Organized palette tokens with a grouped semantic structure inspired by `SkiaShell.Theme`.
+- [x] Added examples and validation for system theme following, effect fallback, and theme switching.
+
+### Phase 6-C: Demo and Designer Friendliness
+
+- [x] Kept `Lumina.NativeForms.Demo` on `net10.0-windows` + `net10.0`.
+- [x] Used WinForms on `net10.0-windows` so the Visual Studio designer path remains available.
+- [x] Used `Lumina.NativeForms` on `net10.0`.
+- [x] Added `UseNativeForms` alongside `UseWinForms` in the Demo project.
+- [ ] Continue the remaining Demo work under the current user-owned Demo structure without automatic changes from library work.
+- [ ] Port the full `WdsScaleSimulator` surface into the Demo.
+- [ ] Cover every supported control, event, property, and representative layout scenario inside the Demo.
+- [ ] Add explicit “switch the namespace/reference” migration examples inside the Demo itself.
+- [ ] Validate the final Demo end-to-end across designer, runtime, and AOT publishing scenarios.
+
+### Phase 6-D: Documentation and Developer Experience
+
+- [x] Added XML comments across the current NativeForms public surface so supported members explain their Win32-backed behavior.
+- [x] Updated `README`, `quickstart`, and migration documentation with NativeForms guidance.
+- [x] Added a control support matrix, compatibility notes, and theme configuration documentation.
+- [ ] Add final Demo screenshots, recordings, and release-preparation material after the user-owned Demo work is finished.
 
 Lumina 包含两条并行产品线，共享同一套底层 Hook 引擎与 DWM 效果实现。
 
@@ -147,6 +195,8 @@ Lumina.sln
 - [ ] 为暂未兼容的能力提供最小替代层、兼容说明与迁移清单
 - [ ] 补充无 WinForms 依赖的 AOT 构建样例、兼容性测试与回归用例
 - [ ] 新增 `Lumina.NativeForms.Analyzers`，提供启动约束、`Application.Run` 用法、`partial Form` 约束与迁移友好规则
+- [ ] NativeForms.Demos 里面把所有控件都放上去。 能让设计器打开正常改变， 也能让配合nativeforms能够aot编译。 
+  
 
 ### Phase 6-B：系统风格与主题
 

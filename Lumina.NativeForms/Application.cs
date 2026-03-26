@@ -8,6 +8,8 @@ namespace Lumina.NativeForms;
 public static class Application
 {
     private const string PersonalizeRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+    private static readonly Lock s_syncRoot = new();
+    private static readonly HashSet<Form> s_openForms = [];
     private static bool s_visualStylesEnabled;
     private static bool s_compatibleTextRenderingDefault;
 
@@ -27,6 +29,7 @@ public static class Application
     public static void EnableVisualStyles()
     {
         s_visualStylesEnabled = true;
+        NotifyVisualStylesChanged();
     }
 
     /// <summary>
@@ -36,6 +39,32 @@ public static class Application
     public static void SetCompatibleTextRenderingDefault(bool defaultValue)
     {
         s_compatibleTextRenderingDefault = defaultValue;
+    }
+
+    /// <summary>
+    /// Requests that the current UI thread exit its NativeForms message loop.
+    /// </summary>
+    public static void ExitThread()
+    {
+        Win32.PostQuitMessage(0);
+    }
+
+    /// <summary>
+    /// Requests that all currently open NativeForms windows close and the application exit.
+    /// </summary>
+    public static void Exit()
+    {
+        Form[] openForms = GetOpenFormsSnapshot();
+        if (openForms.Length == 0)
+        {
+            ExitThread();
+            return;
+        }
+
+        foreach (Form form in openForms)
+        {
+            form.Close();
+        }
     }
 
     /// <summary>
@@ -77,6 +106,7 @@ public static class Application
     {
         ArgumentNullException.ThrowIfNull(configure);
         configure(VisualStyleSettings);
+        NotifyVisualStylesChanged();
     }
 
     /// <summary>
@@ -87,6 +117,7 @@ public static class Application
     {
         ArgumentNullException.ThrowIfNull(theme);
         VisualStyleSettings.Theme = theme;
+        NotifyVisualStylesChanged();
     }
 
     /// <summary>
@@ -104,6 +135,7 @@ public static class Application
     public static void ResetTheme()
     {
         VisualStyleSettings.Theme = null;
+        NotifyVisualStylesChanged();
     }
 
     internal static void EnsureVisualStylesInitialized()
@@ -116,26 +148,61 @@ public static class Application
 
     internal static ResolvedVisualStyle GetResolvedVisualStyle()
     {
-        var themeMode = ResolveThemeMode(VisualStyleSettings.ThemeMode);
-        var effectKind = ResolveEffectKind(VisualStyleSettings);
-        var effectOptions = ResolveEffectOptions(VisualStyleSettings, effectKind, themeMode);
-        var palette = ResolvePalette(VisualStyleSettings, themeMode);
-        return new ResolvedVisualStyle(themeMode, effectKind, effectOptions, VisualStyleSettings.Theme, palette);
+        return ResolveVisualStyle(
+            VisualStyleSettings.ThemeMode,
+            VisualStyleSettings.PreferredVisualStyle,
+            VisualStyleSettings.ApplyBackdropEffects,
+            VisualStyleSettings.PreferredEffect,
+            VisualStyleSettings.PreferredEffectOptions,
+            VisualStyleSettings.Theme,
+            VisualStyleSettings.Palette);
     }
 
-    internal static ThemeMode ResolveThemeMode(ThemeMode requestedThemeMode)
+    internal static ThemeMode ResolveThemeMode(ThemeMode requestedThemeMode, NativeTheme? theme = null)
     {
         return requestedThemeMode switch
         {
             ThemeMode.Light => ThemeMode.Light,
             ThemeMode.Dark => ThemeMode.Dark,
-            _ => VisualStyleSettings.Theme?.ThemeMode switch
+            _ => theme?.ThemeMode switch
             {
                 ThemeMode.Light => ThemeMode.Light,
                 ThemeMode.Dark => ThemeMode.Dark,
                 _ => DetectSystemThemeMode(),
             },
         };
+    }
+
+    internal static VisualStyleKind ResolveVisualStyleKind(VisualStyleKind requestedVisualStyleKind, NativeTheme? theme = null)
+    {
+        if (requestedVisualStyleKind != VisualStyleKind.System)
+        {
+            return requestedVisualStyleKind;
+        }
+
+        if (theme?.PreferredVisualStyle is { } themeVisualStyle && themeVisualStyle != VisualStyleKind.System)
+        {
+            return themeVisualStyle;
+        }
+
+        return DetectSystemVisualStyleKind();
+    }
+
+    internal static ResolvedVisualStyle ResolveVisualStyle(
+        ThemeMode requestedThemeMode,
+        VisualStyleKind preferredVisualStyle,
+        bool applyBackdropEffects,
+        EffectKind? preferredEffect,
+        EffectOptions? preferredEffectOptions,
+        NativeTheme? theme,
+        ThemePalette? palette)
+    {
+        ThemeMode themeMode = ResolveThemeMode(requestedThemeMode, theme);
+        VisualStyleKind visualStyleKind = ResolveVisualStyleKind(preferredVisualStyle, theme);
+        EffectKind effectKind = ResolveEffectKind(applyBackdropEffects, preferredEffect, theme, visualStyleKind);
+        EffectOptions? effectOptions = ResolveEffectOptions(preferredEffectOptions, theme, effectKind, themeMode);
+        ThemePalette resolvedPalette = ResolvePalette(palette, theme, themeMode, visualStyleKind);
+        return new ResolvedVisualStyle(themeMode, visualStyleKind, effectKind, effectOptions, theme, resolvedPalette);
     }
 
     private static ThemeMode DetectSystemThemeMode()
@@ -160,64 +227,80 @@ public static class Application
         return ThemeMode.Light;
     }
 
-    private static EffectKind ResolveEffectKind(ApplicationVisualStyleSettings settings)
+    private static VisualStyleKind DetectSystemVisualStyleKind()
     {
-        if (!settings.ApplyBackdropEffects)
-        {
-            return EffectKind.None;
-        }
-
-        if (settings.PreferredEffect is { } preferredEffect)
-        {
-            return preferredEffect;
-        }
-
-        if (settings.Theme?.PreferredEffect is { } themedEffect)
-        {
-            return themedEffect;
-        }
-
         if (!OperatingSystem.IsWindows())
         {
-            return EffectKind.None;
+            return VisualStyleKind.Classic;
         }
 
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
         {
-            return EffectKind.Mica;
+            return VisualStyleKind.Mica;
         }
 
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0))
         {
-            return EffectKind.Blur;
+            return VisualStyleKind.Fluent;
         }
 
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 2))
         {
-            return EffectKind.None;
+            return VisualStyleKind.Modern;
         }
 
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
         {
-            return EffectKind.Aero;
+            return VisualStyleKind.AeroGlass;
         }
 
-        return EffectKind.None;
+        return VisualStyleKind.Classic;
+    }
+
+    private static EffectKind ResolveEffectKind(
+        bool applyBackdropEffects,
+        EffectKind? preferredEffect,
+        NativeTheme? theme,
+        VisualStyleKind visualStyleKind)
+    {
+        if (!applyBackdropEffects)
+        {
+            return EffectKind.None;
+        }
+
+        if (preferredEffect is { } preferred)
+        {
+            return preferred;
+        }
+
+        if (theme?.PreferredEffect is { } themedEffect)
+        {
+            return themedEffect;
+        }
+
+        return visualStyleKind switch
+        {
+            VisualStyleKind.Mica => EffectKind.Mica,
+            VisualStyleKind.Fluent => EffectKind.Blur,
+            VisualStyleKind.AeroGlass => EffectKind.Aero,
+            _ => EffectKind.None,
+        };
     }
 
     private static EffectOptions? ResolveEffectOptions(
-        ApplicationVisualStyleSettings settings,
+        EffectOptions? preferredEffectOptions,
+        NativeTheme? theme,
         EffectKind effectKind,
         ThemeMode themeMode)
     {
-        if (settings.PreferredEffectOptions is not null)
+        if (preferredEffectOptions is not null)
         {
-            return settings.PreferredEffectOptions;
+            return preferredEffectOptions;
         }
 
-        if (settings.Theme?.PreferredEffectOptions is not null)
+        if (theme?.PreferredEffectOptions is not null)
         {
-            return settings.Theme.PreferredEffectOptions;
+            return theme.PreferredEffectOptions;
         }
 
         return effectKind switch
@@ -233,15 +316,61 @@ public static class Application
         };
     }
 
-    private static ThemePalette ResolvePalette(ApplicationVisualStyleSettings settings, ThemeMode themeMode)
+    private static ThemePalette ResolvePalette(
+        ThemePalette? palette,
+        NativeTheme? theme,
+        ThemeMode themeMode,
+        VisualStyleKind visualStyleKind)
     {
-        if (settings.Theme?.Palette is not null)
+        if (palette is not null)
         {
-            return settings.Theme.Palette;
+            return palette;
+        }
+
+        if (theme?.Palette is not null)
+        {
+            return theme.Palette;
         }
 
         return themeMode == ThemeMode.Dark
-            ? ThemePalette.CreateDark()
-            : ThemePalette.CreateLight();
+            ? ThemePalette.CreateDark(visualStyleKind)
+            : ThemePalette.CreateLight(visualStyleKind);
+    }
+
+    internal static void RegisterOpenForm(Form form)
+    {
+        ArgumentNullException.ThrowIfNull(form);
+
+        lock (s_syncRoot)
+        {
+            _ = s_openForms.Add(form);
+        }
+    }
+
+    internal static bool UnregisterOpenForm(Form form)
+    {
+        ArgumentNullException.ThrowIfNull(form);
+
+        lock (s_syncRoot)
+        {
+            _ = s_openForms.Remove(form);
+            return s_openForms.Count == 0;
+        }
+    }
+
+    private static Form[] GetOpenFormsSnapshot()
+    {
+        lock (s_syncRoot)
+        {
+            return [.. s_openForms];
+        }
+    }
+
+    private static void NotifyVisualStylesChanged()
+    {
+        foreach (Form form in GetOpenFormsSnapshot())
+        {
+            form.RefreshVisualStyles();
+        }
     }
 }

@@ -17,16 +17,34 @@ public class RadioButton : Control
     /// </summary>
     public bool Checked
     {
-        get => Handle != 0
-            ? Win32.SendMessageW(Handle, Win32.BM_GETCHECK, 0, 0) == (nint)Win32.BST_CHECKED
-            : _checked;
+        get
+        {
+            if (Handle != 0)
+            {
+                _checked = Win32.SendMessageW(Handle, Win32.BM_GETCHECK, 0, 0) == (nint)Win32.BST_CHECKED;
+            }
+
+            return _checked;
+        }
         set
         {
+            if (_checked == value)
+            {
+                if (Handle != 0)
+                {
+                    _ = Win32.SendMessageW(Handle, Win32.BM_SETCHECK, (nint)(value ? Win32.BST_CHECKED : Win32.BST_UNCHECKED), 0);
+                }
+
+                return;
+            }
+
             _checked = value;
             if (Handle != 0)
             {
                 _ = Win32.SendMessageW(Handle, Win32.BM_SETCHECK, (nint)(value ? Win32.BST_CHECKED : Win32.BST_UNCHECKED), 0);
             }
+
+            OnCheckedChanged(EventArgs.Empty);
         }
     }
 
@@ -55,7 +73,7 @@ public class RadioButton : Control
         if (_checked != currentValue)
         {
             _checked = currentValue;
-            CheckedChanged?.Invoke(this, EventArgs.Empty);
+            OnCheckedChanged(EventArgs.Empty);
         }
 
         return true;
@@ -65,5 +83,14 @@ public class RadioButton : Control
     protected override void ApplyTheme()
     {
         _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="CheckedChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnCheckedChanged(EventArgs e)
+    {
+        CheckedChanged?.Invoke(this, e);
     }
 }

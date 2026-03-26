@@ -6,34 +6,37 @@ layout: default
 
 # NativeForms 概览
 
-`Lumina.NativeForms` 的目标是尽量贴近 WinForms 的命名、属性、方法和事件模型，让旧项目迁移时尽量只改引用和命名空间。
+`Lumina.NativeForms` 的目标不是重新发明一套桌面 UI，而是尽量贴近 WinForms 的命名、属性、方法、事件和启动方式，让旧项目可以把迁移成本集中在引用切换和少量兼容差异上。
 
 ## 当前能力
 
-- 顶层窗口与消息循环：`Application`、`Form`
-- 基础控件：`Button`、`Label`、`TextBox`、`ComboBox`、`CheckBox`、`GroupBox`
-- 新增高频控件：`RadioButton`、`ListBox`
-- 应用级默认视觉入口：`Application.EnableVisualStyles()`
-- 系统主题跟随：浅色 / 深色
-- 应用级与窗口级效果覆盖：`ConfigureVisualStyles`、`SetEffect`、`SetThemeMode`
+- 顶层窗口与消息循环：`Application`、`ApplicationConfiguration`、`Form`
+- 基础控件：`Button`、`Label`、`TextBox`、`ComboBox`、`CheckBox`、`RadioButton`、`ListBox`
+- 基础容器：`GroupBox`、`Panel`
+- WinForms 风格自动缩放：`AutoScaleMode`、`AutoScaleDimensions`、`CurrentAutoScaleDimensions`、`PerformAutoScale()`
+- WinForms 风格集合操作：`Controls.AddRange(...)`、`Controls.Find(...)`、`Items.AddRange(...)`、`SelectedItem`
+- WinForms 风格启动入口：`ApplicationConfiguration.Initialize()`
+- 应用级视觉入口：`Application.EnableVisualStyles()`
+- 应用级与窗口级视觉覆盖：`ConfigureVisualStyles(...)`、`UseTheme(...)`、`SetThemeMode(...)`、`SetEffect(...)`、`SetPalette(...)`
 - JSON 主题文件：`NativeTheme`、`ThemePalette`
-
-## Demo 结构
-
-`Lumina.NativeForms.Demo` 现在是双目标工程：
-
-- `net10.0-windows`：WinForms 版本，面向 Visual Studio 设计器
-- `net10.0`：NativeForms 版本，面向 Native AOT
-
-项目文件里使用 `UseWinForms` 和 `UseNativeForms` 区分两条路径，便于后续做条件编译和迁移验证。
+- 分析器规则：`Lumina.NativeForms.Analyzers`
 
 ## 默认视觉策略
 
-调用 `Application.EnableVisualStyles()` 后，NativeForms 会根据当前系统自动选择默认效果：
+调用 `Application.EnableVisualStyles()` 后，NativeForms 会根据当前操作系统选择最接近系统的默认风格：
 
-- Windows 7：`Aero`
-- Windows 8 / 8.1：`None`
-- Windows 10：`Blur`
-- Windows 11：`Mica`
+- Windows 7：`VisualStyleKind.AeroGlass`
+- Windows 8 / 8.1：`VisualStyleKind.Modern`
+- Windows 10：`VisualStyleKind.Fluent`
+- Windows 11：`VisualStyleKind.Mica`
 
-如果应用提供了主题文件或明确的覆盖设置，则优先使用应用配置。
+`ThemeMode.System` 会优先跟随系统浅色 / 深色偏好。应用级设置更新后，已经打开的 NativeForms 窗口也会刷新默认视觉样式。
+
+## Demo 约束
+
+`Lumina.NativeForms.Demo` 当前保持固定双目标结构：
+
+- `net10.0-windows`：WinForms 路径，保持 Visual Studio 设计器友好
+- `net10.0`：NativeForms 路径，用于 Native AOT 发布
+
+这个 Demo 的项目结构现在视为迁移验证边界，不再自动改成其他形态。

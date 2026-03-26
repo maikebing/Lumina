@@ -3,7 +3,7 @@ namespace Lumina.NativeForms;
 /// <summary>
 /// Represents a group box used to visually group related controls.
 /// </summary>
-public class GroupBox : Control
+public class GroupBox : ContainerControlBase
 {
     /// <inheritdoc />
     protected override string ClassName => "BUTTON";

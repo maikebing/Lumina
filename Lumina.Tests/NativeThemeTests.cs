@@ -13,6 +13,7 @@ public class NativeThemeTests
 
         Assert.Equal("Lumina Native Light", theme.Name);
         Assert.Equal(ThemeMode.Light, theme.ThemeMode);
+        Assert.Equal(VisualStyleKind.Fluent, theme.PreferredVisualStyle);
         Assert.Equal(EffectKind.Blur, theme.PreferredEffect);
         Assert.NotNull(theme.Palette);
     }
@@ -24,6 +25,7 @@ public class NativeThemeTests
 
         Assert.Equal("Lumina Native Dark", theme.Name);
         Assert.Equal(ThemeMode.Dark, theme.ThemeMode);
+        Assert.Equal(VisualStyleKind.Mica, theme.PreferredVisualStyle);
         Assert.Equal(EffectKind.Mica, theme.PreferredEffect);
         Assert.Equal(0xFF_20_20_24u, theme.Palette.WindowBackground);
     }
@@ -37,6 +39,7 @@ public class NativeThemeTests
             Description = "Round-trip test theme.",
             Author = "Lumina.Tests",
             ThemeMode = ThemeMode.Dark,
+            PreferredVisualStyle = VisualStyleKind.Fluent,
             PreferredEffect = EffectKind.Acrylic,
             PreferredEffectOptions = new EffectOptions
             {
@@ -59,6 +62,7 @@ public class NativeThemeTests
         Assert.Equal(original.Description, restored.Description);
         Assert.Equal(original.Author, restored.Author);
         Assert.Equal(original.ThemeMode, restored.ThemeMode);
+        Assert.Equal(original.PreferredVisualStyle, restored.PreferredVisualStyle);
         Assert.Equal(original.PreferredEffect, restored.PreferredEffect);
         Assert.NotNull(restored.PreferredEffectOptions);
         Assert.Equal(original.PreferredEffectOptions!.BlendColor, restored.PreferredEffectOptions!.BlendColor);

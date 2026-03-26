@@ -5,7 +5,7 @@ namespace Lumina.NativeForms;
 /// <summary>
 /// Provides the common WinForms-like surface for all NativeForms controls backed by Win32 child windows.
 /// </summary>
-public abstract class Control
+public abstract class Control : IDisposable
 {
     private string _text = string.Empty;
     private int _left;
@@ -14,6 +14,7 @@ public abstract class Control
     private int _height = 24;
     private bool _enabled = true;
     private bool _visible = true;
+    private bool _disposed;
 
     /// <summary>
     /// Gets or sets the design-time or lookup name of the control.
@@ -26,40 +27,119 @@ public abstract class Control
     public nint Handle { get; private set; }
 
     /// <summary>
+    /// Gets or sets an arbitrary user-defined value associated with the control.
+    /// </summary>
+    public object? Tag { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tab order index used by designer-style layout code.
+    /// </summary>
+    public int TabIndex { get; set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the control has been disposed.
+    /// </summary>
+    public bool IsDisposed => _disposed;
+
+    /// <summary>
+    /// Gets the parent control, if the control is currently hosted inside a container control.
+    /// </summary>
+    public Control? Parent { get; private set; }
+
+    /// <summary>
+    /// Occurs when the <see cref="Text"/> property changes.
+    /// </summary>
+    public event EventHandler? TextChanged;
+
+    /// <summary>
     /// Gets or sets the text displayed by the control.
     /// </summary>
     public string Text
     {
-        get => _text;
+        get
+        {
+            if (Handle != 0)
+            {
+                _text = Win32.GetText(Handle);
+            }
+
+            return _text;
+        }
         set
         {
-            _text = value ?? string.Empty;
+            ThrowIfDisposed();
+
+            string newText = value ?? string.Empty;
+            string currentText = Text;
+            if (string.Equals(currentText, newText, StringComparison.Ordinal))
+            {
+                _text = newText;
+                return;
+            }
+
+            _text = newText;
             if (Handle != 0)
             {
                 _ = Win32.SetWindowTextW(Handle, _text);
             }
+
+            OnTextChanged(EventArgs.Empty);
         }
     }
 
     /// <summary>
     /// Gets the left position of the control in client coordinates.
     /// </summary>
-    public int Left => _left;
+    public int Left
+    {
+        get => _left;
+        set => SetBounds(value, _top, _width, _height);
+    }
 
     /// <summary>
     /// Gets the top position of the control in client coordinates.
     /// </summary>
-    public int Top => _top;
+    public int Top
+    {
+        get => _top;
+        set => SetBounds(_left, value, _width, _height);
+    }
 
     /// <summary>
     /// Gets the width of the control.
     /// </summary>
-    public int Width => _width;
+    public int Width
+    {
+        get => _width;
+        set => SetBounds(_left, _top, value, _height);
+    }
 
     /// <summary>
     /// Gets the height of the control.
     /// </summary>
-    public int Height => _height;
+    public int Height
+    {
+        get => _height;
+        set => SetBounds(_left, _top, _width, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the right edge of the control.
+    /// </summary>
+    public int Right
+    {
+        get => _left + _width;
+        set => SetBounds(value - _width, _top, _width, _height);
+    }
+
+    /// <summary>
+    /// Gets or sets the bottom edge of the control.
+    /// </summary>
+    public int Bottom
+    {
+        get => _top + _height;
+        set => SetBounds(_left, value - _height, _width, _height);
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the control can receive user input.
@@ -139,10 +219,17 @@ public abstract class Control
     /// </summary>
     protected virtual uint ExStyle => 0;
 
-    internal void Attach(Form owner, int id)
+    internal void Attach(Form owner, int id, Control? parent)
     {
+        ThrowIfDisposed();
         Owner = owner;
         Id = id;
+        Parent = parent;
+    }
+
+    internal void SetParent(Control parent)
+    {
+        Parent = parent;
     }
 
     /// <summary>
@@ -154,6 +241,8 @@ public abstract class Control
     /// <param name="height">The desired height.</param>
     public void SetBounds(int left, int top, int width, int height)
     {
+        ThrowIfDisposed();
+
         _left = left;
         _top = top;
         _width = Math.Max(1, width);
@@ -165,8 +254,76 @@ public abstract class Control
         }
     }
 
+    /// <summary>
+    /// Invalidates the control so the underlying native window repaints.
+    /// </summary>
+    public void Invalidate()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.InvalidateRect(Handle, 0, true);
+        }
+    }
+
+    /// <summary>
+    /// Forces the control to repaint immediately.
+    /// </summary>
+    public void Refresh()
+    {
+        if (Handle != 0)
+        {
+            Invalidate();
+            _ = Win32.UpdateWindow(Handle);
+        }
+    }
+
+    /// <summary>
+    /// Releases the native child window and marks the control as disposed.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        if (Handle != 0)
+        {
+            _ = Win32.DestroyWindow(Handle);
+        }
+
+        ReleaseHandleRecursive();
+    }
+
+    internal void CreateHandleRecursive()
+    {
+        CreateHandle();
+
+        if (this is ContainerControlBase container)
+        {
+            container.CreateChildHandles();
+        }
+    }
+
+    internal void ReleaseHandleRecursive()
+    {
+        if (this is ContainerControlBase container)
+        {
+            foreach (Control child in container.ChildControls)
+            {
+                child.ReleaseHandleRecursive();
+            }
+        }
+
+        Handle = 0;
+    }
+
     internal void CreateHandle()
     {
+        ThrowIfDisposed();
+
         if (Owner is null)
         {
             throw new InvalidOperationException("The control is not attached to a form.");
@@ -188,7 +345,7 @@ public abstract class Control
             _top,
             _width,
             nativeHeight,
-            Owner.Handle,
+            Parent?.Handle ?? Owner.Handle,
             (nint)Id,
             Owner.InstanceHandle,
             0);
@@ -241,11 +398,48 @@ public abstract class Control
     {
     }
 
+    /// <summary>
+    /// Raises the <see cref="TextChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnTextChanged(EventArgs e)
+    {
+        TextChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Updates the cached <see cref="Text"/> value from the native child window and raises <see cref="TextChanged"/>
+    /// if the value changed.
+    /// </summary>
+    /// <returns><see langword="true"/> if the text changed; otherwise, <see langword="false"/>.</returns>
+    protected bool UpdateTextFromHandle()
+    {
+        if (Handle == 0)
+        {
+            return false;
+        }
+
+        string currentText = Win32.GetText(Handle);
+        if (string.Equals(_text, currentText, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        _text = currentText;
+        OnTextChanged(EventArgs.Empty);
+        return true;
+    }
+
     private void ApplyBounds()
     {
         if (Handle != 0)
         {
             _ = Win32.MoveWindow(Handle, _left, _top, _width, GetNativeHeight(_height), true);
         }
+    }
+
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
     }
 }

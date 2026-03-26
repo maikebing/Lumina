@@ -1,0 +1,13 @@
+namespace Lumina.NativeForms;
+
+/// <summary>
+/// Represents a simple child-control container panel.
+/// </summary>
+public class Panel : ContainerControlBase
+{
+    /// <inheritdoc />
+    protected override string ClassName => "STATIC";
+
+    /// <inheritdoc />
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE;
+}

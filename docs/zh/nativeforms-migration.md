@@ -8,15 +8,15 @@ layout: default
 
 ## 迁移目标
 
-目标不是重新设计旧应用，而是尽量保持 WinForms 的 API 使用习惯，让迁移成本集中在工程切换上。
+迁移目标不是重写旧应用，而是尽量保持 WinForms 的写法，把改动集中在目标框架、引用、命名空间和少量兼容差异上。
 
 ## 推荐迁移顺序
 
-1. 保留原来的窗体拆分方式，先不要动业务逻辑。
+1. 保留原有窗体拆分方式，先不要动业务逻辑。
 2. 把项目改成双目标：`net10.0-windows` 和 `net10.0`。
-3. `net10.0-windows` 继续引用 WinForms，保证设计器可用。
-4. `net10.0` 改为引用 `Lumina.NativeForms`，逐步替换命名空间。
-5. 先验证事件和属性行为，再处理不兼容能力。
+3. 在 `net10.0-windows` 下继续使用 WinForms，保留 Visual Studio 设计器。
+4. 在 `net10.0` 下切到 `Lumina.NativeForms`，用于 Native AOT。
+5. 先验证高频窗口、常用控件、事件和布局，再收敛剩余兼容差异。
 
 ## 项目文件示例
 
@@ -37,22 +37,39 @@ layout: default
 </PropertyGroup>
 ```
 
-## 命名空间切换示例
+## 命名空间切换
 
-WinForms：
+WinForms:
 
 ```csharp
 using System.Windows.Forms;
 ```
 
-NativeForms：
+NativeForms:
 
 ```csharp
 using Lumina.NativeForms;
 ```
 
-## 兼容性边界
+## 启动入口兼容
 
-- 当前优先覆盖的是高频标准控件与标准事件。
-- NativeForms 仍然基于原生 Win32 控件，复杂 owner-draw、嵌套容器和设计期元数据还在继续补齐。
-- 对于暂未兼容的能力，建议先在 `net10.0-windows` 目标保留 WinForms 路径，同时在 `net10.0` 目标逐步收缩差异面。
+在 `net10.0` 目标下，可以继续保留 WinForms 风格的启动写法：
+
+```csharp
+ApplicationConfiguration.Initialize();
+Application.Run(new MainForm());
+```
+
+## 迁移时优先验证的 API
+
+- 自动缩放：`AutoScaleMode`、`AutoScaleDimensions`、`PerformAutoScale()`
+- 容器集合：`Controls.Add(...)`、`Controls.AddRange(...)`、`Controls.Find(...)`
+- 列表集合：`Items.Add(...)`、`Items.AddRange(...)`、`SelectedIndex`、`SelectedItem`
+- 窗口主题：`Application.EnableVisualStyles()`、`ConfigureVisualStyles(...)`、`UseTheme(...)`
+- 常见事件：`Click`、`CheckedChanged`、`SelectedIndexChanged`、`TextChanged`
+
+## 当前迁移边界
+
+- 当前优先覆盖的是高频标准控件和常见窗体 API。
+- NativeForms 仍然基于原生 Win32 控件，复杂自绘、Owner-draw 和更多高级控件仍在继续补齐。
+- 如果某个高级能力尚未对齐，建议继续保留 `net10.0-windows` 的 WinForms 路径，同时在 `net10.0` 路径逐步收敛差异。

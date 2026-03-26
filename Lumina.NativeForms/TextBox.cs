@@ -46,7 +46,14 @@ public class TextBox : Control
     public bool ReadOnly
     {
         get => _readOnly;
-        set => _readOnly = value;
+        set
+        {
+            _readOnly = value;
+            if (Handle != 0)
+            {
+                _ = Win32.SendMessageW(Handle, Win32.EM_SETREADONLY, value ? (nint)1 : 0, 0);
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -89,7 +96,28 @@ public class TextBox : Control
     /// <param name="value">The text to append.</param>
     public void AppendText(string value)
     {
-        Text += value;
+        ArgumentNullException.ThrowIfNull(value);
+
+        if (Handle == 0)
+        {
+            Text += value;
+            return;
+        }
+
+        _ = Win32.SendMessageW(Handle, Win32.EM_SETSEL, (nint)int.MaxValue, (nint)int.MaxValue);
+        _ = Win32.SendMessageW(Handle, Win32.EM_REPLACESEL, 0, value);
+        _ = UpdateTextFromHandle();
+    }
+
+    /// <inheritdoc />
+    protected override bool OnCommand(int notificationCode)
+    {
+        if (notificationCode != Win32.EN_CHANGE)
+        {
+            return false;
+        }
+
+        return UpdateTextFromHandle();
     }
 
     /// <inheritdoc />

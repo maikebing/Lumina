@@ -42,14 +42,28 @@ internal static class Program
     [STAThread]
     private static int Main()
     {
-        Application.EnableVisualStyles();
+        ApplicationConfiguration.Initialize();
         Application.ConfigureVisualStyles(settings =>
         {
             settings.ThemeMode = ThemeMode.System;
             settings.ApplyBackdropEffects = true;
+            settings.PreferredVisualStyle = VisualStyleKind.System;
         });
 
         return Application.Run(new DemoForm());
+    }
+}
+```
+
+## NativeForms Autoscaling
+
+```csharp
+public sealed class MainForm : Form
+{
+    public MainForm()
+    {
+        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleDimensions = new SizeF(8F, 20F);
     }
 }
 ```
@@ -60,9 +74,29 @@ internal static class Program
 using Lumina.NativeForms;
 
 Application.LoadTheme("themes/lumina-native-dark.json");
+
+using var form = new MainForm();
+form.UseTheme(NativeTheme.CreateDarkTheme());
+form.SetPalette(new ThemePalette
+{
+    Accent = 0xFFFF7A00,
+    FocusBorder = 0xFFFF7A00,
+});
 ```
 
 Sample theme files are included under `themes/nativeforms/` in the repository root.
+
+## Analyzer Wiring
+
+Inside this repository, add the analyzer project as an analyzer reference for NativeForms targets:
+
+```xml
+<ItemGroup Condition="'$(UseNativeForms)' == 'true'">
+  <ProjectReference Include="..\Lumina.NativeForms.Analyzers\Lumina.NativeForms.Analyzers.csproj"
+                    OutputItemType="Analyzer"
+                    ReferenceOutputAssembly="false" />
+</ItemGroup>
+```
 
 ## Native AOT Publish
 

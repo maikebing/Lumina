@@ -3,6 +3,7 @@
   "Description": "Built-in dark palette for NativeForms.",
   "Author": "Lumina",
   "ThemeMode": 2,
+  "PreferredVisualStyle": 5,
   "PreferredEffect": 2,
   "Palette": {
     "WindowBackground": 4280295460,

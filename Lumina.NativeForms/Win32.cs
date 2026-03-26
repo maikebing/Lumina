@@ -51,15 +51,18 @@ internal static class Win32
     public const int SW_HIDE = 0;
 
     public const int WM_SIZE = 0x0005;
+    public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
     public const int WM_DESTROY = 0x0002;
     public const int WM_NCCREATE = 0x0081;
     public const int WM_NCDESTROY = 0x0082;
     public const int WM_SETFONT = 0x0030;
+    public const int WM_THEMECHANGED = 0x031A;
 
     public const int BN_CLICKED = 0;
     public const int CBN_SELCHANGE = 1;
     public const int LBN_SELCHANGE = 1;
+    public const int EN_CHANGE = 0x0300;
     public const int BM_GETCHECK = 0x00F0;
     public const int BM_SETCHECK = 0x00F1;
     public const int BST_UNCHECKED = 0;
@@ -69,6 +72,9 @@ internal static class Win32
     public const int CB_RESETCONTENT = 0x014B;
     public const int CB_GETCURSEL = 0x0147;
     public const int CB_SETCURSEL = 0x014E;
+    public const int EM_SETSEL = 0x00B1;
+    public const int EM_SETREADONLY = 0x00CF;
+    public const int EM_REPLACESEL = 0x00C2;
     public const int LB_ADDSTRING = 0x0180;
     public const int LB_RESETCONTENT = 0x0184;
     public const int LB_GETCURSEL = 0x0188;

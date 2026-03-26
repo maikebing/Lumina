@@ -24,6 +24,8 @@ public class Form : IDisposable
     private EffectKind _pendingEffectKind = EffectKind.None;
     private EffectOptions? _pendingEffectOptions;
     private ThemeMode? _requestedThemeMode;
+    private NativeTheme? _themeOverride;
+    private ThemePalette? _paletteOverride;
 
     /// <summary>
     /// Initializes a new top-level NativeForms window.
@@ -32,6 +34,36 @@ public class Form : IDisposable
     {
         _controls = new ControlCollection(this);
     }
+
+    /// <summary>
+    /// Occurs after the native form handle and attached child controls are created.
+    /// </summary>
+    public event EventHandler? Created;
+
+    /// <summary>
+    /// Occurs before the form is first shown.
+    /// </summary>
+    public event EventHandler? Load;
+
+    /// <summary>
+    /// Occurs after the form becomes visible for the first time.
+    /// </summary>
+    public event EventHandler? Shown;
+
+    /// <summary>
+    /// Occurs when the form is closed.
+    /// </summary>
+    public event EventHandler? Closed;
+
+    /// <summary>
+    /// Occurs when the form performs layout.
+    /// </summary>
+    public event EventHandler? Layout;
+
+    /// <summary>
+    /// Occurs when the form size changes.
+    /// </summary>
+    public event EventHandler? SizeChanged;
 
     /// <summary>
     /// Gets or sets the window title text.
@@ -91,6 +123,11 @@ public class Form : IDisposable
     public ControlCollection Controls => _controls;
 
     /// <summary>
+    /// Gets the visual style currently resolved for this form after application defaults and form-level overrides are applied.
+    /// </summary>
+    public ResolvedVisualStyle CurrentVisualStyle => ResolveCurrentVisualStyle();
+
+    /// <summary>
     /// Creates the native window, applies the current application defaults, and shows the form.
     /// </summary>
     public void Show()
@@ -136,15 +173,17 @@ public class Form : IDisposable
 
         foreach (var control in CollectionsMarshal.AsSpan(_controlList))
         {
-            control.CreateHandle();
+            control.CreateHandleRecursive();
         }
 
+        Application.RegisterOpenForm(this);
         OnCreated();
-        ApplyPendingEffect();
+        OnLoad();
         OnLayout();
 
         _ = Win32.ShowWindow(Handle, Win32.SW_SHOW);
         _ = Win32.UpdateWindow(Handle);
+        OnShown();
     }
 
     /// <summary>
@@ -189,6 +228,46 @@ public class Form : IDisposable
     {
         _themeExplicitlySet = false;
         _requestedThemeMode = null;
+        ApplyApplicationDefaults();
+    }
+
+    /// <summary>
+    /// Applies a form-level theme override that can supply theme mode, visual style, effect defaults, and palette tokens.
+    /// </summary>
+    /// <param name="theme">The theme to use for this form.</param>
+    public void UseTheme(NativeTheme theme)
+    {
+        ArgumentNullException.ThrowIfNull(theme);
+        _themeOverride = theme;
+        ApplyApplicationDefaults();
+    }
+
+    /// <summary>
+    /// Clears the form-level theme override and returns to the application defaults.
+    /// </summary>
+    public void ResetTheme()
+    {
+        _themeOverride = null;
+        ApplyApplicationDefaults();
+    }
+
+    /// <summary>
+    /// Applies a form-level semantic palette override without requiring a full theme object.
+    /// </summary>
+    /// <param name="palette">The palette to use for this form.</param>
+    public void SetPalette(ThemePalette palette)
+    {
+        ArgumentNullException.ThrowIfNull(palette);
+        _paletteOverride = palette;
+        ApplyApplicationDefaults();
+    }
+
+    /// <summary>
+    /// Clears the form-level palette override and returns to the application default palette.
+    /// </summary>
+    public void ResetPalette()
+    {
+        _paletteOverride = null;
         ApplyApplicationDefaults();
     }
 
@@ -240,6 +319,23 @@ public class Form : IDisposable
     /// </summary>
     protected virtual void OnCreated()
     {
+        Created?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Called before the form is shown for the first time.
+    /// </summary>
+    protected virtual void OnLoad()
+    {
+        Load?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Called after the form is shown for the first time.
+    /// </summary>
+    protected virtual void OnShown()
+    {
+        Shown?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -247,6 +343,7 @@ public class Form : IDisposable
     /// </summary>
     protected virtual void OnLayout()
     {
+        Layout?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -254,6 +351,7 @@ public class Form : IDisposable
     /// </summary>
     protected virtual void OnClosed()
     {
+        Closed?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -261,6 +359,7 @@ public class Form : IDisposable
     /// </summary>
     protected virtual void OnSizeChanged()
     {
+        SizeChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -330,12 +429,7 @@ public class Form : IDisposable
 
         foreach (var control in CollectionsMarshal.AsSpan(_controlList))
         {
-            Rectangle bounds = control.Bounds;
-            control.SetBounds(
-                ScaleCoordinate(bounds.X, scaleX),
-                ScaleCoordinate(bounds.Y, scaleY),
-                ScaleSize(bounds.Width, scaleX),
-                ScaleSize(bounds.Height, scaleY));
+            ScaleControlTree(control, scaleX, scaleY);
         }
 
         AutoScaleDimensions = currentDimensions;
@@ -358,6 +452,8 @@ public class Form : IDisposable
             _ = Win32.DestroyWindow(Handle);
         }
 
+        ReleaseControlHandles();
+
         if (_selfHandle.IsAllocated)
         {
             _selfHandle.Free();
@@ -369,6 +465,17 @@ public class Form : IDisposable
 
     private void AddControl(Control control)
     {
+        AttachControl(control, parent: null);
+        _controlList.Add(control);
+
+        if (Handle != 0)
+        {
+            control.CreateHandleRecursive();
+        }
+    }
+
+    internal void AttachControl(Control control, Control? parent)
+    {
         ArgumentNullException.ThrowIfNull(control);
 
         if (control.Owner is not null)
@@ -376,19 +483,18 @@ public class Form : IDisposable
             throw new InvalidOperationException("The control already belongs to a form.");
         }
 
-        control.Attach(this, ++_nextControlId);
-        _controlList.Add(control);
+        control.Attach(this, ++_nextControlId, parent);
         _controlsById[control.Id] = control;
 
-        if (Handle != 0)
+        if (control is ContainerControlBase container)
         {
-            control.CreateHandle();
+            container.AttachChildrenToOwner(this);
         }
     }
 
     private void ApplyApplicationDefaults()
     {
-        var visualStyle = Application.GetResolvedVisualStyle();
+        ResolvedVisualStyle visualStyle = ResolveCurrentVisualStyle();
 
         if (!_effectExplicitlySet)
         {
@@ -402,6 +508,39 @@ public class Form : IDisposable
         }
 
         ApplyPendingThemeMode();
+        ApplyPendingEffect();
+    }
+
+    internal void RefreshVisualStyles()
+    {
+        ApplyApplicationDefaults();
+    }
+
+    private ResolvedVisualStyle ResolveCurrentVisualStyle()
+    {
+        ThemeMode requestedThemeMode = _themeExplicitlySet
+            ? _requestedThemeMode ?? ThemeMode.System
+            : Application.VisualStyleSettings.ThemeMode;
+
+        EffectKind? preferredEffect = _effectExplicitlySet
+            ? _pendingEffectKind
+            : Application.VisualStyleSettings.PreferredEffect;
+
+        EffectOptions? preferredEffectOptions = _effectExplicitlySet
+            ? _pendingEffectOptions
+            : Application.VisualStyleSettings.PreferredEffectOptions;
+
+        NativeTheme? theme = _themeOverride ?? Application.VisualStyleSettings.Theme;
+        ThemePalette? palette = _paletteOverride ?? Application.VisualStyleSettings.Palette;
+
+        return Application.ResolveVisualStyle(
+            requestedThemeMode,
+            Application.VisualStyleSettings.PreferredVisualStyle,
+            Application.VisualStyleSettings.ApplyBackdropEffects,
+            preferredEffect,
+            preferredEffectOptions,
+            theme,
+            palette);
     }
 
     private void ApplyPendingEffect()
@@ -478,27 +617,40 @@ public class Form : IDisposable
                 OnLayout();
                 return 0;
 
+            case Win32.WM_SETTINGCHANGE:
+            case Win32.WM_THEMECHANGED:
+                RefreshVisualStyles();
+                break;
+
             case Win32.WM_COMMAND:
                 HandleCommand(wParam, lParam);
                 return 0;
 
             case Win32.WM_DESTROY:
                 OnClosed();
-                Win32.PostQuitMessage(0);
                 return 0;
 
             case Win32.WM_NCDESTROY:
+                ReleaseControlHandles();
                 Handle = 0;
                 Win32.SetWindowLongPtrW(hwnd, Win32.GWLP_USERDATA, 0);
+                if (Application.UnregisterOpenForm(this))
+                {
+                    Win32.PostQuitMessage(0);
+                }
+
                 if (_selfHandle.IsAllocated)
                 {
                     _selfHandle.Free();
                 }
+
                 return 0;
 
             default:
                 return Win32.DefWindowProcW(hwnd, message, wParam, lParam);
         }
+
+        return Win32.DefWindowProcW(hwnd, message, wParam, lParam);
     }
 
     private void HandleCommand(nint wParam, nint lParam)
@@ -512,6 +664,14 @@ public class Form : IDisposable
         }
 
         OnCommand(controlId, notificationCode, lParam);
+    }
+
+    private void ReleaseControlHandles()
+    {
+        foreach (Control control in CollectionsMarshal.AsSpan(_controlList))
+        {
+            control.ReleaseHandleRecursive();
+        }
     }
 
     private void ThrowIfDisposed()
@@ -548,6 +708,24 @@ public class Form : IDisposable
     private static int ScaleSize(int value, float factor)
         => Math.Max(1, (int)Math.Round(value * factor, MidpointRounding.AwayFromZero));
 
+    private static void ScaleControlTree(Control control, float scaleX, float scaleY)
+    {
+        Rectangle bounds = control.Bounds;
+        control.SetBounds(
+            ScaleCoordinate(bounds.X, scaleX),
+            ScaleCoordinate(bounds.Y, scaleY),
+            ScaleSize(bounds.Width, scaleX),
+            ScaleSize(bounds.Height, scaleY));
+
+        if (control is ContainerControlBase container)
+        {
+            foreach (Control child in container.ChildControls)
+            {
+                ScaleControlTree(child, scaleX, scaleY);
+            }
+        }
+    }
+
     private static unsafe Win32.CREATESTRUCTW ReadCreateStruct(nint lParam)
     {
         return MemoryMarshal.Read<Win32.CREATESTRUCTW>(new ReadOnlySpan<byte>((void*)lParam, sizeof(Win32.CREATESTRUCTW)));
@@ -556,7 +734,7 @@ public class Form : IDisposable
     /// <summary>
     /// Represents the child control collection of a NativeForms form.
     /// </summary>
-    public sealed class ControlCollection
+    public sealed class ControlCollection : IEnumerable<Control>
     {
         private readonly Form _owner;
 
@@ -572,6 +750,94 @@ public class Form : IDisposable
         public void Add(Control control)
         {
             _owner.AddControl(control);
+        }
+
+        /// <summary>
+        /// Adds a batch of controls to the form.
+        /// </summary>
+        /// <param name="controls">The controls to add.</param>
+        public void AddRange(IEnumerable<Control> controls)
+        {
+            ArgumentNullException.ThrowIfNull(controls);
+
+            foreach (Control control in controls)
+            {
+                _owner.AddControl(control);
+            }
+        }
+
+        /// <summary>
+        /// Adds a batch of controls to the form.
+        /// </summary>
+        /// <param name="controls">The controls to add.</param>
+        public void AddRange(params Control[] controls)
+        {
+            AddRange((IEnumerable<Control>)controls);
+        }
+
+        /// <summary>
+        /// Gets the number of controls currently attached to the form.
+        /// </summary>
+        public int Count => _owner._controlList.Count;
+
+        /// <summary>
+        /// Gets the control at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based control index.</param>
+        /// <returns>The control at the requested index.</returns>
+        public Control this[int index] => _owner._controlList[index];
+
+        /// <summary>
+        /// Determines whether the specified control is already attached to the form.
+        /// </summary>
+        /// <param name="control">The control to locate.</param>
+        /// <returns><see langword="true"/> if the control is attached; otherwise, <see langword="false"/>.</returns>
+        public bool Contains(Control control)
+        {
+            return _owner._controlList.Contains(control);
+        }
+
+        /// <summary>
+        /// Finds controls by <see cref="Control.Name"/> using case-insensitive matching.
+        /// </summary>
+        /// <param name="key">The control name to locate.</param>
+        /// <param name="searchAllChildren"><see langword="true"/> to search nested containers recursively; otherwise, <see langword="false"/>.</param>
+        /// <returns>The matching controls.</returns>
+        public Control[] Find(string key, bool searchAllChildren)
+        {
+            ArgumentNullException.ThrowIfNull(key);
+
+            List<Control> matches = [];
+            CollectMatches(_owner._controlList, key, searchAllChildren, matches);
+            return [.. matches];
+        }
+
+        /// <inheritdoc />
+        public IEnumerator<Control> GetEnumerator()
+        {
+            return _owner._controlList.GetEnumerator();
+        }
+
+        /// <inheritdoc />
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private static void CollectMatches(IEnumerable<Control> controls, string key, bool searchAllChildren, List<Control> matches)
+        {
+            foreach (Control control in controls)
+            {
+                if (string.Equals(control.Name, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    matches.Add(control);
+                }
+
+                if (searchAllChildren && control is ContainerControlBase container)
+                {
+                    CollectMatches(container.Controls, key, searchAllChildren, matches);
+                }
+            }
         }
     }
 }

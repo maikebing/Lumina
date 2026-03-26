@@ -13,7 +13,9 @@ public class ApplicationConfigurationTests
             Application.ConfigureVisualStyles(settings =>
             {
                 settings.ThemeMode = ThemeMode.Dark;
+                settings.PreferredVisualStyle = VisualStyleKind.Mica;
                 settings.PreferredEffect = EffectKind.Mica;
+                settings.Palette = null;
                 settings.Theme = null;
             });
 
@@ -22,6 +24,7 @@ public class ApplicationConfigurationTests
             ResolvedVisualStyle resolvedStyle = Application.CurrentVisualStyle;
 
             Assert.Equal(ThemeMode.Dark, resolvedStyle.ThemeMode);
+            Assert.Equal(VisualStyleKind.Mica, resolvedStyle.VisualStyleKind);
             Assert.Equal(EffectKind.Mica, resolvedStyle.EffectKind);
         }
         finally
@@ -30,8 +33,71 @@ public class ApplicationConfigurationTests
             {
                 settings.ThemeMode = ThemeMode.System;
                 settings.ApplyBackdropEffects = true;
+                settings.PreferredVisualStyle = VisualStyleKind.System;
                 settings.PreferredEffect = null;
                 settings.PreferredEffectOptions = null;
+                settings.Palette = null;
+                settings.Theme = null;
+            });
+        }
+    }
+
+    [Fact]
+    public void FormCurrentVisualStyle_UsesWindowThemeAndPaletteOverrides()
+    {
+        try
+        {
+            Application.ConfigureVisualStyles(settings =>
+            {
+                settings.ThemeMode = ThemeMode.System;
+                settings.ApplyBackdropEffects = true;
+                settings.PreferredVisualStyle = VisualStyleKind.System;
+                settings.PreferredEffect = null;
+                settings.PreferredEffectOptions = null;
+                settings.Palette = null;
+                settings.Theme = null;
+            });
+
+            using var form = new Form();
+            var theme = new NativeTheme
+            {
+                Name = "Window Override",
+                ThemeMode = ThemeMode.Dark,
+                PreferredVisualStyle = VisualStyleKind.Fluent,
+                PreferredEffect = EffectKind.Acrylic,
+                PreferredEffectOptions = new EffectOptions
+                {
+                    BlendColor = 0xCC_12_34_56,
+                    BlurRadius = 16,
+                    Opacity = 0.8f,
+                },
+                Palette = ThemePalette.CreateDark(VisualStyleKind.Fluent),
+            };
+
+            var paletteOverride = ThemePalette.CreateDark(VisualStyleKind.Fluent);
+            paletteOverride.Accent = 0xFF_FF_7A_00;
+
+            form.UseTheme(theme);
+            form.SetPalette(paletteOverride);
+
+            ResolvedVisualStyle resolvedStyle = form.CurrentVisualStyle;
+
+            Assert.Equal(ThemeMode.Dark, resolvedStyle.ThemeMode);
+            Assert.Equal(VisualStyleKind.Fluent, resolvedStyle.VisualStyleKind);
+            Assert.Equal(EffectKind.Acrylic, resolvedStyle.EffectKind);
+            Assert.Equal(0xCC_12_34_56u, resolvedStyle.EffectOptions!.BlendColor);
+            Assert.Equal(0xFF_FF_7A_00u, resolvedStyle.Palette.Accent);
+        }
+        finally
+        {
+            Application.ConfigureVisualStyles(settings =>
+            {
+                settings.ThemeMode = ThemeMode.System;
+                settings.ApplyBackdropEffects = true;
+                settings.PreferredVisualStyle = VisualStyleKind.System;
+                settings.PreferredEffect = null;
+                settings.PreferredEffectOptions = null;
+                settings.Palette = null;
                 settings.Theme = null;
             });
         }

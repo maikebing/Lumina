@@ -3,6 +3,7 @@
   "Description": "Built-in light palette for NativeForms.",
   "Author": "Lumina",
   "ThemeMode": 1,
+  "PreferredVisualStyle": 4,
   "PreferredEffect": 5,
   "PreferredEffectOptions": {
     "BlendColor": 2147483648,

@@ -34,6 +34,11 @@ public sealed class NativeTheme
     public EffectKind? PreferredEffect { get; set; }
 
     /// <summary>
+    /// Gets or sets an optional preferred system-aligned visual style family for the theme.
+    /// </summary>
+    public VisualStyleKind PreferredVisualStyle { get; set; } = VisualStyleKind.System;
+
+    /// <summary>
     /// Gets or sets optional effect options associated with <see cref="PreferredEffect"/>.
     /// </summary>
     public EffectOptions? PreferredEffectOptions { get; set; }
@@ -81,9 +86,10 @@ public sealed class NativeTheme
         Name = "Lumina Native Light",
         Description = "Built-in light palette for NativeForms.",
         ThemeMode = ThemeMode.Light,
+        PreferredVisualStyle = VisualStyleKind.Fluent,
         PreferredEffect = EffectKind.Blur,
         PreferredEffectOptions = new EffectOptions { BlurRadius = 18 },
-        Palette = ThemePalette.CreateLight(),
+        Palette = ThemePalette.CreateLight(VisualStyleKind.Fluent),
     };
 
     /// <summary>
@@ -95,8 +101,9 @@ public sealed class NativeTheme
         Name = "Lumina Native Dark",
         Description = "Built-in dark palette for NativeForms.",
         ThemeMode = ThemeMode.Dark,
+        PreferredVisualStyle = VisualStyleKind.Mica,
         PreferredEffect = EffectKind.Mica,
-        Palette = ThemePalette.CreateDark(),
+        Palette = ThemePalette.CreateDark(VisualStyleKind.Mica),
     };
 }
 

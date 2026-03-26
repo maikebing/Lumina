@@ -5,9 +5,16 @@ namespace Lumina.NativeForms;
 /// </summary>
 public sealed class ResolvedVisualStyle
 {
-    internal ResolvedVisualStyle(ThemeMode themeMode, EffectKind effectKind, EffectOptions? effectOptions, NativeTheme? theme, ThemePalette palette)
+    internal ResolvedVisualStyle(
+        ThemeMode themeMode,
+        VisualStyleKind visualStyleKind,
+        EffectKind effectKind,
+        EffectOptions? effectOptions,
+        NativeTheme? theme,
+        ThemePalette palette)
     {
         ThemeMode = themeMode;
+        VisualStyleKind = visualStyleKind;
         EffectKind = effectKind;
         EffectOptions = effectOptions;
         Theme = theme;
@@ -23,6 +30,11 @@ public sealed class ResolvedVisualStyle
     /// Gets a value indicating whether the resolved appearance is dark.
     /// </summary>
     public bool IsDarkMode => ThemeMode == ThemeMode.Dark;
+
+    /// <summary>
+    /// Gets the system-aligned visual style family chosen for the current window.
+    /// </summary>
+    public VisualStyleKind VisualStyleKind { get; }
 
     /// <summary>
     /// Gets the default Lumina effect that should be applied to new windows.
