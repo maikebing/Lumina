@@ -20,10 +20,12 @@
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageIcon>nuget-icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="../assets/nuget-icon.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>

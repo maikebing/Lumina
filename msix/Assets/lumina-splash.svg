@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 300">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c1445"/>
+      <stop offset="60%" stop-color="#0f0a2e"/>
+      <stop offset="100%" stop-color="#1a0533"/>
+    </linearGradient>
+    <linearGradient id="glassgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#818cf8" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="shimmer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="titlebar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="wordmark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="blob-blur">
+      <feGaussianBlur stdDeviation="28"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="text-glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="620" height="300" fill="url(#bg)"/>
+
+  <!-- Ambient blobs -->
+  <circle cx="160" cy="220" r="120" fill="#7c3aed" opacity="0.22" filter="url(#blob-blur)"/>
+  <circle cx="420" cy="90"  r="100" fill="#2563eb" opacity="0.18" filter="url(#blob-blur)"/>
+  <circle cx="520" cy="240" r="80"  fill="#db2777" opacity="0.12" filter="url(#blob-blur)"/>
+  <circle cx="80"  cy="60"  r="70"  fill="#4f46e5" opacity="0.15" filter="url(#blob-blur)"/>
+
+  <!-- Glass window icon (centered, 180x180) -->
+  <rect x="52" y="60" width="180" height="180" rx="18" fill="url(#glassgrad)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  <!-- Title bar -->
+  <rect x="52" y="60" width="180" height="38" rx="18" fill="url(#titlebar)"/>
+  <rect x="52" y="82"  width="180" height="16" fill="url(#titlebar)"/>
+  <!-- Traffic dots -->
+  <circle cx="74"  cy="79" r="7" fill="#f87171" opacity="0.9"/>
+  <circle cx="94"  cy="79" r="7" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="114" cy="79" r="7" fill="#34d399" opacity="0.9"/>
+  <!-- Shimmer -->
+  <rect x="52" y="60" width="90" height="180" rx="18" fill="url(#shimmer)" opacity="0.35"/>
+  <!-- Content lines -->
+  <rect x="70" y="114" width="130" height="8" rx="4" fill="white" opacity="0.15"/>
+  <rect x="70" y="130" width="106" height="8" rx="4" fill="white" opacity="0.10"/>
+  <rect x="70" y="146" width="118" height="8" rx="4" fill="white" opacity="0.12"/>
+  <rect x="70" y="162" width="80"  height="8" rx="4" fill="white" opacity="0.08"/>
+  <rect x="70" y="178" width="96"  height="8" rx="4" fill="white" opacity="0.06"/>
+  <!-- Border glow -->
+  <rect x="52" y="60" width="180" height="180" rx="18" fill="none" stroke="#a78bfa" stroke-width="1.5" opacity="0.55" filter="url(#glow)"/>
+
+  <!-- Wordmark -->
+  <text x="258" y="162"
+        font-family="Segoe UI, system-ui, -apple-system, sans-serif"
+        font-size="72"
+        font-weight="600"
+        letter-spacing="-2"
+        fill="url(#wordmark)"
+        filter="url(#text-glow)">Lumina</text>
+
+  <!-- Tagline -->
+  <text x="260" y="196"
+        font-family="Segoe UI, system-ui, -apple-system, sans-serif"
+        font-size="18"
+        font-weight="400"
+        letter-spacing="1"
+        fill="#818cf8"
+        opacity="0.75">Windows Visual Effects SDK</text>
+
+  <!-- Version badge -->
+  <rect x="260" y="216" width="68" height="22" rx="11" fill="#818cf8" fill-opacity="0.15" stroke="#818cf8" stroke-width="0.75" stroke-opacity="0.4"/>
+  <text x="294" y="231"
+        font-family="Segoe UI, system-ui, -apple-system, sans-serif"
+        font-size="11"
+        font-weight="500"
+        text-anchor="middle"
+        fill="#c4b5fd"
+        opacity="0.9">v0.1.0</text>
+</svg>
