@@ -11,7 +11,7 @@ internal static partial class CrashHandler
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "Lumina", "crashes");
 
-    internal static void Register()
+    internal static unsafe void Register()
     {
         SetUnhandledExceptionFilter(&OnUnhandledException);
     }
@@ -45,7 +45,7 @@ internal static partial class CrashHandler
     private static partial uint GetCurrentProcessId();
 
     [LibraryImport("kernel32.dll")]
-    private static partial nint SetUnhandledExceptionFilter(
+    private static unsafe partial nint SetUnhandledExceptionFilter(
         delegate* unmanaged<nint, uint> lpTopLevelExceptionFilter);
 
     [LibraryImport("dbghelp.dll", SetLastError = true)]
