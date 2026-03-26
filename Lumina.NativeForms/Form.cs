@@ -440,6 +440,19 @@ public class Form : IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the resources used by the form.
+    /// </summary>
+    /// <param name="disposing">
+    /// <see langword="true"/> to release both managed and unmanaged resources;
+    /// <see langword="false"/> to release unmanaged resources only.
+    /// </param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed)
         {
             return;
@@ -452,7 +465,10 @@ public class Form : IDisposable
             _ = Win32.DestroyWindow(Handle);
         }
 
-        ReleaseControlHandles();
+        if (disposing)
+        {
+            ReleaseControlHandles();
+        }
 
         if (_selfHandle.IsAllocated)
         {
