@@ -16,8 +16,11 @@ public class Form : IDisposable
     private bool _disposed;
     private bool _shown;
     private int _nextControlId = 1000;
+    private bool _effectExplicitlySet;
+    private bool _themeExplicitlySet;
     private EffectKind _pendingEffectKind = EffectKind.None;
     private EffectOptions? _pendingEffectOptions;
+    private ThemeMode? _requestedThemeMode;
 
     public Form()
     {
@@ -84,6 +87,8 @@ public class Form : IDisposable
         }
 
         Handle = hwnd;
+        Application.EnsureVisualStylesInitialized();
+        ApplyApplicationDefaults();
 
         foreach (var control in _controlList)
         {
@@ -108,9 +113,24 @@ public class Form : IDisposable
 
     public void SetEffect(EffectKind kind, EffectOptions? options = null)
     {
+        _effectExplicitlySet = true;
         _pendingEffectKind = kind;
         _pendingEffectOptions = options;
         ApplyPendingEffect();
+    }
+
+    public void SetThemeMode(ThemeMode themeMode)
+    {
+        _themeExplicitlySet = true;
+        _requestedThemeMode = themeMode;
+        ApplyPendingThemeMode();
+    }
+
+    public void ResetThemeMode()
+    {
+        _themeExplicitlySet = false;
+        _requestedThemeMode = null;
+        ApplyApplicationDefaults();
     }
 
     public void SetMica() => SetEffect(EffectKind.Mica);
@@ -127,6 +147,7 @@ public class Form : IDisposable
 
     public void ClearLuminaEffect()
     {
+        _effectExplicitlySet = true;
         _pendingEffectKind = EffectKind.None;
         _pendingEffectOptions = null;
         if (Handle != 0)
@@ -211,6 +232,24 @@ public class Form : IDisposable
         }
     }
 
+    private void ApplyApplicationDefaults()
+    {
+        var visualStyle = Application.GetResolvedVisualStyle();
+
+        if (!_effectExplicitlySet)
+        {
+            _pendingEffectKind = visualStyle.EffectKind;
+            _pendingEffectOptions = visualStyle.EffectOptions;
+        }
+
+        if (!_themeExplicitlySet)
+        {
+            _requestedThemeMode = visualStyle.ThemeMode;
+        }
+
+        ApplyPendingThemeMode();
+    }
+
     private void ApplyPendingEffect()
     {
         if (Handle == 0)
@@ -219,6 +258,18 @@ public class Form : IDisposable
         }
 
         LuminaWindow.SetEffect(Handle, _pendingEffectKind, _pendingEffectOptions);
+    }
+
+    private void ApplyPendingThemeMode()
+    {
+        if (Handle == 0 || !OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        ThemeMode resolvedThemeMode = Application.ResolveThemeMode(_requestedThemeMode ?? ThemeMode.System);
+        int useDarkMode = resolvedThemeMode == ThemeMode.Dark ? 1 : 0;
+        _ = Win32.DwmSetWindowAttribute(Handle, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, Marshal.SizeOf<int>());
     }
 
     private static void EnsureWindowClassRegistered(nint instanceHandle)

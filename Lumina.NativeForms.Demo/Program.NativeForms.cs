@@ -1,3 +1,5 @@
+using Lumina.NativeForms;
+
 namespace Lumina.NativeForms.Demo;
 
 internal static class Program

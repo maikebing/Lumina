@@ -67,6 +67,7 @@ internal static class Win32
 
     public const int COLOR_WINDOW = 5;
     public const int DEFAULT_GUI_FONT = 17;
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
     public const int GWLP_USERDATA = -21;
 
@@ -237,6 +238,9 @@ internal static class Win32
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
+
+    [DllImport("dwmapi.dll")]
+    internal static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
 
     internal static int LowWord(nint value) => unchecked((ushort)(nuint)value);
 

@@ -1,16 +1,39 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
     <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
-  <ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <UseNativeForms>true</UseNativeForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(UseWindowsForms)' == 'true'">
+    <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
+    <Compile Include="Program.WinForms.cs" />
+    <Compile Include="WinForms\WdsScaleSimulatorDemoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WinForms\WdsScaleSimulatorDemoForm.Designer.cs">
+      <DependentUpon>WdsScaleSimulatorDemoForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseNativeForms)' == 'true'">
     <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
+    <Compile Include="Program.NativeForms.cs" />
+    <Compile Include="NativeForms\WdsScaleSimulatorDemoForm.cs" />
   </ItemGroup>
 
 </Project>

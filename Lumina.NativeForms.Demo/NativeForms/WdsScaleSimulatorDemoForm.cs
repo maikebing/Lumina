@@ -123,7 +123,6 @@ internal sealed class WdsScaleSimulatorDemoForm : Form
 
     protected override void OnCreated()
     {
-        SetMica();
         RefreshTransportUi();
         RefreshStatus();
         AppendLog("已加载 NativeForms Demo 界面。");
@@ -283,7 +282,7 @@ internal sealed class WdsScaleSimulatorDemoForm : Form
         _advanceButton.Click += (_, _) =>
         {
             _statusValues[2].Text = _advanceEdit.Text;
-            AppendLog($"临时轴推进: {_advanceEdit.Text}");
+            AppendLog($"临时轴推进 {_advanceEdit.Text}");
         };
         _advanceToEndButton.Click += (_, _) =>
         {
@@ -311,13 +310,13 @@ internal sealed class WdsScaleSimulatorDemoForm : Form
 
     private void LoadDefaults()
     {
-        _modeCombo.AddItem("串口");
-        _modeCombo.AddItem("TCP 服务端");
+        _modeCombo.Items.Add("串口");
+        _modeCombo.Items.Add("TCP 服务端");
         _modeCombo.SelectedIndex = 0;
 
-        _serialCombo.AddItem("COM3");
-        _serialCombo.AddItem("COM5");
-        _serialCombo.AddItem("COM9");
+        _serialCombo.Items.Add("COM3");
+        _serialCombo.Items.Add("COM5");
+        _serialCombo.Items.Add("COM9");
         _serialCombo.SelectedIndex = 0;
 
         _baudEdit.Text = "9600";
@@ -345,11 +344,11 @@ internal sealed class WdsScaleSimulatorDemoForm : Form
     private byte ComputeFaultFlags()
     {
         byte value = 0;
-        for (int i = 0; i < _faultChecks.Length; i++)
+        for (int index = 0; index < _faultChecks.Length; index++)
         {
-            if (_faultChecks[i].Checked)
+            if (_faultChecks[index].Checked)
             {
-                value |= (byte)(1 << i);
+                value |= (byte)(1 << index);
             }
         }
 
@@ -459,10 +458,10 @@ internal sealed class WdsScaleSimulatorDemoForm : Form
         int valueWidth = width - 40 - labelWidth;
         int currentY = y + 48;
 
-        for (int i = 0; i < _statusLabels.Length; i++)
+        for (int index = 0; index < _statusLabels.Length; index++)
         {
-            _statusLabels[i].SetBounds(x + 20, currentY, labelWidth, rowHeight);
-            _statusValues[i].SetBounds(x + 20 + labelWidth, currentY, valueWidth, rowHeight);
+            _statusLabels[index].SetBounds(x + 20, currentY, labelWidth, rowHeight);
+            _statusValues[index].SetBounds(x + 20 + labelWidth, currentY, valueWidth, rowHeight);
             currentY += 28;
         }
     }
