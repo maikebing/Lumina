@@ -1,5 +1,21 @@
 # Roadmap
 
+## Project Guardrails
+
+- Keep `Lumina.NativeForms.Demo` as a fixed dual-target project shape.
+- `net10.0-windows` in the Demo must use WinForms and stay friendly to the Visual Studio designer.
+- `net10.0` in the Demo must use `Lumina.NativeForms`.
+- Do not replace this Demo split model with another project structure.
+- Shipping and AOT publishing should target `net10.0`, paired with `Lumina.NativeForms`.
+- `Lumina.NativeForms` must be able to replace WinForms in the `net10.0` + Native AOT path.
+- WinForms theme and material integration should be implemented through `Lumina.Windows` helpers.
+- NativeForms theme, palette, and material behavior should stay built in to `Lumina.NativeForms`.
+- NativeForms APIs should remain as close to WinForms as possible for control names, properties, methods, events, defaults, and behavior.
+- Startup compatibility should cover WinForms-style entry points such as `ApplicationConfiguration.Initialize()`.
+- Resource release semantics should follow `IDisposable`; do not introduce a separate custom release API for forms.
+- Scaling behavior such as `AutoScaleMode` should match WinForms expectations as closely as practical.
+- Native interop should stay AOT-friendly and prefer modern .NET 10 patterns such as `Span<T>`, `InlineArray`, and `MemoryMarshal` where they improve safety or performance.
+
 Lumina 包含两条并行产品线，共享同一套底层 Hook 引擎与 DWM 效果实现。
 
 ## 产品线概览
