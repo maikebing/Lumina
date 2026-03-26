@@ -422,3 +422,7 @@ native/
 
 # Claude Code tooling
 .claude/
+
+# MSIX build artifacts
+msix/GenAssets/
+msix/dist/
