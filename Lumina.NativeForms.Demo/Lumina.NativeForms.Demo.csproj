@@ -1,39 +1,61 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Platforms>x64</Platforms>
-    <IsPackable>false</IsPackable>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <OutputType>WinExe</OutputType>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PublishAot>true</PublishAot>
     <UseNativeForms>true</UseNativeForms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(UseWindowsForms)' == 'true'">
     <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
-    <Compile Include="Program.WinForms.cs" />
-    <Compile Include="WinForms\WdsScaleSimulatorDemoForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WinForms\WdsScaleSimulatorDemoForm.Designer.cs">
-      <DependentUpon>WdsScaleSimulatorDemoForm.cs</DependentUpon>
-    </Compile>
+    <Using Include="System.Windows.Forms" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseNativeForms)' == 'true'">
     <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
-    <Compile Include="Program.NativeForms.cs" />
-    <Compile Include="NativeForms\WdsScaleSimulatorDemoForm.cs" />
+    <Using Include="Lumina.NativeForms" />
+    <ProjectReference Include="..\Lumina.NativeForms.Analyzers\Lumina.NativeForms.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="PublishAot;RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.5" />
+    <PackageReference Include="System.Resources.Extensions" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\themes\nativeforms\*.json" Link="themes\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
+    <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
