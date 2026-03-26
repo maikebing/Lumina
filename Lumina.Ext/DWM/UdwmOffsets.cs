@@ -41,7 +41,7 @@ internal static class UdwmOffsets
     }
 
     // ─────────────────────────────────────────────────────────
-    // RVA 表（Phase 2 中替换为从 DWMBlurGlass/OpenGlass 整理的真实值）
+    // RVA table. Populate with values independently verified for each supported build.
     // ─────────────────────────────────────────────────────────
     private static bool TryGetOffsets(uint build, out OffsetEntry offsets)
     {

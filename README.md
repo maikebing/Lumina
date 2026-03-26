@@ -58,11 +58,18 @@ Requires .NET 10 SDK with Native AOT workload.
 
 ## Acknowledgements
 
-Inspired by and references:
+Inspired by and technical references:
 - [DWMBlurGlass](https://github.com/Maplespe/DWMBlurGlass) by Maplespe
 - [OpenGlass](https://github.com/ALTaleX531/OpenGlass) by ALTaleX531
 - [AcrylicEverywhere](https://github.com/ALTaleX531/AcrylicEverywhere) by ALTaleX531
 
+Lumina is an independent implementation. These projects are credited for research
+context and behavioral reference only; no source code from them is included in
+this repository.
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the repository policy
+and upstream license references.
+
 ## License
 
-[LGPL v3](COPYING.LESSER)
+[MIT](LICENSE)

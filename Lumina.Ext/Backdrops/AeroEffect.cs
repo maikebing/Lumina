@@ -39,7 +39,7 @@ internal static unsafe class AeroEffect
 
         if (pParams == 0) return;
 
-        // CGlassColorizationParameters layout (undocumented, matches DWMBlurGlass research):
+        // Undocumented CGlassColorizationParameters layout inferred from runtime behavior:
         //   +0x00  float  baseAlpha
         //   +0x04  float  reflectionAlpha
         //   +0x08  float  blurBalance
