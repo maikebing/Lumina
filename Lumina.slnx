@@ -1,13 +1,34 @@
 <Solution>
-  <Project Path="Lumina.App/Lumina.App.csproj" />
-  <Project Path="Lumina.Core.Advanced/Lumina.Core.Advanced.csproj" />
-  <Project Path="Lumina.Core/Lumina.Core.csproj" />
-  <Project Path="Lumina.Ext/Lumina.Ext.csproj" />
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/Demos/">
+    <Project Path="WinFormsApp2/NativeFormsDemo.csproj" Id="1d9458f2-c5e2-495c-8294-15368d825c97" />
+  </Folder>
+  <Project Path="Lumina.App/Lumina.App.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Lumina.Core.Advanced/Lumina.Core.Advanced.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Lumina.Core/Lumina.Core.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Lumina.Ext/Lumina.Ext.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
   <Project Path="Lumina.NativeForms.Analyzers/Lumina.NativeForms.Analyzers.csproj" />
-  <Project Path="Lumina.NativeForms.Demo/Lumina.NativeForms.Demo.csproj" />
-  <Project Path="Lumina.NativeForms/Lumina.NativeForms.csproj" />
-  <Project Path="Lumina.Tests/Lumina.Tests.csproj" />
-  <Project Path="Lumina.WinForms/Lumina.WinForms.csproj" />
-  <Project Path="Lumina.Wpf/Lumina.Wpf.csproj" />
-  <Project Path="WinFormsApp1/WinFormsApp1.csproj" Id="b64f09ac-6a13-4712-9579-98700c04da05" />
+  <Project Path="Lumina.NativeForms/Lumina.NativeForms.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Lumina.Tests/Lumina.Tests.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Lumina.WinForms/Lumina.WinForms.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Lumina.Wpf/Lumina.Wpf.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>
