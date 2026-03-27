@@ -1,12 +1,47 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <NativeFormsDemoTargetFrameworks>net10.0-windows10.0.19041.0;net10.0</NativeFormsDemoTargetFrameworks>
+    <RestoreTargetFrameworks>$(NativeFormsDemoTargetFrameworks)</RestoreTargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DesignTimeBuild)' == 'true'">
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DesignTimeBuild)' != 'true'">
+    <TargetFrameworks>$(NativeFormsDemoTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PublishAot>true</PublishAot>
+    <UseNativeForms>true</UseNativeForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(UseWindowsForms)' == 'true'">
+    <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseNativeForms)' == 'true'">
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
+    <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
+    <ProjectReference Include="..\Lumina.NativeForms.Analyzers\Lumina.NativeForms.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="PublishAot;RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun" />
+    <Using Include="Lumina.NativeForms" />
+    <Compile Remove="frmMain.Designer.cs" />
+    <EmbeddedResource Remove="frmMain.resx" />
+    <Compile Remove="Properties\Resources.Designer.cs" />
+    <EmbeddedResource Remove="Properties\Resources.resx" />
+    <Compile Include="$(IntermediateOutputPath)Generated\frmMain.Native.g.cs" AutoGen="true" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
@@ -22,5 +57,30 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="GenerateNativeFormsDesignerShim" BeforeTargets="CoreCompile" Condition="'$(UseNativeForms)' == 'true'">
+    <PropertyGroup>
+      <NativeFormsGeneratedDir>$(IntermediateOutputPath)Generated\</NativeFormsGeneratedDir>
+      <NativeFormsGeneratedFile>$(NativeFormsGeneratedDir)frmMain.Native.g.cs</NativeFormsGeneratedFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <NativeFormsGeneratedSource Include="namespace NativeFormsDemo" />
+      <NativeFormsGeneratedSource Include="{" />
+      <NativeFormsGeneratedSource Include="    partial class frmMain" />
+      <NativeFormsGeneratedSource Include="    {" />
+      <NativeFormsGeneratedSource Include="        private void InitializeComponent()" />
+      <NativeFormsGeneratedSource Include="        {" />
+      <NativeFormsGeneratedSource Include="$([MSBuild]::Escape('            this.AutoScaleMode = AutoScaleMode.Font;'))" />
+      <NativeFormsGeneratedSource Include="$([MSBuild]::Escape('            this.ClientSize = new System.Drawing.Size(879, 584);'))" />
+      <NativeFormsGeneratedSource Include="$([MSBuild]::Escape('            this.Text = &quot;frmMain&quot;;'))" />
+      <NativeFormsGeneratedSource Include="        }" />
+      <NativeFormsGeneratedSource Include="    }" />
+      <NativeFormsGeneratedSource Include="}" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(NativeFormsGeneratedDir)" />
+    <WriteLinesToFile File="$(NativeFormsGeneratedFile)" Lines="@(NativeFormsGeneratedSource)" Overwrite="true" />
+  </Target>
 
 </Project>

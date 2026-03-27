@@ -4,7 +4,9 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Demos/">
-    <Project Path="WinFormsApp2/NativeFormsDemo.csproj" Id="1d9458f2-c5e2-495c-8294-15368d825c97" />
+    <Project Path="NativeFormsDemo/NativeFormsDemo.csproj">
+      <Platform Solution="Debug|x64" Project="x64" />
+    </Project>
   </Folder>
   <Project Path="Lumina.App/Lumina.App.csproj">
     <Platform Solution="*|x64" Project="x64" />
@@ -18,7 +20,9 @@
   <Project Path="Lumina.Ext/Lumina.Ext.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Lumina.NativeForms.Analyzers/Lumina.NativeForms.Analyzers.csproj" />
+  <Project Path="Lumina.NativeForms.Analyzers/Lumina.NativeForms.Analyzers.csproj">
+    <Platform Solution="Debug|x64" Project="x64" />
+  </Project>
   <Project Path="Lumina.NativeForms/Lumina.NativeForms.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
