@@ -6,16 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <NativeFormsDemoTargetFrameworks>net10.0-windows10.0.19041.0;net10.0</NativeFormsDemoTargetFrameworks>
+    <TargetFrameworks>$(NativeFormsDemoTargetFrameworks)</TargetFrameworks>
     <RestoreTargetFrameworks>$(NativeFormsDemoTargetFrameworks)</RestoreTargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(DesignTimeBuild)' == 'true'">
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(DesignTimeBuild)' != 'true'">
-    <TargetFrameworks>$(NativeFormsDemoTargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
