@@ -1,10 +1,10 @@
 ---
-title: "NativeForms 支持矩阵"
+title: "LuminaForms 支持矩阵"
 permalink: /zh/nativeforms-support-matrix/
 layout: default
 ---
 
-# NativeForms 支持矩阵
+# LuminaForms 支持矩阵
 
 ## 控件与基础 API
 
@@ -44,7 +44,7 @@ layout: default
 | `partial Form` 约束 | 已支持 | 分析器提示保持 WinForms 习惯 |
 | `Controls.Find(...)` | 已支持 | 支持按 `Name` 递归查找 |
 | 容器嵌套自动缩放 | 已支持 | `Form`、`GroupBox`、`Panel` |
-| `net10.0` + Native AOT 路径 | 已支持 | NativeForms 本体保持 AOT 友好 |
+| `net10.0` + Native AOT 路径 | 已支持 | LuminaForms 本体保持 AOT 友好 |
 | VS 设计器 | 边界明确 | 由 Demo 的 `net10.0-windows` WinForms 路径承担 |
 
 ## 当前边界

@@ -1,10 +1,10 @@
 ---
-title: "NativeForms 迁移指南"
+title: "LuminaForms 迁移指南"
 permalink: /zh/nativeforms-migration/
 layout: default
 ---
 
-# NativeForms 迁移指南
+# LuminaForms 迁移指南
 
 ## 迁移目标
 
@@ -15,7 +15,7 @@ layout: default
 1. 保留原有窗体拆分方式，先不要动业务逻辑。
 2. 把项目改成双目标：`net10.0-windows` 和 `net10.0`。
 3. 在 `net10.0-windows` 下继续使用 WinForms，保留 Visual Studio 设计器。
-4. 在 `net10.0` 下切到 `Lumina.NativeForms`，用于 Native AOT。
+4. 在 `net10.0` 下切到 `Lumina.Forms`，用于 Native AOT。
 5. 先验证高频窗口、常用控件、事件和布局，再收敛剩余兼容差异。
 
 ## 项目文件示例
@@ -23,17 +23,16 @@ layout: default
 ```xml
 <PropertyGroup>
   <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
-  <UseWinForms>false</UseWinForms>
-  <UseNativeForms>false</UseNativeForms>
+  <UseWindowsForms>false</UseWindowsForms>
+  <UseLuminaForms>false</UseLuminaForms>
 </PropertyGroup>
 
 <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-  <UseWinForms>true</UseWinForms>
   <UseWindowsForms>true</UseWindowsForms>
 </PropertyGroup>
 
 <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
-  <UseNativeForms>true</UseNativeForms>
+  <UseLuminaForms>true</UseLuminaForms>
 </PropertyGroup>
 ```
 
@@ -45,10 +44,10 @@ WinForms:
 using System.Windows.Forms;
 ```
 
-NativeForms:
+LuminaForms:
 
 ```csharp
-using Lumina.NativeForms;
+using Lumina.Forms;
 ```
 
 ## 启动入口兼容
@@ -71,5 +70,5 @@ Application.Run(new MainForm());
 ## 当前迁移边界
 
 - 当前优先覆盖的是高频标准控件和常见窗体 API。
-- NativeForms 仍然基于原生 Win32 控件，复杂自绘、Owner-draw 和更多高级控件仍在继续补齐。
+- LuminaForms 仍然基于原生 Win32 控件，复杂自绘、Owner-draw 和更多高级控件仍在继续补齐。
 - 如果某个高级能力尚未对齐，建议继续保留 `net10.0-windows` 的 WinForms 路径，同时在 `net10.0` 路径逐步收敛差异。

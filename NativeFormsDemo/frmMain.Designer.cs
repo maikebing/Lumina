@@ -163,7 +163,9 @@
             // 
             // pictureBox1
             // 
+#if NET10_0_WINDOWS
             pictureBox1.Image = Properties.Resources.SplashScreen;
+#endif
             pictureBox1.Location = new Point(245, 256);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(622, 303);

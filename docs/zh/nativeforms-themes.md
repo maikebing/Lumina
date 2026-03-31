@@ -1,14 +1,14 @@
 ---
-title: "NativeForms 主题与 JSON 配置"
+title: "LuminaForms 主题与 JSON 配置"
 permalink: /zh/nativeforms-themes/
 layout: default
 ---
 
-# NativeForms 主题与 JSON 配置
+# LuminaForms 主题与 JSON 配置
 
 ## 目标
 
-NativeForms 的主题系统优先解决三件事：
+LuminaForms 的主题系统优先解决三件事：
 
 - 跟随系统浅色 / 深色
 - 根据操作系统版本选择最接近系统的默认视觉风格
@@ -39,7 +39,7 @@ NativeForms 的主题系统优先解决三件事：
 ## 代码示例
 
 ```csharp
-using Lumina.NativeForms;
+using Lumina.Forms;
 
 ApplicationConfiguration.Initialize();
 Application.ConfigureVisualStyles(settings =>
@@ -65,7 +65,7 @@ Application.Run(form);
 ```json
 {
   "Name": "Lumina Native Dark",
-  "Description": "Built-in dark palette for NativeForms.",
+  "Description": "Built-in dark palette for LuminaForms.",
   "Author": "Lumina",
   "ThemeMode": 2,
   "PreferredVisualStyle": 5,

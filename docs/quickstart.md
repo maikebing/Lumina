@@ -6,7 +6,7 @@
 dotnet add package Lumina.Core
 dotnet add package Lumina.WinForms
 dotnet add package Lumina.Wpf
-dotnet add package Lumina.NativeForms
+dotnet add package Lumina.Forms
 ```
 
 ## WinForms
@@ -32,10 +32,10 @@ public partial class MainForm : Form
 </Window>
 ```
 
-## NativeForms
+## LuminaForms
 
 ```csharp
-using Lumina.NativeForms;
+using Lumina.Forms;
 
 internal static class Program
 {
@@ -55,7 +55,7 @@ internal static class Program
 }
 ```
 
-## NativeForms Autoscaling
+## LuminaForms Autoscaling
 
 ```csharp
 public sealed class MainForm : Form
@@ -71,7 +71,7 @@ public sealed class MainForm : Form
 ## Theme Files
 
 ```csharp
-using Lumina.NativeForms;
+using Lumina.Forms;
 
 Application.LoadTheme("themes/lumina-native-dark.json");
 
@@ -88,11 +88,11 @@ Sample theme files are included under `themes/nativeforms/` in the repository ro
 
 ## Analyzer Wiring
 
-Inside this repository, add the analyzer project as an analyzer reference for NativeForms targets:
+Inside this repository, add the analyzer project as an analyzer reference for LuminaForms targets:
 
 ```xml
-<ItemGroup Condition="'$(UseNativeForms)' == 'true'">
-  <ProjectReference Include="..\Lumina.NativeForms.Analyzers\Lumina.NativeForms.Analyzers.csproj"
+<ItemGroup Condition="'$(UseLuminaForms)' == 'true'">
+  <ProjectReference Include="..\Lumina.Forms.Analyzers\Lumina.Forms.Analyzers.csproj"
                     OutputItemType="Analyzer"
                     ReferenceOutputAssembly="false" />
 </ItemGroup>
@@ -101,11 +101,11 @@ Inside this repository, add the analyzer project as an analyzer reference for Na
 ## Native AOT Publish
 
 ```powershell
-dotnet publish Lumina.NativeForms.Demo/Lumina.NativeForms.Demo.csproj `
+dotnet publish NativeFormsDemo/NativeFormsDemo.csproj `
   -f net10.0 `
   -r win-x64 `
   -c Release `
   /p:PublishAot=true
 ```
 
-Use `net10.0-windows` when you want the WinForms designer-friendly demo target. Use `net10.0` when you want the NativeForms target for AOT.
+Use `net10.0-windows` when you want the WinForms designer-friendly demo target. Use `net10.0` when you want the LuminaForms target for AOT.

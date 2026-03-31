@@ -1,10 +1,10 @@
 ---
-title: "NativeForms 兼容差异清单"
+title: "LuminaForms 兼容差异清单"
 permalink: /zh/nativeforms-compatibility/
 layout: default
 ---
 
-# NativeForms 兼容差异清单
+# LuminaForms 兼容差异清单
 
 ## 当前已经对齐的方向
 
@@ -28,5 +28,5 @@ layout: default
 ## 迁移建议
 
 1. 先保留 `net10.0-windows` 的 WinForms 路径，保证设计器和旧行为可以回退。
-2. 再让 `net10.0` 切到 `Lumina.NativeForms`，优先验证高频窗体和高频控件。
-3. 对尚未覆盖的高级能力，先收敛差异面，再决定是继续补齐 NativeForms，还是暂时保留 WinForms 路径。
+2. 再让 `net10.0` 切到 `Lumina.Forms`，优先验证高频窗体和高频控件。
+3. 对尚未覆盖的高级能力，先收敛差异面，再决定是继续补齐 LuminaForms，还是暂时保留 WinForms 路径。

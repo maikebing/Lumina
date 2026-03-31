@@ -42,7 +42,7 @@ jobs:
         run: |
           dotnet pack Lumina.Core/Lumina.Core.csproj -c Release --no-build -o nupkgs
           dotnet pack Lumina.Core.Advanced/Lumina.Core.Advanced.csproj -c Release --no-build -o nupkgs
-          dotnet pack Lumina.WinForms/Lumina.WinForms.csproj -c Release --no-build -o nupkgs
+          dotnet pack Lumina.Forms/Lumina.Forms.csproj -c Release --no-build -o nupkgs
           dotnet pack Lumina.Wpf/Lumina.Wpf.csproj -c Release --no-build -o nupkgs
 
       - name: Publish to NuGet

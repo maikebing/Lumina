@@ -26,10 +26,10 @@
   <Project Path="Lumina.Tests/Lumina.Tests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Lumina.WinForms.Analyzers/Lumina.WinForms.Analyzers.csproj">
+  <Project Path="Lumina.Forms.Analyzers/Lumina.Forms.Analyzers.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Lumina.WinForms/Lumina.WinForms.csproj">
+  <Project Path="Lumina.Forms/Lumina.Forms.csproj">
     <Platform Project="x64" />
   </Project>
 </Solution>

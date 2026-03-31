@@ -25,26 +25,26 @@ Unlike similar tools built in C++, Lumina is written entirely in **C# with Nativ
 - Multi-language UI (XML-based language files)
 - Native Win32 GUI — no WPF, no WinForms, no external UI framework
 
-## NativeForms
+## LuminaForms
 
-`Lumina.NativeForms` is the AOT-friendly companion layer for WinForms-style desktop apps.
+LuminaForms ships through the `Lumina.Forms` package and namespace as the AOT-friendly companion layer for WinForms-style desktop apps.
 It keeps familiar names such as `Application`, `Form`, `Button`, `TextBox`, `ComboBox`,
 `CheckBox`, `RadioButton`, `ListBox`, `GroupBox`, and `Panel` so older apps can migrate with
 minimal namespace and project-file changes.
 
 ### Demo Targets
 
-`Lumina.NativeForms.Demo` now uses two targets:
+`NativeFormsDemo` now uses two targets:
 
 - `net10.0-windows`: WinForms path, kept friendly to the Visual Studio designer
-- `net10.0`: NativeForms path, intended for Native AOT and Win32-native controls
+- `net10.0`: LuminaForms path, intended for Native AOT and Win32-native controls
 
-The demo project uses both `UseWinForms` and `UseNativeForms` so the same solution
+The demo project uses both `UseWindowsForms` and `UseLuminaForms` so the same solution
 can validate migration behavior on both sides.
 
 ### Themes
 
-NativeForms supports:
+LuminaForms supports:
 
 - OS-aware default backdrops through `Application.EnableVisualStyles()`
 - OS-aware visual style families through `VisualStyleKind` (`Classic`, `AeroGlass`, `Modern`, `Fluent`, `Mica`)
@@ -54,7 +54,7 @@ NativeForms supports:
 - Window-level overrides through `UseTheme(...)`, `SetThemeMode(...)`, and `SetPalette(...)`
 - JSON theme files through `NativeTheme` and semantic `ThemePalette` tokens
 - WinForms-like collection helpers such as `Controls.AddRange(...)`, `Controls.Find(...)`, `Items.AddRange(...)`, and `SelectedItem`
-- Compatibility analyzers through `Lumina.NativeForms.Analyzers`
+- Compatibility analyzers through `Lumina.Forms.Analyzers`
 - WinForms-style autoscaling through `AutoScaleMode`, `AutoScaleDimensions`, and `PerformAutoScale()`
 
 Sample theme files live under [`themes/nativeforms/`](themes/nativeforms).
@@ -62,11 +62,11 @@ Sample theme files live under [`themes/nativeforms/`](themes/nativeforms).
 ### Docs
 
 - [Quick Start](docs/quickstart.md)
-- [NativeForms Overview](docs/zh/nativeforms.md)
-- [NativeForms Migration Guide](docs/zh/nativeforms-migration.md)
-- [NativeForms Compatibility Notes](docs/zh/nativeforms-compatibility.md)
-- [NativeForms Theme Guide](docs/zh/nativeforms-themes.md)
-- [NativeForms Support Matrix](docs/zh/nativeforms-support-matrix.md)
+- [LuminaForms Overview](docs/zh/nativeforms.md)
+- [LuminaForms Migration Guide](docs/zh/nativeforms-migration.md)
+- [LuminaForms Compatibility Notes](docs/zh/nativeforms-compatibility.md)
+- [LuminaForms Theme Guide](docs/zh/nativeforms-themes.md)
+- [LuminaForms Support Matrix](docs/zh/nativeforms-support-matrix.md)
 
 ## Architecture
 

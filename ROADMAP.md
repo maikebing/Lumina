@@ -2,15 +2,15 @@
 
 ## Project Guardrails
 
-- Keep `Lumina.NativeForms.Demo` as a fixed dual-target project shape.
+- Keep `NativeFormsDemo` as a fixed dual-target project shape.
 - `net10.0-windows` in the Demo must use WinForms and stay friendly to the Visual Studio designer.
-- `net10.0` in the Demo must use `Lumina.NativeForms`.
+- `net10.0` in the Demo must use `Lumina.Forms`.
 - Do not replace this Demo split model with another project structure.
-- Shipping and AOT publishing should target `net10.0`, paired with `Lumina.NativeForms`.
-- `Lumina.NativeForms` must be able to replace WinForms in the `net10.0` + Native AOT path.
+- Shipping and AOT publishing should target `net10.0`, paired with `Lumina.Forms`.
+- `Lumina.Forms` must be able to replace WinForms in the `net10.0` + Native AOT path.
 - WinForms theme and material integration should be implemented through `Lumina.Windows` helpers.
-- NativeForms theme, palette, and material behavior should stay built in to `Lumina.NativeForms`.
-- NativeForms APIs should remain as close to WinForms as possible for control names, properties, methods, events, defaults, and behavior.
+- LuminaForms theme, palette, and material behavior should stay built in to `Lumina.Forms`.
+- LuminaForms APIs should remain as close to WinForms as possible for control names, properties, methods, events, defaults, and behavior.
 - Startup compatibility should cover WinForms-style entry points such as `ApplicationConfiguration.Initialize()`.
 - Resource release semantics should follow `IDisposable`; do not introduce a separate custom release API for forms.
 - Scaling behavior such as `AutoScaleMode` should match WinForms expectations as closely as practical.
@@ -19,11 +19,11 @@
 
 ## Phase 6 Status Refresh
 
-This section is the current readable Phase 6 snapshot for NativeForms work.
+This section is the current readable Phase 6 snapshot for LuminaForms work.
 
-### Phase 6-A: Lumina.NativeForms Core
+### Phase 6-A: Lumina.Forms Core
 
-- [x] Added `Lumina.NativeForms` to the solution.
+- [x] Added `Lumina.Forms` to the solution.
 - [x] Exposed WinForms-style entry points and current core type names.
 - [x] Removed temporary `Native*` type names to reduce migration friction.
 - [x] Kept `unsafe` interop details contained inside the library instead of leaking into the Demo or consumer code.
@@ -31,7 +31,7 @@ This section is the current readable Phase 6 snapshot for NativeForms work.
 - [x] Aligned common WinForms names, properties, methods, events, and default behavior for the controls currently implemented.
 - [x] Added compatibility notes, migration guidance, and a clear checklist for unsupported or still-growing areas.
 - [x] Added AOT-friendly compatibility and regression tests for autoscaling, containers, item collections, themes, and event behavior.
-- [x] Added `Lumina.NativeForms.Analyzers` with startup, `Application.Run`, `partial Form`, and migration-friendly rules.
+- [x] Added `Lumina.Forms.Analyzers` with startup, `Application.Run`, `partial Form`, and migration-friendly rules.
 - [ ] Expand the user-owned Demo to showcase every supported control while preserving the fixed dual-target structure.
 
 ### Phase 6-B: System Visual Styles and Themes
@@ -47,10 +47,10 @@ This section is the current readable Phase 6 snapshot for NativeForms work.
 
 ### Phase 6-C: Demo and Designer Friendliness
 
-- [x] Kept `Lumina.NativeForms.Demo` on `net10.0-windows` + `net10.0`.
+- [x] Kept `NativeFormsDemo` on `net10.0-windows` + `net10.0`.
 - [x] Used WinForms on `net10.0-windows` so the Visual Studio designer path remains available.
-- [x] Used `Lumina.NativeForms` on `net10.0`.
-- [x] Added `UseNativeForms` alongside `UseWinForms` in the Demo project.
+- [x] Used `Lumina.Forms` on `net10.0`.
+- [x] Added `UseLuminaForms` alongside `UseWindowsForms` in the Demo project.
 - [ ] Continue the remaining Demo work under the current user-owned Demo structure without automatic changes from library work.
 - [ ] Port the full `WdsScaleSimulator` surface into the Demo.
 - [ ] Cover every supported control, event, property, and representative layout scenario inside the Demo.
@@ -59,8 +59,8 @@ This section is the current readable Phase 6 snapshot for NativeForms work.
 
 ### Phase 6-D: Documentation and Developer Experience
 
-- [x] Added XML comments across the current NativeForms public surface so supported members explain their Win32-backed behavior.
-- [x] Updated `README`, `quickstart`, and migration documentation with NativeForms guidance.
+- [x] Added XML comments across the current LuminaForms public surface so supported members explain their Win32-backed behavior.
+- [x] Updated `README`, `quickstart`, and migration documentation with LuminaForms guidance.
 - [x] Added a control support matrix, compatibility notes, and theme configuration documentation.
 - [ ] Add final Demo screenshots, recordings, and release-preparation material after the user-owned Demo work is finished.
 
@@ -184,9 +184,9 @@ Lumina.sln
 
 ## Phase 6 - NativeForms 与迁移兼容
 
-### Phase 6-A：Lumina.NativeForms 核心
+### Phase 6-A：Lumina.Forms 核心
 
-- [x] 新增 `Lumina.NativeForms` 项目并纳入解决方案
+- [x] 新增 `Lumina.Forms` 项目并纳入解决方案
 - [x] 公开 WinForms 风格命名入口：`Application` / `Form` / `Control` / `Button` / `Label` / `TextBox` / `ComboBox` / `CheckBox` / `GroupBox`
 - [x] 删除旧 `Native*` 文件命名，降低旧项目迁移成本
 - [x] 将窗口过程封送改为托管委托，避免 `unsafe` 向 Demo 与使用方传染
@@ -194,8 +194,8 @@ Lumina.sln
 - [ ] 对齐 WinForms 的属性名、方法名、事件名、默认值与行为语义，目标是大部分旧项目仅切换引用与命名空间即可迁移
 - [ ] 为暂未兼容的能力提供最小替代层、兼容说明与迁移清单
 - [ ] 补充无 WinForms 依赖的 AOT 构建样例、兼容性测试与回归用例
-- [ ] 新增 `Lumina.NativeForms.Analyzers`，提供启动约束、`Application.Run` 用法、`partial Form` 约束与迁移友好规则
-- [ ] NativeForms.Demos 里面把所有控件都放上去。 能让设计器打开正常改变， 也能让配合nativeforms能够aot编译。 
+- [ ] 新增 `Lumina.Forms.Analyzers`，提供启动约束、`Application.Run` 用法、`partial Form` 约束与迁移友好规则
+- [ ] NativeFormsDemo 里面把所有控件都放上去，既能让设计器正常打开修改，也能配合 LuminaForms 做 AOT 编译验证。
   
 
 ### Phase 6-B：系统风格与主题
@@ -215,19 +215,19 @@ Lumina.sln
 
 ### Phase 6-C：Demo 与设计器友好
 
-- [ ] `Lumina.NativeForms.Demo` 改为 `net10.0-windows` + `net10.0` 双目标
+- [ ] `NativeFormsDemo` 保持 `net10.0-windows` + `net10.0` 双目标
 - [ ] `net10.0-windows` 目标使用 WinForms，并保持 Visual Studio 设计器友好
-- [ ] `net10.0` 目标使用 `Lumina.NativeForms` 的同名控件
-- [ ] 增加 `UseNativeForms` MSBuild 属性，与 `UseWinForms` 区分，便于条件编译与后续扩展
+- [ ] `net10.0` 目标使用 `Lumina.Forms` 的同名控件
+- [ ] 增加 `UseLuminaForms` MSBuild 属性，与 `UseWindowsForms` 区分，便于条件编译与后续扩展
 - [ ] 拆分 WinForms / NativeForms 两套入口与窗体文件，避免互相影响
-- [ ] 将称台模拟器（`WdsScaleSimulator`）界面迁移为 NativeForms Demo，并保留原有交互流程作为迁移样板
+- [ ] 将称台模拟器（`WdsScaleSimulator`）界面迁移为 NativeFormsDemo，并保留原有交互流程作为迁移样板
 - [ ] 在 Demo 中覆盖目前已实现的全部控件、事件、属性与典型布局，验证与 WinForms API / 行为的一致性
 - [ ] 提供“旧 WinForms 应用切换引用与命名空间”的迁移示例
 - [ ] 验证 Demo 在 VS 设计器、运行时与 AOT 场景下的可用性
 
 ### Phase 6-D：文档与开发者体验
 
-- [ ] 为 `Lumina.NativeForms` 公开类型、属性、方法、事件补齐 XML 注释，帮助使用者理解 Win32 实现与兼容性边界
-- [ ] 更新 README、quickstart 与 migration 文档，补充 NativeForms 章节
+- [ ] 为 `Lumina.Forms` 公开类型、属性、方法、事件补齐 XML 注释，帮助使用者理解 Win32 实现与兼容性边界
+- [ ] 更新 README、quickstart 与 migration 文档，补充 LuminaForms 章节
 - [ ] 新增控件支持矩阵、兼容差异清单、主题配置说明
 - [ ] 补充 Demo 截图 / 录屏、构建说明、回归测试与后续发布准备

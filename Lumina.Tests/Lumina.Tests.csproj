@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
-    <ProjectReference Include="..\Lumina.WinForms.Analyzers\Lumina.WinForms.Analyzers.csproj" />
-    <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
+    <ProjectReference Include="..\Lumina.Forms.Analyzers\Lumina.Forms.Analyzers.csproj" />
+    <ProjectReference Include="..\Lumina.Forms\Lumina.Forms.csproj" />
   </ItemGroup>
 
 </Project>

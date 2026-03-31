@@ -7,8 +7,8 @@ layout: default
 
 # Lumina 中文文档
 
-- [NativeForms 概览](/zh/nativeforms/)
-- [NativeForms 迁移指南](/zh/nativeforms-migration/)
-- [NativeForms 主题与 JSON 配置](/zh/nativeforms-themes/)
-- [NativeForms 支持矩阵](/zh/nativeforms-support-matrix/)
+- [LuminaForms 概览](/zh/nativeforms/)
+- [LuminaForms 迁移指南](/zh/nativeforms-migration/)
+- [LuminaForms 主题与 JSON 配置](/zh/nativeforms-themes/)
+- [LuminaForms 支持矩阵](/zh/nativeforms-support-matrix/)
 - [快速开始](/quickstart/)

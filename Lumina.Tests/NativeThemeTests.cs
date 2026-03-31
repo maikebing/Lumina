@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Lumina.NativeForms;
+using Lumina.Forms;
 using Xunit;
 
 namespace Lumina.Tests;

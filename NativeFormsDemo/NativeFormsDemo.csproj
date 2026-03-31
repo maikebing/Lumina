@@ -20,9 +20,12 @@
 
   <ItemGroup Condition="'$(UseLuminaForms)' == 'true'">
     <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
-    <ProjectReference Include="..\Lumina.WinForms.Analyzers\Lumina.WinForms.Analyzers.csproj" />
-    <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
-	  <Using Include="Lumina" />
+		<ProjectReference Include="..\Lumina.Forms.Analyzers\Lumina.Forms.Analyzers.csproj" />
+		<ProjectReference Include="..\Lumina.Forms\Lumina.Forms.csproj" />
+	  <Using Include="Lumina.Forms" />
+	  <Using Include="System.Drawing" />
+	  <Compile Remove="Properties\Resources.Designer.cs" />
+	  <EmbeddedResource Remove="Properties\Resources.resx" />
 
   </ItemGroup>
 
@@ -32,6 +35,12 @@
 
 	<ItemGroup>
 	  <PackageReference Include="System.Resources.Extensions" Version="10.0.5" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseLuminaForms)' == 'true'">
+	  <Content Include="Resources\SplashScreen.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>
