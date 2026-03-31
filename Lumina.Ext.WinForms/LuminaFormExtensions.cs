@@ -1,6 +1,7 @@
-using System.Windows.Forms;
 
-namespace Lumina.WinForms;
+using Lumina;
+
+namespace System.Windows.Forms;
 
 /// <summary>
 /// WinForms 扩展方法，为 <see cref="Form"/> 提供一行式效果 API。

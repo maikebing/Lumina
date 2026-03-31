@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -25,11 +25,10 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(UseWindowsForms)' == 'true'">
-    <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
+    <ProjectReference Include="..\Lumina.WinForms\Lumina.Ext.WinForms.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseNativeForms)' == 'true'">
-    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
     <ProjectReference Include="..\Lumina.NativeForms\Lumina.NativeForms.csproj" />
     <ProjectReference Include="..\Lumina.NativeForms.Analyzers\Lumina.NativeForms.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="PublishAot;RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun" />
     <Using Include="Lumina.NativeForms" />
@@ -38,6 +37,10 @@
     <Compile Remove="Properties\Resources.Designer.cs" />
     <EmbeddedResource Remove="Properties\Resources.resx" />
     <Compile Include="$(IntermediateOutputPath)Generated\frmMain.Native.g.cs" AutoGen="true" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

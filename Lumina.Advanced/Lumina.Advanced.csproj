@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>x64</Platforms>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NuGet 包元数据 -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Lumina.Advanced</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Lumina Contributors</Authors>
+    <Description>Advanced-mode window visual effects via dwm.exe injection. Requires administrator privileges. Unlocks deep Blur, Aero and custom hook effects.</Description>
+    <PackageTags>mica;acrylic;blur;aero;dwm;injection;windows;visual-effects</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageIcon>nuget-icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
+    <ProjectReference Include="..\Lumina.Ext\Lumina.Ext.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="../THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
+    <None Include="../assets/nuget-icon.png" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

@@ -4,17 +4,17 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x64</Platforms>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- NuGet 包元数据 -->
     <IsPackable>true</IsPackable>
-    <PackageId>Lumina.Advanced</PackageId>
+    <PackageId>Lumina.WinForms</PackageId>
     <Version>0.1.0</Version>
     <Authors>Lumina Contributors</Authors>
-    <Description>Advanced-mode window visual effects via dwm.exe injection. Requires administrator privileges. Unlocks deep Blur, Aero and custom hook effects.</Description>
-    <PackageTags>mica;acrylic;blur;aero;dwm;injection;windows;visual-effects</PackageTags>
+    <Description>WinForms adapter for Lumina — one-line extension methods to apply Mica, Acrylic, Aero and custom blur effects to any Form.</Description>
+    <PackageTags>winforms;mica;acrylic;blur;aero;dwm;windows;visual-effects</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
-    <ProjectReference Include="../Lumina.Ext/Lumina.Ext.csproj" />
   </ItemGroup>
 
   <ItemGroup>

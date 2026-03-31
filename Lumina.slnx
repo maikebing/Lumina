@@ -11,28 +11,25 @@
   <Project Path="Lumina.App/Lumina.App.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Lumina.Core.Advanced/Lumina.Core.Advanced.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
   <Project Path="Lumina.Core/Lumina.Core.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="Lumina.Ext.WinForms/Lumina.Ext.WinForms.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="Lumina.Ext.Wpf/Lumina.Ext.Wpf.csproj">
+    <Platform Project="x64" />
+  </Project>
   <Project Path="Lumina.Ext/Lumina.Ext.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
-  <Project Path="Lumina.NativeForms.Analyzers/Lumina.NativeForms.Analyzers.csproj">
-    <Platform Solution="Debug|x64" Project="x64" />
-  </Project>
-  <Project Path="Lumina.NativeForms/Lumina.NativeForms.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="Lumina.Tests/Lumina.Tests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Lumina.WinForms/Lumina.WinForms.csproj">
+  <Project Path="Lumina.WinForms.Analyzers/Lumina.WinForms.Analyzers.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
-  <Project Path="Lumina.Wpf/Lumina.Wpf.csproj">
-    <Platform Solution="*|x64" Project="x64" />
+  <Project Path="Lumina.WinForms/Lumina.WinForms.csproj">
+    <Platform Project="x64" />
   </Project>
 </Solution>

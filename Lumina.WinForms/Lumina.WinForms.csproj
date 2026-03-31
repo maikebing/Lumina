@@ -1,20 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- NuGet 包元数据 -->
     <IsPackable>true</IsPackable>
-    <PackageId>Lumina.WinForms</PackageId>
+    <PackageId>Lumina.NativeForms</PackageId>
     <Version>0.1.0</Version>
     <Authors>Lumina Contributors</Authors>
-    <Description>WinForms adapter for Lumina — one-line extension methods to apply Mica, Acrylic, Aero and custom blur effects to any Form.</Description>
-    <PackageTags>winforms;mica;acrylic;blur;aero;dwm;windows;visual-effects</PackageTags>
+    <Description>A native Win32 forms layer for Lumina, designed for AOT-friendly desktop windows and controls.</Description>
+    <PackageTags>win32;native;forms;aot;mica;acrylic;windows;visual-effects</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
@@ -24,13 +23,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="/" />
-    <None Include="../THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
-    <None Include="../assets/nuget-icon.png" Pack="true" PackagePath="/" />
+    <None Include="..\README.md" Pack="true" PackagePath="/" />
+    <None Include="..\THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
+    <None Include="..\assets\nuget-icon.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>

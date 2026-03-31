@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Lumina.Ext/Lumina.Ext.csproj" />
+    <ProjectReference Include="..\Lumina.Ext\Lumina.Ext.csproj" />
     <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
   </ItemGroup>
 
