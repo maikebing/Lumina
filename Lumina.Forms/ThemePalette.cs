@@ -162,6 +162,25 @@ public sealed class ThemePalette
 
         switch (visualStyleKind)
         {
+            case VisualStyleKind.Mica:
+                palette.WindowBackground = 0xFF_F3_F3_F3;
+                palette.WindowBorder = 0xFF_E6_E6_E6;
+                palette.TitleBarBackground = 0xD9_F8_F8_F8;
+                palette.TitleBarBorder = 0xFF_E8_E8_E8;
+                palette.SurfaceBackground = 0xFF_FF_FF_FF;
+                palette.SurfaceBorder = 0xFF_E5_E5_E5;
+                palette.ControlBackground = 0xFF_FC_FC_FC;
+                palette.ControlBorder = 0xFF_DA_DA_DA;
+                palette.ControlHoverBackground = 0xFF_F5_F5_F5;
+                palette.ControlPressedBackground = 0xFF_EE_EE_EE;
+                palette.ControlDisabledBackground = 0xFF_F5_F5_F5;
+                palette.Accent = 0xFF_00_5F_B8;
+                palette.FocusBorder = 0xFF_00_5F_B8;
+                palette.Selection = 0x33_00_5F_B8;
+                palette.SelectionForeground = 0xFF_11_1A_24;
+                palette.MutedForeground = 0xFF_5F_5F_5F;
+                break;
+
             case VisualStyleKind.AeroGlass:
                 palette.WindowBackground = 0xFF_EF_F5_FB;
                 palette.WindowBorder = 0xFF_9B_B6_D4;
@@ -269,6 +288,26 @@ public sealed class ThemePalette
 
         switch (visualStyleKind)
         {
+            case VisualStyleKind.Mica:
+                palette.WindowBackground = 0xFF_20_20_20;
+                palette.WindowBorder = 0xFF_32_32_32;
+                palette.TitleBarBackground = 0xD9_20_20_20;
+                palette.TitleBarBorder = 0xFF_36_36_36;
+                palette.SurfaceBackground = 0xFF_2B_2B_2B;
+                palette.SurfaceBorder = 0xFF_3A_3A_3A;
+                palette.ControlBackground = 0xFF_2D_2D_2D;
+                palette.ControlBorder = 0xFF_47_47_47;
+                palette.ControlHoverBackground = 0xFF_35_35_35;
+                palette.ControlPressedBackground = 0xFF_3E_3E_3E;
+                palette.ControlDisabledBackground = 0xFF_26_26_26;
+                palette.Accent = 0xFF_60_CD_FF;
+                palette.AccentForeground = 0xFF_08_08_08;
+                palette.Selection = 0x44_60_CD_FF;
+                palette.SelectionForeground = 0xFF_FF_FF_FF;
+                palette.DisabledForeground = 0xFF_9A_9A_9A;
+                palette.MutedForeground = 0xFF_C6_C6_C6;
+                break;
+
             case VisualStyleKind.AeroGlass:
                 palette.WindowBackground = 0xFF_1D_26_31;
                 palette.WindowBorder = 0xFF_4F_67_7E;

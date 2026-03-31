@@ -102,4 +102,42 @@ public class ApplicationConfigurationTests
             });
         }
     }
+
+    [Fact]
+    public void CurrentVisualStyle_UsesMicaAltForLightWindows11Style()
+    {
+        try
+        {
+            Application.ConfigureVisualStyles(settings =>
+            {
+                settings.ThemeMode = ThemeMode.Light;
+                settings.ApplyBackdropEffects = true;
+                settings.PreferredVisualStyle = VisualStyleKind.Mica;
+                settings.PreferredEffect = null;
+                settings.PreferredEffectOptions = null;
+                settings.Palette = null;
+                settings.Theme = null;
+            });
+
+            ResolvedVisualStyle resolvedStyle = Application.CurrentVisualStyle;
+
+            Assert.Equal(ThemeMode.Light, resolvedStyle.ThemeMode);
+            Assert.Equal(VisualStyleKind.Mica, resolvedStyle.VisualStyleKind);
+            Assert.Equal(EffectKind.MicaAlt, resolvedStyle.EffectKind);
+            Assert.Equal(0xFF_F3_F3_F3u, resolvedStyle.Palette.WindowBackground);
+        }
+        finally
+        {
+            Application.ConfigureVisualStyles(settings =>
+            {
+                settings.ThemeMode = ThemeMode.System;
+                settings.ApplyBackdropEffects = true;
+                settings.PreferredVisualStyle = VisualStyleKind.System;
+                settings.PreferredEffect = null;
+                settings.PreferredEffectOptions = null;
+                settings.Palette = null;
+                settings.Theme = null;
+            });
+        }
+    }
 }

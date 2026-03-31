@@ -83,13 +83,12 @@ public sealed class NativeTheme
     /// <returns>A new built-in light theme.</returns>
     public static NativeTheme CreateLightTheme() => new()
     {
-        Name = "Lumina Native Light",
-        Description = "Built-in light palette for LuminaForms.",
+        Name = "Lumina Windows 11 Light",
+        Description = "Built-in Windows 11 inspired light palette for LuminaForms.",
         ThemeMode = ThemeMode.Light,
-        PreferredVisualStyle = VisualStyleKind.Fluent,
-        PreferredEffect = EffectKind.Blur,
-        PreferredEffectOptions = new EffectOptions { BlurRadius = 18 },
-        Palette = ThemePalette.CreateLight(VisualStyleKind.Fluent),
+        PreferredVisualStyle = VisualStyleKind.Mica,
+        PreferredEffect = EffectKind.MicaAlt,
+        Palette = ThemePalette.CreateLight(VisualStyleKind.Mica),
     };
 
     /// <summary>
@@ -98,8 +97,8 @@ public sealed class NativeTheme
     /// <returns>A new built-in dark theme.</returns>
     public static NativeTheme CreateDarkTheme() => new()
     {
-        Name = "Lumina Native Dark",
-        Description = "Built-in dark palette for LuminaForms.",
+        Name = "Lumina Windows 11 Dark",
+        Description = "Built-in Windows 11 inspired dark palette for LuminaForms.",
         ThemeMode = ThemeMode.Dark,
         PreferredVisualStyle = VisualStyleKind.Mica,
         PreferredEffect = EffectKind.Mica,

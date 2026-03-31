@@ -77,9 +77,11 @@ internal static class ToolStripPopupMenu
             if (command != 0 && nativeMenu.TryGetCommand(command, out ToolStripItem item))
             {
                 item.PerformClick();
+                _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
                 return 0;
             }
 
+            _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
             return s_menuCloseDirection;
         }
         finally
@@ -152,6 +154,8 @@ internal static class ToolStripPopupMenu
         {
             item.PerformClick();
         }
+
+        _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]

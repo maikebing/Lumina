@@ -11,10 +11,11 @@ public class NativeThemeTests
     {
         var theme = NativeTheme.CreateLightTheme();
 
-        Assert.Equal("Lumina Native Light", theme.Name);
+        Assert.Equal("Lumina Windows 11 Light", theme.Name);
         Assert.Equal(ThemeMode.Light, theme.ThemeMode);
-        Assert.Equal(VisualStyleKind.Fluent, theme.PreferredVisualStyle);
-        Assert.Equal(EffectKind.Blur, theme.PreferredEffect);
+        Assert.Equal(VisualStyleKind.Mica, theme.PreferredVisualStyle);
+        Assert.Equal(EffectKind.MicaAlt, theme.PreferredEffect);
+        Assert.Equal(0xFF_F3_F3_F3u, theme.Palette.WindowBackground);
         Assert.NotNull(theme.Palette);
     }
 
@@ -23,11 +24,11 @@ public class NativeThemeTests
     {
         var theme = NativeTheme.CreateDarkTheme();
 
-        Assert.Equal("Lumina Native Dark", theme.Name);
+        Assert.Equal("Lumina Windows 11 Dark", theme.Name);
         Assert.Equal(ThemeMode.Dark, theme.ThemeMode);
         Assert.Equal(VisualStyleKind.Mica, theme.PreferredVisualStyle);
         Assert.Equal(EffectKind.Mica, theme.PreferredEffect);
-        Assert.Equal(0xFF_20_20_24u, theme.Palette.WindowBackground);
+        Assert.Equal(0xFF_20_20_20u, theme.Palette.WindowBackground);
     }
 
     [Fact]

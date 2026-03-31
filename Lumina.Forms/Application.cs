@@ -200,7 +200,7 @@ public static class Application
     {
         ThemeMode themeMode = ResolveThemeMode(requestedThemeMode, theme);
         VisualStyleKind visualStyleKind = ResolveVisualStyleKind(preferredVisualStyle, theme);
-        EffectKind effectKind = ResolveEffectKind(applyBackdropEffects, preferredEffect, theme, visualStyleKind);
+        EffectKind effectKind = ResolveEffectKind(applyBackdropEffects, preferredEffect, theme, themeMode, visualStyleKind);
         EffectOptions? effectOptions = ResolveEffectOptions(preferredEffectOptions, theme, effectKind, themeMode);
         ThemePalette resolvedPalette = ResolvePalette(palette, theme, themeMode, visualStyleKind);
         return new ResolvedVisualStyle(themeMode, visualStyleKind, effectKind, effectOptions, theme, resolvedPalette);
@@ -262,6 +262,7 @@ public static class Application
         bool applyBackdropEffects,
         EffectKind? preferredEffect,
         NativeTheme? theme,
+        ThemeMode themeMode,
         VisualStyleKind visualStyleKind)
     {
         if (!applyBackdropEffects)
@@ -281,7 +282,9 @@ public static class Application
 
         return visualStyleKind switch
         {
-            VisualStyleKind.Mica => EffectKind.Mica,
+            VisualStyleKind.Mica => themeMode == ThemeMode.Dark
+                ? EffectKind.Mica
+                : EffectKind.MicaAlt,
             VisualStyleKind.Fluent => EffectKind.Blur,
             VisualStyleKind.AeroGlass => EffectKind.Aero,
             _ => EffectKind.None,
@@ -357,6 +360,22 @@ public static class Application
             _ = s_openForms.Remove(form);
             return s_openForms.Count == 0;
         }
+    }
+
+    internal static nint GetAnyOpenFormHandle()
+    {
+        lock (s_syncRoot)
+        {
+            foreach (Form form in s_openForms)
+            {
+                if (form.Handle != 0)
+                {
+                    return form.Handle;
+                }
+            }
+        }
+
+        return 0;
     }
 
     private static Form[] GetOpenFormsSnapshot()

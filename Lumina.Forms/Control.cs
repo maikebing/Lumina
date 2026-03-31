@@ -21,6 +21,8 @@ public abstract class Control : IDisposable
     private bool _visible = true;
     private bool _disposed;
     private nint _originalWindowProc;
+    private long _lastContextMenuShownTick = long.MinValue;
+    private Point _lastContextMenuScreenLocation = new(int.MinValue, int.MinValue);
 
     /// <summary>
     /// Gets or sets the design-time or lookup name of the control.
@@ -436,6 +438,14 @@ public abstract class Control : IDisposable
         OnHandleCreated();
     }
 
+    internal static bool TryGetControlByHandle(nint handle, out Control? control)
+    {
+        lock (s_subclassLock)
+        {
+            return s_controlsByHandle.TryGetValue(handle, out control);
+        }
+    }
+
     internal bool HandleCommand(int notificationCode)
         => OnCommand(notificationCode);
 
@@ -561,15 +571,19 @@ public abstract class Control : IDisposable
 
     private nint SubclassWindowProc(nint hwnd, uint message, nint wParam, nint lParam)
     {
-        if (message == Win32.WM_CONTEXTMENU && ContextMenuStrip is not null)
-        {
-            ShowAttachedContextMenu(hwnd, lParam);
-            return 0;
-        }
-
         nint result = _originalWindowProc != 0
             ? Win32.CallWindowProcW(_originalWindowProc, hwnd, message, wParam, lParam)
             : Win32.DefWindowProcW(hwnd, message, wParam, lParam);
+
+        if (message == Win32.WM_CONTEXTMENU && ContextMenuStrip is not null && TryShowAttachedContextMenu(hwnd, lParam))
+        {
+            return 0;
+        }
+
+        if (message == Win32.WM_RBUTTONUP && ContextMenuStrip is not null)
+        {
+            _ = TryShowAttachedContextMenuFromClientPoint(hwnd, lParam);
+        }
 
         if (message == Win32.WM_NCDESTROY)
         {
@@ -584,33 +598,102 @@ public abstract class Control : IDisposable
         return result;
     }
 
-    private void ShowAttachedContextMenu(nint hwnd, nint lParam)
+    internal bool TryShowAttachedContextMenu(nint hwnd, nint lParam)
+    {
+        if (!TryResolveContextMenuScreenLocation(hwnd, lParam, out Point screenLocation))
+        {
+            return false;
+        }
+
+        return TryShowAttachedContextMenuAtScreenPoint(hwnd, screenLocation);
+    }
+
+    internal bool TryShowAttachedContextMenuFromClientPoint(nint hwnd, nint lParam)
+    {
+        if (!TryResolveClientContextMenuScreenLocation(hwnd, lParam, out Point screenLocation))
+        {
+            return false;
+        }
+
+        return TryShowAttachedContextMenuAtScreenPoint(hwnd, screenLocation);
+    }
+
+    internal bool TryShowAttachedContextMenuAtScreenPoint(nint hwnd, Point screenLocation)
     {
         ContextMenuStrip? contextMenuStrip = ContextMenuStrip;
         if (contextMenuStrip is null)
         {
-            return;
+            return false;
         }
 
-        Point screenLocation;
-        if (lParam == (nint)(-1))
+        if (ShouldSuppressDuplicateContextMenu(screenLocation))
         {
-            if (!Win32.GetCursorPos(out var cursor))
-            {
-                return;
-            }
+            return true;
+        }
 
-            screenLocation = new Point(cursor.x, cursor.y);
-        }
-        else
-        {
-            screenLocation = new Point(
-                unchecked((short)(nuint)lParam),
-                unchecked((short)(((nuint)lParam >> 16) & 0xFFFF)));
-        }
+        _lastContextMenuShownTick = Environment.TickCount64;
+        _lastContextMenuScreenLocation = screenLocation;
 
         nint ownerHandle = Owner?.Handle ?? Parent?.Handle ?? hwnd;
         contextMenuStrip.ShowAtScreenPoint(ownerHandle, screenLocation);
+        return true;
+    }
+
+    private bool TryResolveContextMenuScreenLocation(nint hwnd, nint lParam, out Point screenLocation)
+    {
+        if (lParam == (nint)(-1))
+        {
+            if (Win32.GetWindowRect(hwnd, out var rect))
+            {
+                screenLocation = new Point(rect.Left + Math.Min(16, Math.Max(0, rect.Width - 1)), rect.Top + Math.Min(16, Math.Max(0, rect.Height - 1)));
+                return true;
+            }
+
+            if (Win32.GetCursorPos(out var cursor))
+            {
+                screenLocation = new Point(cursor.x, cursor.y);
+                return true;
+            }
+
+            screenLocation = default;
+            return false;
+        }
+
+        screenLocation = ExtractPoint(lParam);
+        return true;
+    }
+
+    private static bool TryResolveClientContextMenuScreenLocation(nint hwnd, nint lParam, out Point screenLocation)
+    {
+        var point = new Win32.POINT
+        {
+            x = unchecked((short)(nuint)lParam),
+            y = unchecked((short)(((nuint)lParam >> 16) & 0xFFFF)),
+        };
+
+        if (!Win32.ClientToScreen(hwnd, ref point))
+        {
+            screenLocation = default;
+            return false;
+        }
+
+        screenLocation = new Point(point.x, point.y);
+        return true;
+    }
+
+    private bool ShouldSuppressDuplicateContextMenu(Point screenLocation)
+    {
+        long elapsed = Environment.TickCount64 - _lastContextMenuShownTick;
+        return elapsed is >= 0 and <= 250
+            && Math.Abs(_lastContextMenuScreenLocation.X - screenLocation.X) <= 4
+            && Math.Abs(_lastContextMenuScreenLocation.Y - screenLocation.Y) <= 4;
+    }
+
+    internal static Point ExtractPoint(nint lParam)
+    {
+        return new Point(
+            unchecked((short)(nuint)lParam),
+            unchecked((short)(((nuint)lParam >> 16) & 0xFFFF)));
     }
 
     private void ApplyBounds()

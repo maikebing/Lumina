@@ -154,6 +154,15 @@ public class ToolStrip : ContainerControlBase
     /// <returns>The control used to host the item.</returns>
     protected virtual Control CreateHostControl(ToolStripItem item)
     {
+        if (OperatingSystem.IsWindows()
+            && item.DisplayStyle == ToolStripItemDisplayStyle.Image
+            && item.Image is not null)
+        {
+            return item is ToolStripDropDownItem
+                ? CreateImageDropDownHost(item)
+                : CreateImageButtonHost(item);
+        }
+
         return item switch
         {
             ToolStripStatusLabel => new Label(),
@@ -179,6 +188,27 @@ public class ToolStrip : ContainerControlBase
     }
 
     /// <summary>
+    /// Creates the default clickable image host for non-drop-down items.
+    /// </summary>
+    /// <param name="item">The image item that needs a host.</param>
+    /// <returns>The control used to invoke the item.</returns>
+    protected virtual Control CreateImageButtonHost(ToolStripItem item)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return CreateButtonHost(item);
+        }
+
+        var pictureBox = new ItemPictureHost
+        {
+            SizeMode = PictureBoxSizeMode.CenterImage,
+            TabStop = false,
+        };
+        pictureBox.Click += (_, _) => item.PerformClick();
+        return pictureBox;
+    }
+
+    /// <summary>
     /// Creates the default clickable host for a top-level drop-down item.
     /// </summary>
     /// <param name="item">The drop-down item that needs a host.</param>
@@ -188,6 +218,27 @@ public class ToolStrip : ContainerControlBase
         var button = new ItemButtonHost();
         button.Click += (_, _) => ShowDropDownWithSiblingNavigation((ToolStripDropDownItem)item, button);
         return button;
+    }
+
+    /// <summary>
+    /// Creates the default clickable image host for a top-level drop-down item.
+    /// </summary>
+    /// <param name="item">The image drop-down item that needs a host.</param>
+    /// <returns>The control used to open the drop-down.</returns>
+    protected virtual Control CreateImageDropDownHost(ToolStripItem item)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return CreateDropDownHost(item);
+        }
+
+        var pictureBox = new ItemPictureHost
+        {
+            SizeMode = PictureBoxSizeMode.CenterImage,
+            TabStop = false,
+        };
+        pictureBox.Click += (_, _) => ShowDropDownWithSiblingNavigation((ToolStripDropDownItem)item, pictureBox);
+        return pictureBox;
     }
 
     private void ApplyItemState(Control host, ToolStripItem item)
@@ -217,6 +268,11 @@ public class ToolStrip : ContainerControlBase
                 textBox.Text = item.Text;
                 break;
 
+            case PictureBox pictureBox when OperatingSystem.IsWindows():
+                pictureBox.Image = item.Image;
+                pictureBox.SizeMode = PictureBoxSizeMode.CenterImage;
+                break;
+
             case Button button:
                 button.Text = ResolveItemText(item);
                 break;
@@ -237,6 +293,12 @@ public class ToolStrip : ContainerControlBase
             ToolStripComboBox => new Size(121, Math.Min(availableHeight, 25)),
             ToolStripTextBox => new Size(100, Math.Min(availableHeight, 23)),
             ToolStripSeparator => new Size(6, availableHeight),
+            _ when OperatingSystem.IsWindowsVersionAtLeast(6, 1)
+                && item.DisplayStyle == ToolStripItemDisplayStyle.Image
+                && item.Image is not null
+                => new Size(
+                    Math.Max(20, item.Image.Width + 8),
+                    Math.Max(20, Math.Min(availableHeight, item.Image.Height + 8))),
             _ => new Size(Math.Max(24, ResolveItemText(item).Length * 8 + 16), Math.Min(Math.Max(20, availableHeight), Math.Max(20, availableHeight))),
         };
     }
@@ -343,6 +405,12 @@ public class ToolStrip : ContainerControlBase
     }
 
     private sealed class ItemButtonHost : Button
+    {
+        protected override int GetNativeHeight(int requestedHeight)
+            => Math.Max(20, requestedHeight);
+    }
+
+    private sealed class ItemPictureHost : PictureBox
     {
         protected override int GetNativeHeight(int requestedHeight)
             => Math.Max(20, requestedHeight);

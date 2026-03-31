@@ -20,6 +20,7 @@ public class NotifyIcon : Component
     private const uint WM_LBUTTONDBLCLK = 0x0203;
     private const uint WM_RBUTTONUP = 0x0205;
     private const uint WM_RBUTTONDBLCLK = 0x0206;
+    private const uint NIF_MESSAGE = 0x01;
     private const uint NIF_ICON = 0x02;
     private const uint NIF_TIP = 0x04;
     private static readonly Lock s_syncRoot = new();
@@ -282,7 +283,7 @@ public class NotifyIcon : Component
             0,
             0,
             0,
-            (nint)(-3),
+            0,
             0,
             instanceHandle,
             0);
@@ -319,7 +320,7 @@ public class NotifyIcon : Component
             cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATAW>(),
             hWnd = _windowHandle,
             uID = _iconId,
-            uFlags = message == NIM_DELETE ? 0u : NIF_ICON | NIF_TIP,
+            uFlags = message == NIM_DELETE ? 0u : NIF_MESSAGE | NIF_ICON | NIF_TIP,
             uCallbackMessage = WM_TRAYICON,
             hIcon = ResolveIconHandle(),
             szTip = TrimToolTip(_text),
@@ -449,7 +450,13 @@ public class NotifyIcon : Component
             return;
         }
 
-        ContextMenuStrip.ShowAtScreenPoint(_windowHandle, new System.Drawing.Point(cursorPoint.x, cursorPoint.y));
+        nint ownerHandle = Application.GetAnyOpenFormHandle();
+        if (ownerHandle == 0)
+        {
+            ownerHandle = _windowHandle;
+        }
+
+        ContextMenuStrip.ShowAtScreenPoint(ownerHandle, new System.Drawing.Point(cursorPoint.x, cursorPoint.y));
     }
 
     /// <summary>

@@ -54,8 +54,19 @@ internal static class Win32
     public const int SW_HIDE = 0;
 
     public const int WM_SIZE = 0x0005;
+    public const int WM_NULL = 0x0000;
+    public const int WM_ERASEBKGND = 0x0014;
+    public const int WM_CTLCOLORMSGBOX = 0x0132;
+    public const int WM_CTLCOLOREDIT = 0x0133;
+    public const int WM_CTLCOLORLISTBOX = 0x0134;
+    public const int WM_CTLCOLORBTN = 0x0135;
+    public const int WM_CTLCOLORDLG = 0x0136;
+    public const int WM_CTLCOLORSTATIC = 0x0138;
+    public const int WM_PARENTNOTIFY = 0x0210;
     public const int WM_NOTIFY = 0x004E;
     public const int WM_KEYDOWN = 0x0100;
+    public const int WM_RBUTTONDOWN = 0x0204;
+    public const int WM_RBUTTONUP = 0x0205;
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
     public const int WM_CONTEXTMENU = 0x007B;
@@ -113,6 +124,12 @@ internal static class Win32
     public const int COLOR_WINDOW = 5;
     public const int COLOR_BTNFACE = 15;
     public const int DEFAULT_GUI_FONT = 17;
+    public const int FW_NORMAL = 400;
+    public const uint DEFAULT_CHARSET = 1;
+    public const uint OUT_DEFAULT_PRECIS = 0;
+    public const uint CLIP_DEFAULT_PRECIS = 0;
+    public const uint CLEARTYPE_QUALITY = 5;
+    public const uint DEFAULT_PITCH = 0;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
     public const int VK_F10 = 0x79;
@@ -151,6 +168,7 @@ internal static class Win32
 
     public const int WH_MSGFILTER = -1;
     public const int MSGF_MENU = 2;
+    public const int TRANSPARENT = 1;
 
     public const int WM_INITMENUPOPUP = 0x0117;
     public const int WM_UNINITMENUPOPUP = 0x0125;
@@ -336,6 +354,10 @@ internal static class Win32
     [DllImport("user32.dll")]
     internal static extern void PostQuitMessage(int nExitCode);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool PostMessageW(nint hWnd, int msg, nint wParam, nint lParam);
+
     [DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
     internal static extern nint LoadCursorW(nint hInstance, nint lpCursorName);
 
@@ -409,7 +431,14 @@ internal static class Win32
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ClientToScreen(nint hWnd, ref POINT lpPoint);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("user32.dll")]
+    internal static extern nint WindowFromPoint(POINT point);
 
     [DllImport("user32.dll")]
     internal static extern short GetKeyState(int nVirtKey);
@@ -449,8 +478,37 @@ internal static class Win32
     [DllImport("gdi32.dll", SetLastError = true)]
     internal static extern nint GetStockObject(int i);
 
+    [DllImport("gdi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern nint CreateFontW(
+        int cHeight,
+        int cWidth,
+        int cEscapement,
+        int cOrientation,
+        int cWeight,
+        uint bItalic,
+        uint bUnderline,
+        uint bStrikeOut,
+        uint iCharSet,
+        uint iOutPrecision,
+        uint iClipPrecision,
+        uint iQuality,
+        uint iPitchAndFamily,
+        string pszFaceName);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern nint CreateSolidBrush(uint colorRef);
+
     [DllImport("gdi32.dll", SetLastError = true)]
     internal static extern nint SelectObject(nint hdc, nint h);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern uint SetBkColor(nint hdc, uint color);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern uint SetTextColor(nint hdc, uint color);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    internal static extern int SetBkMode(nint hdc, int mode);
 
     [DllImport("gdi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -462,6 +520,10 @@ internal static class Win32
     [DllImport("gdi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool DeleteObject(nint hObject);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool FillRect(nint hdc, ref RECT rect, nint hbr);
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
@@ -563,6 +625,14 @@ internal static class Win32
         }
     }
 
+    internal static uint ToColorRef(uint argb)
+    {
+        uint red = (argb >> 16) & 0xFF;
+        uint green = (argb >> 8) & 0xFF;
+        uint blue = argb & 0xFF;
+        return red | (green << 8) | (blue << 16);
+    }
+
     internal static SizeF GetDefaultFontScaleDimensions()
     {
         nint screenDc = GetDC(0);
@@ -571,7 +641,12 @@ internal static class Win32
             return new SizeF(8f, 20f);
         }
 
-        nint fontHandle = GetStockObject(DEFAULT_GUI_FONT);
+        nint fontHandle = CreateUiFont();
+        bool ownsFontHandle = fontHandle != 0;
+        if (fontHandle == 0)
+        {
+            fontHandle = GetStockObject(DEFAULT_GUI_FONT);
+        }
         nint previousObject = 0;
 
         try
@@ -595,10 +670,37 @@ internal static class Win32
                 _ = SelectObject(screenDc, previousObject);
             }
 
+            if (ownsFontHandle)
+            {
+                _ = DeleteObject(fontHandle);
+            }
+
             _ = ReleaseDC(0, screenDc);
         }
 
         return new SizeF(8f, 20f);
+    }
+
+    internal static nint CreateUiFont(float pointSize = 9f)
+    {
+        float dpi = GetSystemDpiScaleDimensions().Height;
+        int height = -Math.Max(1, (int)Math.Round(pointSize * dpi / 72f, MidpointRounding.AwayFromZero));
+
+        return CreateFontW(
+            height,
+            0,
+            0,
+            0,
+            FW_NORMAL,
+            0,
+            0,
+            0,
+            DEFAULT_CHARSET,
+            OUT_DEFAULT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY,
+            DEFAULT_PITCH,
+            "Segoe UI");
     }
 
     [InlineArray(Capacity)]

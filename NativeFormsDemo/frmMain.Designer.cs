@@ -130,6 +130,7 @@
             // 
             // button1
             // 
+            button1.ContextMenuStrip = contextMenuStrip1;
             button1.Location = new Point(24, 22);
             button1.Name = "button1";
             button1.Size = new Size(75, 23);
@@ -267,6 +268,7 @@
             // 
             // textBox1
             // 
+            textBox1.ContextMenuStrip = contextMenuStrip1;
             textBox1.Location = new Point(667, 74);
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(100, 23);
@@ -275,6 +277,7 @@
             // 
             // treeView1
             // 
+            treeView1.ContextMenuStrip = contextMenuStrip1;
             treeView1.Location = new Point(610, 153);
             treeView1.Name = "treeView1";
             treeNode14.Name = "节点4";
@@ -401,6 +404,7 @@
             // 
             // statusStrip1
             // 
+            statusStrip1.ContextMenuStrip = contextMenuStrip1;
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripProgressBar1, toolStripDropDownButton1, toolStripSplitButton1, toolStripSplitButton2 });
             statusStrip1.Location = new Point(0, 769);
             statusStrip1.Name = "statusStrip1";
@@ -532,6 +536,7 @@
             // 
             // panel1
             // 
+            panel1.ContextMenuStrip = contextMenuStrip1;
             panel1.Controls.Add(button4);
             panel1.Location = new Point(534, 619);
             panel1.Name = "panel1";
@@ -594,6 +599,7 @@
             // 
             // tabPage1
             // 
+            tabPage1.ContextMenuStrip = contextMenuStrip1;
             tabPage1.Controls.Add(button6);
             tabPage1.Location = new Point(4, 26);
             tabPage1.Name = "tabPage1";

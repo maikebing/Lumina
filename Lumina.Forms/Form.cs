@@ -28,6 +28,17 @@ public class Form : IDisposable
     private ThemeMode? _requestedThemeMode;
     private NativeTheme? _themeOverride;
     private ThemePalette? _paletteOverride;
+    private nint _windowBackgroundBrush;
+    private bool _ownsWindowBackgroundBrush;
+    private nint _surfaceBackgroundBrush;
+    private bool _ownsSurfaceBackgroundBrush;
+    private nint _controlBackgroundBrush;
+    private bool _ownsControlBackgroundBrush;
+    private uint _windowForegroundColorRef;
+    private uint _surfaceForegroundColorRef;
+    private uint _controlForegroundColorRef;
+    private uint _surfaceBackgroundColorRef;
+    private uint _controlBackgroundColorRef;
 
     /// <summary>
     /// Initializes a new top-level LuminaForms window.
@@ -110,6 +121,7 @@ public class Form : IDisposable
     internal nint InstanceHandle { get; private set; }
 
     internal nint UiFontHandle { get; private set; }
+    private bool OwnsUiFontHandle { get; set; }
 
     /// <summary>
     /// Gets or sets the client size used when creating the form.
@@ -170,7 +182,12 @@ public class Form : IDisposable
         InstanceHandle = Win32.GetModuleHandleW(null);
         EnsureWindowClassRegistered(InstanceHandle);
 
-        UiFontHandle = Win32.GetStockObject(Win32.DEFAULT_GUI_FONT);
+        UiFontHandle = Win32.CreateUiFont();
+        OwnsUiFontHandle = UiFontHandle != 0;
+        if (UiFontHandle == 0)
+        {
+            UiFontHandle = Win32.GetStockObject(Win32.DEFAULT_GUI_FONT);
+        }
         _selfHandle = GCHandle.Alloc(this);
 
         nint hwnd = Win32.CreateWindowExW(
@@ -532,6 +549,13 @@ public class Form : IDisposable
             ReleaseControlHandles();
         }
 
+        ReleasePaletteResources();
+
+        if (UiFontHandle != 0 && OwnsUiFontHandle)
+        {
+            _ = Win32.DeleteObject(UiFontHandle);
+        }
+
         if (_selfHandle.IsAllocated)
         {
             _selfHandle.Free();
@@ -539,6 +563,7 @@ public class Form : IDisposable
 
         Handle = 0;
         UiFontHandle = 0;
+        OwnsUiFontHandle = false;
     }
 
     private void AddControl(Control control)
@@ -649,6 +674,7 @@ public class Form : IDisposable
 
         ApplyPendingThemeMode();
         ApplyPendingEffect();
+        ApplyResolvedPalette(visualStyle.Palette);
     }
 
     internal void RefreshVisualStyles()
@@ -703,6 +729,80 @@ public class Form : IDisposable
         ThemeMode resolvedThemeMode = Application.ResolveThemeMode(_requestedThemeMode ?? ThemeMode.System);
         int useDarkMode = resolvedThemeMode == ThemeMode.Dark ? 1 : 0;
         _ = Win32.DwmSetWindowAttribute(Handle, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
+    }
+
+    private void ApplyResolvedPalette(ThemePalette palette)
+    {
+        SetBrush(ref _windowBackgroundBrush, ref _ownsWindowBackgroundBrush, palette.WindowBackground, Win32.COLOR_BTNFACE);
+        SetBrush(ref _surfaceBackgroundBrush, ref _ownsSurfaceBackgroundBrush, palette.SurfaceBackground, Win32.COLOR_BTNFACE);
+        SetBrush(ref _controlBackgroundBrush, ref _ownsControlBackgroundBrush, palette.ControlBackground, Win32.COLOR_WINDOW);
+
+        _windowForegroundColorRef = Win32.ToColorRef(palette.WindowForeground);
+        _surfaceForegroundColorRef = Win32.ToColorRef(palette.SurfaceForeground);
+        _controlForegroundColorRef = Win32.ToColorRef(palette.ControlForeground);
+        _surfaceBackgroundColorRef = Win32.ToColorRef(palette.SurfaceBackground);
+        _controlBackgroundColorRef = Win32.ToColorRef(palette.ControlBackground);
+
+        if (Handle != 0)
+        {
+            RefreshHandles();
+        }
+    }
+
+    private void RefreshHandles()
+    {
+        _ = Win32.InvalidateRect(Handle, 0, true);
+        _ = Win32.UpdateWindow(Handle);
+
+        foreach (Control control in CollectionsMarshal.AsSpan(_controlList))
+        {
+            RefreshControl(control);
+        }
+    }
+
+    private static void RefreshControl(Control control)
+    {
+        control.Refresh();
+
+        if (control is not ContainerControlBase container)
+        {
+            return;
+        }
+
+        foreach (Control child in container.ChildControls)
+        {
+            RefreshControl(child);
+        }
+    }
+
+    private static void SetBrush(ref nint brush, ref bool ownsBrush, uint argb, int fallbackSysColor)
+    {
+        ReleaseBrush(ref brush, ref ownsBrush);
+
+        brush = Win32.CreateSolidBrush(Win32.ToColorRef(argb));
+        ownsBrush = brush != 0;
+        if (brush == 0)
+        {
+            brush = Win32.GetSysColorBrush(fallbackSysColor);
+        }
+    }
+
+    private void ReleasePaletteResources()
+    {
+        ReleaseBrush(ref _windowBackgroundBrush, ref _ownsWindowBackgroundBrush);
+        ReleaseBrush(ref _surfaceBackgroundBrush, ref _ownsSurfaceBackgroundBrush);
+        ReleaseBrush(ref _controlBackgroundBrush, ref _ownsControlBackgroundBrush);
+    }
+
+    private static void ReleaseBrush(ref nint brush, ref bool ownsBrush)
+    {
+        if (brush != 0 && ownsBrush)
+        {
+            _ = Win32.DeleteObject(brush);
+        }
+
+        brush = 0;
+        ownsBrush = false;
     }
 
     private static unsafe void EnsureWindowClassRegistered(nint instanceHandle)
@@ -763,6 +863,30 @@ public class Form : IDisposable
                 PerformLayout();
                 return 0;
 
+            case Win32.WM_ERASEBKGND:
+                if (HandleEraseBackground(wParam))
+                {
+                    return (nint)1;
+                }
+
+                break;
+
+            case Win32.WM_CONTEXTMENU:
+                if (HandleContextMenu(wParam, lParam))
+                {
+                    return 0;
+                }
+
+                break;
+
+            case Win32.WM_PARENTNOTIFY:
+                if (HandleParentNotify(wParam, lParam))
+                {
+                    return 0;
+                }
+
+                break;
+
             case Win32.WM_KEYDOWN:
             case Win32.WM_SYSKEYDOWN:
                 if (TryHandleMenuShortcut(BuildShortcutKeyData(wParam)))
@@ -805,6 +929,18 @@ public class Form : IDisposable
                 break;
             }
 
+            case Win32.WM_CTLCOLORBTN:
+            case Win32.WM_CTLCOLORDLG:
+            case Win32.WM_CTLCOLOREDIT:
+            case Win32.WM_CTLCOLORLISTBOX:
+            case Win32.WM_CTLCOLORSTATIC:
+                if (TryHandleControlColor(message, wParam, lParam, out nint brush))
+                {
+                    return brush;
+                }
+
+                break;
+
             case Win32.WM_NOTIFY:
                 if (HandleNotify(lParam))
                 {
@@ -827,7 +963,16 @@ public class Form : IDisposable
 
             case Win32.WM_NCDESTROY:
                 ReleaseMainMenuStrip();
+                ReleasePaletteResources();
                 ReleaseControlHandles();
+
+                if (UiFontHandle != 0 && OwnsUiFontHandle)
+                {
+                    _ = Win32.DeleteObject(UiFontHandle);
+                    UiFontHandle = 0;
+                    OwnsUiFontHandle = false;
+                }
+
                 Handle = 0;
                 Win32.SetWindowLongPtrW(hwnd, Win32.GWLP_USERDATA, 0);
                 if (Application.UnregisterOpenForm(this))
@@ -881,6 +1026,151 @@ public class Form : IDisposable
 
         return _controlsById.TryGetValue(controlId, out var control)
             && control.HandleNotify(notificationCode, lParam);
+    }
+
+    private bool HandleContextMenu(nint wParam, nint lParam)
+    {
+        if (wParam != 0
+            && Control.TryGetControlByHandle(wParam, out Control? directControl)
+            && directControl is not null
+            && directControl.TryShowAttachedContextMenu(wParam, lParam))
+        {
+            return true;
+        }
+
+        if (TryResolveControlFromScreenPoint(lParam, out Control? pointControl, out nint controlHandle, out _))
+        {
+            return pointControl!.TryShowAttachedContextMenu(controlHandle, lParam);
+        }
+
+        return false;
+    }
+
+    private bool HandleParentNotify(nint wParam, nint lParam)
+    {
+        if (Win32.LowWord(wParam) != Win32.WM_RBUTTONDOWN)
+        {
+            return false;
+        }
+
+        if (!TryResolveControlFromScreenPoint(lParam, out Control? control, out nint controlHandle, out Point screenLocation))
+        {
+            return false;
+        }
+
+        return control!.TryShowAttachedContextMenuAtScreenPoint(controlHandle, screenLocation);
+    }
+
+    private static bool TryResolveControlFromScreenPoint(nint lParam, out Control? control, out nint controlHandle, out Point screenLocation)
+    {
+        bool hasMessagePoint = lParam != 0 && lParam != (nint)(-1);
+        Point messagePoint = hasMessagePoint
+            ? Control.ExtractPoint(lParam)
+            : default;
+
+        if (hasMessagePoint && TryGetControlFromScreenPoint(messagePoint, out control, out controlHandle))
+        {
+            screenLocation = messagePoint;
+            return true;
+        }
+
+        if (Win32.GetCursorPos(out var cursor)
+            && TryGetControlFromScreenPoint(new Point(cursor.x, cursor.y), out control, out controlHandle))
+        {
+            screenLocation = new Point(cursor.x, cursor.y);
+            return true;
+        }
+
+        control = null;
+        controlHandle = 0;
+        screenLocation = default;
+        return false;
+    }
+
+    private static bool TryGetControlFromScreenPoint(Point screenLocation, out Control? control, out nint controlHandle)
+    {
+        nint hwnd = Win32.WindowFromPoint(new Win32.POINT { x = screenLocation.X, y = screenLocation.Y });
+        if (hwnd != 0 && Control.TryGetControlByHandle(hwnd, out control) && control is not null)
+        {
+            controlHandle = hwnd;
+            return true;
+        }
+
+        control = null;
+        controlHandle = 0;
+        return false;
+    }
+
+    private bool HandleEraseBackground(nint hdc)
+    {
+        if (hdc == 0 || Handle == 0 || _windowBackgroundBrush == 0)
+        {
+            return false;
+        }
+
+        if (!Win32.GetClientRect(Handle, out var rect))
+        {
+            return false;
+        }
+
+        return Win32.FillRect(hdc, ref rect, _windowBackgroundBrush);
+    }
+
+    private bool TryHandleControlColor(uint message, nint wParam, nint lParam, out nint brush)
+    {
+        brush = 0;
+        if (wParam == 0)
+        {
+            return false;
+        }
+
+        _ = Control.TryGetControlByHandle(lParam, out Control? control);
+
+        switch (message)
+        {
+            case Win32.WM_CTLCOLOREDIT:
+            case Win32.WM_CTLCOLORLISTBOX:
+                if (_controlBackgroundBrush == 0)
+                {
+                    return false;
+                }
+
+                _ = Win32.SetBkColor(wParam, _controlBackgroundColorRef);
+                _ = Win32.SetTextColor(wParam, _controlForegroundColorRef);
+                brush = _controlBackgroundBrush;
+                return true;
+
+            case Win32.WM_CTLCOLORSTATIC:
+                if (_surfaceBackgroundBrush == 0)
+                {
+                    return false;
+                }
+
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+                _ = Win32.SetBkColor(wParam, _surfaceBackgroundColorRef);
+                _ = Win32.SetTextColor(
+                    wParam,
+                    control is TabPage or Panel or ToolStrip or StatusStrip
+                        ? _surfaceForegroundColorRef
+                        : _windowForegroundColorRef);
+                brush = _surfaceBackgroundBrush;
+                return true;
+
+            case Win32.WM_CTLCOLORBTN:
+            case Win32.WM_CTLCOLORDLG:
+                if (_surfaceBackgroundBrush == 0)
+                {
+                    return false;
+                }
+
+                _ = Win32.SetBkColor(wParam, _surfaceBackgroundColorRef);
+                _ = Win32.SetTextColor(wParam, _surfaceForegroundColorRef);
+                brush = _surfaceBackgroundBrush;
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private bool TryHandleMenuShortcut(Keys keyData)

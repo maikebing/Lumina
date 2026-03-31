@@ -22,6 +22,11 @@ public class PictureBox : Control, ISupportInitialize
     private PictureBoxSizeMode _sizeMode;
 
     /// <summary>
+    /// Occurs when the user activates the picture box.
+    /// </summary>
+    public event EventHandler? Click;
+
+    /// <summary>
     /// Gets or sets the image displayed by the control.
     /// </summary>
     public Image? Image
@@ -90,7 +95,7 @@ public class PictureBox : Control, ISupportInitialize
     protected override string ClassName => "STATIC";
 
     /// <inheritdoc />
-    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.SS_BITMAP;
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.SS_BITMAP | Win32.SS_NOTIFY;
 
     /// <inheritdoc />
     protected override void OnHandleCreated()
@@ -135,6 +140,27 @@ public class PictureBox : Control, ISupportInitialize
     protected override void OnDisposing()
     {
         ReleaseBitmap();
+    }
+
+    /// <inheritdoc />
+    protected override bool OnCommand(int notificationCode)
+    {
+        if (notificationCode != Win32.STN_CLICKED)
+        {
+            return false;
+        }
+
+        OnClick(EventArgs.Empty);
+        return true;
+    }
+
+    /// <summary>
+    /// Raises the <see cref="Click"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnClick(EventArgs e)
+    {
+        Click?.Invoke(this, e);
     }
 
     private void ApplyImage()
