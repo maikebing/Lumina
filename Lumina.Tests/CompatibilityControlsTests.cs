@@ -98,6 +98,24 @@ public sealed class CompatibilityControlsTests
     }
 
     [Fact]
+    public void MenuStrip_UsesMenuHostsInsteadOfButtons()
+    {
+        var menuStrip = new MenuStrip();
+        var fileMenu = new ToolStripMenuItem { Text = "File" };
+        menuStrip.Items.Add(fileMenu);
+        menuStrip.PerformLayout();
+
+        FieldInfo? itemHostsField = typeof(ToolStrip).GetField("_itemHosts", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(itemHostsField);
+
+        var itemHosts = Assert.IsType<Dictionary<ToolStripItem, Control>>(itemHostsField!.GetValue(menuStrip));
+        Control host = Assert.Single(itemHosts).Value;
+
+        Assert.False(host is Button);
+        Assert.IsNotType<Button>(host);
+    }
+
+    [Fact]
     public void ToolStripMenuItem_CheckOnClick_TogglesCheckedState()
     {
         var item = new ToolStripMenuItem

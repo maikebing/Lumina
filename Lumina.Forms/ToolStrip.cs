@@ -143,7 +143,12 @@ public class ToolStrip : ContainerControlBase
         }
     }
 
-    private Control CreateHostControl(ToolStripItem item)
+    /// <summary>
+    /// Creates the native host control used to represent a logical strip item on the surface.
+    /// </summary>
+    /// <param name="item">The item that needs a host control.</param>
+    /// <returns>The control used to host the item.</returns>
+    protected virtual Control CreateHostControl(ToolStripItem item)
     {
         return item switch
         {
@@ -157,14 +162,24 @@ public class ToolStrip : ContainerControlBase
         };
     }
 
-    private Control CreateButtonHost(ToolStripItem item)
+    /// <summary>
+    /// Creates the default clickable host for non-drop-down items.
+    /// </summary>
+    /// <param name="item">The item that needs a clickable host.</param>
+    /// <returns>The control used to invoke the item.</returns>
+    protected virtual Control CreateButtonHost(ToolStripItem item)
     {
         var button = new ItemButtonHost();
         button.Click += (_, _) => item.PerformClick();
         return button;
     }
 
-    private Control CreateDropDownHost(ToolStripItem item)
+    /// <summary>
+    /// Creates the default clickable host for a top-level drop-down item.
+    /// </summary>
+    /// <param name="item">The drop-down item that needs a host.</param>
+    /// <returns>The control used to open the drop-down.</returns>
+    protected virtual Control CreateDropDownHost(ToolStripItem item)
     {
         var button = new ItemButtonHost();
         button.Click += (_, _) => ShowDropDownWithSiblingNavigation((ToolStripDropDownItem)item, button);
@@ -199,7 +214,7 @@ public class ToolStrip : ContainerControlBase
                 break;
 
             case Button button:
-                button.Text = ResolveButtonText(item);
+                button.Text = ResolveItemText(item);
                 break;
         }
     }
@@ -218,11 +233,16 @@ public class ToolStrip : ContainerControlBase
             ToolStripComboBox => new Size(121, Math.Min(availableHeight, 25)),
             ToolStripTextBox => new Size(100, Math.Min(availableHeight, 23)),
             ToolStripSeparator => new Size(6, availableHeight),
-            _ => new Size(Math.Max(24, ResolveButtonText(item).Length * 8 + 16), Math.Min(Math.Max(20, availableHeight), Math.Max(20, availableHeight))),
+            _ => new Size(Math.Max(24, ResolveItemText(item).Length * 8 + 16), Math.Min(Math.Max(20, availableHeight), Math.Max(20, availableHeight))),
         };
     }
 
-    private static string ResolveButtonText(ToolStripItem item)
+    /// <summary>
+    /// Resolves the display text used by host controls when an item does not provide explicit content.
+    /// </summary>
+    /// <param name="item">The item whose text should be resolved.</param>
+    /// <returns>The text that should appear on the host control.</returns>
+    protected internal static string ResolveItemText(ToolStripItem item)
     {
         if (item.DisplayStyle == ToolStripItemDisplayStyle.Image && !string.IsNullOrWhiteSpace(item.Text))
         {
@@ -257,7 +277,7 @@ public class ToolStrip : ContainerControlBase
     /// Shows the drop-down for a top-level item and handles Left/Right sibling navigation
     /// by looping until the user either selects a command or presses Escape.
     /// </summary>
-    private void ShowDropDownWithSiblingNavigation(ToolStripDropDownItem initialItem, Control initialHost)
+    protected void ShowDropDownWithSiblingNavigation(ToolStripDropDownItem initialItem, Control initialHost)
     {
         // Build ordered list of navigable drop-down items on this strip.
         List<ToolStripDropDownItem> navigable = [];

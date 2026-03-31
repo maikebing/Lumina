@@ -46,6 +46,7 @@ internal static class Win32
     public const uint BS_AUTORADIOBUTTON = 0x00000009;
     public const uint BS_GROUPBOX = 0x00000007;
     public const uint LBS_NOTIFY = 0x0001;
+    public const uint SS_NOTIFY = 0x00000100;
     public const uint SS_BITMAP = 0x0000000E;
 
     public const int SW_SHOW = 5;
@@ -65,6 +66,7 @@ internal static class Win32
     public const int WM_THEMECHANGED = 0x031A;
 
     public const int BN_CLICKED = 0;
+    public const int STN_CLICKED = 0;
     public const int CBN_SELCHANGE = 1;
     public const int LBN_SELCHANGE = 1;
     public const int EN_CHANGE = 0x0300;
@@ -137,7 +139,7 @@ internal static class Win32
     public const int WM_UNINITMENUPOPUP = 0x0125;
     public const int WM_MENUSELECT = 0x011F;
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct WNDCLASSEXW
     {
         public uint cbSize;
