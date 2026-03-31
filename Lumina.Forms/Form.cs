@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
-
+using System.Runtime.CompilerServices;
 namespace Lumina.Forms;
 
 /// <summary>
@@ -10,7 +10,6 @@ namespace Lumina.Forms;
 public class Form : IDisposable
 {
     private const string WindowClassName = "LuminaFormsWindow";
-    private static readonly Win32.WindowProc s_windowProc = WindowProcThunk;
     private static bool s_registered;
 
     private readonly List<Control> _controlList = [];
@@ -175,7 +174,8 @@ public class Form : IDisposable
         if (hwnd == 0)
         {
             _selfHandle.Free();
-            throw new InvalidOperationException("Failed to create the native form window.");
+              int err = Marshal.GetLastWin32Error();
+              throw new InvalidOperationException($"Failed to create the native form window. Win32 error: {err}");
         }
 
         Handle = hwnd;
@@ -624,7 +624,7 @@ public class Form : IDisposable
         _ = Win32.DwmSetWindowAttribute(Handle, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
     }
 
-    private static void EnsureWindowClassRegistered(nint instanceHandle)
+    private static unsafe void EnsureWindowClassRegistered(nint instanceHandle)
     {
         if (s_registered)
         {
@@ -635,18 +635,24 @@ public class Form : IDisposable
         {
             cbSize = (uint)Marshal.SizeOf<Win32.WNDCLASSEXW>(),
             style = Win32.CS_HREDRAW | Win32.CS_VREDRAW,
-            lpfnWndProc = Marshal.GetFunctionPointerForDelegate(s_windowProc),
+                lpfnWndProc = (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&WindowProcThunk,
             hInstance = instanceHandle,
             hCursor = Win32.LoadCursorW(0, (nint)Win32.IDC_ARROW),
             hbrBackground = Win32.GetSysColorBrush(Win32.COLOR_WINDOW),
             lpszClassName = WindowClassName,
         };
 
-        _ = Win32.RegisterClassExW(ref windowClass);
-        s_registered = true;
+            ushort atom = Win32.RegisterClassExW(ref windowClass);
+            int regError = Marshal.GetLastWin32Error();
+            if (atom == 0 && regError != 1410 /* ERROR_CLASS_ALREADY_EXISTS */)
+            {
+                throw new InvalidOperationException($"Failed to register the native window class. Win32 error: {regError}");
+            }
+            s_registered = true;
     }
 
-    private static nint WindowProcThunk(nint hwnd, uint message, nint wParam, nint lParam)
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+        private static nint WindowProcThunk(nint hwnd, uint message, nint wParam, nint lParam)
     {
         if (message == Win32.WM_NCCREATE)
         {

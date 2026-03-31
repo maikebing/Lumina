@@ -15,6 +15,11 @@
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
 		<PublishAot>true</PublishAot>
 		<UseLuminaForms>true</UseLuminaForms>
+		<!-- Allow ResourceManager.GetObject() for non-string types (Bitmap etc.) on the AOT path. -->
+		<CustomResourceTypesSupport>true</CustomResourceTypesSupport>
+		<!-- Pre-serialize custom resources at build time via TypeConverter so the AOT binary     -->
+		<!-- needs no runtime reflection. Requires System.Resources.Extensions (already listed). -->
+		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 
   <ItemGroup Condition="'$(UseLuminaForms)' == 'true'">
