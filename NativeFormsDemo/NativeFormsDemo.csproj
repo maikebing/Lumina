@@ -31,11 +31,15 @@
   </ItemGroup>
 
 	<ItemGroup Condition="'$(UseWindowsForms)' == 'true'">
+		<ProjectReference Include="..\Lumina.Ext.WinForms\Lumina.Ext.WinForms.csproj" />
 		<Using Include="System.Windows.Forms" />
+		<Using Include="System.Drawing" />
   </ItemGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="System.Resources.Extensions" Version="10.0.5" />
 	</ItemGroup>
+
+ 
 
 </Project>

@@ -110,6 +110,15 @@
             textBox2 = new TextBox();
             button7 = new Button();
             richTextBox1 = new RichTextBox();
+            视图ToolStripMenuItem = new ToolStripMenuItem();
+            luminaExtWinFormsToolStripMenuItem = new ToolStripMenuItem();
+            clearEffectToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator3 = new ToolStripSeparator();
+            micaToolStripMenuItem = new ToolStripMenuItem();
+            micaAltToolStripMenuItem = new ToolStripMenuItem();
+            acrylicToolStripMenuItem = new ToolStripMenuItem();
+            aeroToolStripMenuItem = new ToolStripMenuItem();
+            blurToolStripMenuItem = new ToolStripMenuItem();
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -135,7 +144,7 @@
             button1.Name = "button1";
             button1.Size = new Size(75, 23);
             button1.TabIndex = 0;
-            button1.Text = "button1";
+            button1.Text = "Primary Button";
             button1.UseVisualStyleBackColor = true;
             // 
             // contextMenuStrip1
@@ -179,9 +188,9 @@
             checkBox1.AutoSize = true;
             checkBox1.Location = new Point(155, 27);
             checkBox1.Name = "checkBox1";
-            checkBox1.Size = new Size(89, 21);
+            checkBox1.Size = new Size(108, 21);
             checkBox1.TabIndex = 1;
-            checkBox1.Text = "checkBox1";
+            checkBox1.Text = "Enable option";
             checkBox1.UseVisualStyleBackColor = true;
             // 
             // comboBox1
@@ -205,19 +214,19 @@
             label1.AutoSize = true;
             label1.Location = new Point(484, 18);
             label1.Name = "label1";
-            label1.Size = new Size(43, 17);
+            label1.Size = new Size(209, 17);
             label1.TabIndex = 4;
-            label1.Text = "label1";
+            label1.Text = "LuminaForms compatibility sample";
             // 
             // linkLabel1
             // 
             linkLabel1.AutoSize = true;
             linkLabel1.Location = new Point(573, 24);
             linkLabel1.Name = "linkLabel1";
-            linkLabel1.Size = new Size(66, 17);
+            linkLabel1.Size = new Size(204, 17);
             linkLabel1.TabIndex = 5;
             linkLabel1.TabStop = true;
-            linkLabel1.Text = "linkLabel1";
+            linkLabel1.Text = "Migration-friendly control surface";
             // 
             // listBox1
             // 
@@ -252,7 +261,7 @@
             // notifyIcon1
             // 
             notifyIcon1.ContextMenuStrip = contextMenuStrip1;
-            notifyIcon1.Text = "notifyIcon1";
+            notifyIcon1.Text = "LuminaForms Demo";
             notifyIcon1.Visible = true;
             // 
             // numericUpDown1
@@ -269,6 +278,7 @@
             pictureBox1.Location = new Point(265, 241);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(622, 303);
+            pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 11;
             pictureBox1.TabStop = false;
             // 
@@ -278,16 +288,16 @@
             progressBar1.Name = "progressBar1";
             progressBar1.Size = new Size(247, 23);
             progressBar1.TabIndex = 12;
-            progressBar1.Value = 12;
+            progressBar1.Value = 40;
             // 
             // radioButton1
             // 
             radioButton1.AutoSize = true;
             radioButton1.Location = new Point(537, 94);
             radioButton1.Name = "radioButton1";
-            radioButton1.Size = new Size(102, 21);
+            radioButton1.Size = new Size(77, 21);
             radioButton1.TabIndex = 13;
-            radioButton1.Text = "radioButton1";
+            radioButton1.Text = "Choice A";
             radioButton1.UseVisualStyleBackColor = true;
             // 
             // radioButton2
@@ -296,10 +306,10 @@
             radioButton2.Checked = true;
             radioButton2.Location = new Point(544, 62);
             radioButton2.Name = "radioButton2";
-            radioButton2.Size = new Size(102, 21);
+            radioButton2.Size = new Size(77, 21);
             radioButton2.TabIndex = 14;
             radioButton2.TabStop = true;
-            radioButton2.Text = "radioButton2";
+            radioButton2.Text = "Choice B";
             radioButton2.UseVisualStyleBackColor = true;
             // 
             // textBox1
@@ -348,7 +358,7 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { 文件ToolStripMenuItem, 编辑ToolStripMenuItem, 关于ToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { 文件ToolStripMenuItem, 视图ToolStripMenuItem, 编辑ToolStripMenuItem, 关于ToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(1297, 25);
@@ -371,23 +381,26 @@
             // toolStripMenuItem1
             // 
             toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(192, 22);
-            toolStripMenuItem1.Text = "toolStripMenuItem1";
+            toolStripMenuItem1.Size = new Size(181, 22);
+            toolStripMenuItem1.Text = "Command";
             // 
             // toolStripComboBox1
             // 
+            toolStripComboBox1.Items.AddRange(new object[] { "Default", "Compact", "Expanded" });
             toolStripComboBox1.Name = "toolStripComboBox1";
             toolStripComboBox1.Size = new Size(121, 25);
+            toolStripComboBox1.Text = "Default";
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(189, 6);
+            toolStripSeparator1.Size = new Size(178, 6);
             // 
             // toolStripTextBox2
             // 
             toolStripTextBox2.Name = "toolStripTextBox2";
             toolStripTextBox2.Size = new Size(100, 23);
+            toolStripTextBox2.Text = "Filter";
             // 
             // 关于ToolStripMenuItem
             // 
@@ -415,8 +428,8 @@
             // toolStripStatusLabel1
             // 
             toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(131, 17);
-            toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(44, 17);
+            toolStripStatusLabel1.Text = "Ready";
             // 
             // toolStripProgressBar1
             // 
@@ -431,28 +444,31 @@
             toolStripDropDownButton1.ImageTransparentColor = Color.Magenta;
             toolStripDropDownButton1.Name = "toolStripDropDownButton1";
             toolStripDropDownButton1.Size = new Size(29, 20);
-            toolStripDropDownButton1.Text = "toolStripDropDownButton1";
+            toolStripDropDownButton1.Text = "Menu";
             // 
             // toolStripMenuItem3
             // 
             toolStripMenuItem3.Name = "toolStripMenuItem3";
-            toolStripMenuItem3.Size = new Size(192, 22);
-            toolStripMenuItem3.Text = "toolStripMenuItem3";
+            toolStripMenuItem3.Size = new Size(181, 22);
+            toolStripMenuItem3.Text = "Status";
             // 
             // toolStripComboBox2
             // 
+            toolStripComboBox2.Items.AddRange(new object[] { "Status A", "Status B" });
             toolStripComboBox2.Name = "toolStripComboBox2";
             toolStripComboBox2.Size = new Size(121, 25);
+            toolStripComboBox2.Text = "Status A";
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(189, 6);
+            toolStripSeparator2.Size = new Size(178, 6);
             // 
             // toolStripTextBox3
             // 
             toolStripTextBox3.Name = "toolStripTextBox3";
             toolStripTextBox3.Size = new Size(100, 23);
+            toolStripTextBox3.Text = "Search";
             // 
             // toolStripSplitButton1
             // 
@@ -462,13 +478,13 @@
             toolStripSplitButton1.ImageTransparentColor = Color.Magenta;
             toolStripSplitButton1.Name = "toolStripSplitButton1";
             toolStripSplitButton1.Size = new Size(32, 20);
-            toolStripSplitButton1.Text = "toolStripSplitButton1";
+            toolStripSplitButton1.Text = "Options";
             // 
             // toolStripMenuItem4
             // 
             toolStripMenuItem4.Name = "toolStripMenuItem4";
-            toolStripMenuItem4.Size = new Size(192, 22);
-            toolStripMenuItem4.Text = "toolStripMenuItem4";
+            toolStripMenuItem4.Size = new Size(112, 22);
+            toolStripMenuItem4.Text = "Action";
             // 
             // toolStripSplitButton2
             // 
@@ -477,7 +493,7 @@
             toolStripSplitButton2.ImageTransparentColor = Color.Magenta;
             toolStripSplitButton2.Name = "toolStripSplitButton2";
             toolStripSplitButton2.Size = new Size(32, 20);
-            toolStripSplitButton2.Text = "toolStripSplitButton2";
+            toolStripSplitButton2.Text = "Help";
             // 
             // toolStrip1
             // 
@@ -502,7 +518,7 @@
             button2.Name = "button2";
             button2.Size = new Size(75, 23);
             button2.TabIndex = 0;
-            button2.Text = "button2";
+            button2.Text = "Action";
             button2.UseVisualStyleBackColor = true;
             // 
             // checkBox2
@@ -510,9 +526,9 @@
             checkBox2.AutoSize = true;
             checkBox2.Location = new Point(84, 3);
             checkBox2.Name = "checkBox2";
-            checkBox2.Size = new Size(89, 21);
+            checkBox2.Size = new Size(106, 21);
             checkBox2.TabIndex = 1;
-            checkBox2.Text = "checkBox2";
+            checkBox2.Text = "Wrap content";
             checkBox2.UseVisualStyleBackColor = true;
             // 
             // groupBox1
@@ -523,7 +539,7 @@
             groupBox1.Size = new Size(200, 100);
             groupBox1.TabIndex = 22;
             groupBox1.TabStop = false;
-            groupBox1.Text = "groupBox1";
+            groupBox1.Text = "Grouped Controls";
             // 
             // button3
             // 
@@ -531,7 +547,7 @@
             button3.Name = "button3";
             button3.Size = new Size(75, 23);
             button3.TabIndex = 0;
-            button3.Text = "button3";
+            button3.Text = "Open";
             button3.UseVisualStyleBackColor = true;
             // 
             // panel1
@@ -549,7 +565,7 @@
             button4.Name = "button4";
             button4.Size = new Size(75, 23);
             button4.TabIndex = 0;
-            button4.Text = "button4";
+            button4.Text = "Panel Button";
             button4.UseVisualStyleBackColor = true;
             // 
             // splitContainer1
@@ -574,7 +590,7 @@
             button5.Name = "button5";
             button5.Size = new Size(75, 23);
             button5.TabIndex = 0;
-            button5.Text = "button5";
+            button5.Text = "Split Action";
             button5.UseVisualStyleBackColor = true;
             // 
             // checkBox3
@@ -582,9 +598,9 @@
             checkBox3.AutoSize = true;
             checkBox3.Location = new Point(30, 24);
             checkBox3.Name = "checkBox3";
-            checkBox3.Size = new Size(89, 21);
+            checkBox3.Size = new Size(66, 21);
             checkBox3.TabIndex = 0;
-            checkBox3.Text = "checkBox3";
+            checkBox3.Text = "Pinned";
             checkBox3.UseVisualStyleBackColor = true;
             // 
             // tabControl1
@@ -606,7 +622,7 @@
             tabPage1.Padding = new Padding(3);
             tabPage1.Size = new Size(281, 247);
             tabPage1.TabIndex = 0;
-            tabPage1.Text = "tabPage1";
+            tabPage1.Text = "General";
             tabPage1.UseVisualStyleBackColor = true;
             // 
             // button6
@@ -615,7 +631,7 @@
             button6.Name = "button6";
             button6.Size = new Size(75, 23);
             button6.TabIndex = 0;
-            button6.Text = "button6";
+            button6.Text = "Tab Action";
             button6.UseVisualStyleBackColor = true;
             // 
             // tabPage2
@@ -626,12 +642,13 @@
             tabPage2.Padding = new Padding(3);
             tabPage2.Size = new Size(281, 247);
             tabPage2.TabIndex = 1;
-            tabPage2.Text = "tabPage2";
+            tabPage2.Text = "Input";
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // comboBox2
             // 
             comboBox2.FormattingEnabled = true;
+            comboBox2.Items.AddRange(new object[] { "Item 1", "Item 2", "Item 3" });
             comboBox2.Location = new Point(87, 121);
             comboBox2.Name = "comboBox2";
             comboBox2.Size = new Size(121, 25);
@@ -659,10 +676,10 @@
             radioButton3.AutoSize = true;
             radioButton3.Location = new Point(3, 3);
             radioButton3.Name = "radioButton3";
-            radioButton3.Size = new Size(94, 21);
+            radioButton3.Size = new Size(70, 21);
             radioButton3.TabIndex = 0;
             radioButton3.TabStop = true;
-            radioButton3.Text = "radioButton3";
+            radioButton3.Text = "Table A";
             radioButton3.UseVisualStyleBackColor = true;
             // 
             // radioButton4
@@ -670,10 +687,10 @@
             radioButton4.AutoSize = true;
             radioButton4.Location = new Point(3, 89);
             radioButton4.Name = "radioButton4";
-            radioButton4.Size = new Size(94, 21);
+            radioButton4.Size = new Size(70, 21);
             radioButton4.TabIndex = 1;
             radioButton4.TabStop = true;
-            radioButton4.Text = "radioButton4";
+            radioButton4.Text = "Table B";
             radioButton4.UseVisualStyleBackColor = true;
             // 
             // textBox2
@@ -682,6 +699,7 @@
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(94, 23);
             textBox2.TabIndex = 2;
+            textBox2.Text = "Search";
             // 
             // button7
             // 
@@ -689,7 +707,7 @@
             button7.Name = "button7";
             button7.Size = new Size(75, 23);
             button7.TabIndex = 3;
-            button7.Text = "button7";
+            button7.Text = "Apply";
             button7.UseVisualStyleBackColor = true;
             // 
             // richTextBox1
@@ -698,7 +716,68 @@
             richTextBox1.Name = "richTextBox1";
             richTextBox1.Size = new Size(145, 122);
             richTextBox1.TabIndex = 27;
-            richTextBox1.Text = "";
+            richTextBox1.Text = "This demo only showcases common controls and layout containers across both targets. Theme implementation stays inside Lumina.Forms.";
+            // 
+            // 视图ToolStripMenuItem
+            // 
+            视图ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { luminaExtWinFormsToolStripMenuItem });
+            视图ToolStripMenuItem.Name = "视图ToolStripMenuItem";
+            视图ToolStripMenuItem.Size = new Size(44, 21);
+            视图ToolStripMenuItem.Text = "视图";
+            // 
+            // luminaExtWinFormsToolStripMenuItem
+            // 
+            luminaExtWinFormsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { clearEffectToolStripMenuItem, toolStripSeparator3, micaToolStripMenuItem, micaAltToolStripMenuItem, acrylicToolStripMenuItem, aeroToolStripMenuItem, blurToolStripMenuItem });
+            luminaExtWinFormsToolStripMenuItem.Name = "luminaExtWinFormsToolStripMenuItem";
+            luminaExtWinFormsToolStripMenuItem.Size = new Size(194, 22);
+            luminaExtWinFormsToolStripMenuItem.Text = "Lumina.Ext.WinForms";
+            // 
+            // clearEffectToolStripMenuItem
+            // 
+            clearEffectToolStripMenuItem.Name = "clearEffectToolStripMenuItem";
+            clearEffectToolStripMenuItem.Size = new Size(180, 22);
+            clearEffectToolStripMenuItem.Text = "默认";
+            clearEffectToolStripMenuItem.Click += clearEffectToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator3
+            // 
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(177, 6);
+            // 
+            // micaToolStripMenuItem
+            // 
+            micaToolStripMenuItem.Name = "micaToolStripMenuItem";
+            micaToolStripMenuItem.Size = new Size(180, 22);
+            micaToolStripMenuItem.Text = "Mica";
+            micaToolStripMenuItem.Click += micaToolStripMenuItem_Click;
+            // 
+            // micaAltToolStripMenuItem
+            // 
+            micaAltToolStripMenuItem.Name = "micaAltToolStripMenuItem";
+            micaAltToolStripMenuItem.Size = new Size(180, 22);
+            micaAltToolStripMenuItem.Text = "Mica Alt";
+            micaAltToolStripMenuItem.Click += micaAltToolStripMenuItem_Click;
+            // 
+            // acrylicToolStripMenuItem
+            // 
+            acrylicToolStripMenuItem.Name = "acrylicToolStripMenuItem";
+            acrylicToolStripMenuItem.Size = new Size(180, 22);
+            acrylicToolStripMenuItem.Text = "Acrylic";
+            acrylicToolStripMenuItem.Click += acrylicToolStripMenuItem_Click;
+            // 
+            // aeroToolStripMenuItem
+            // 
+            aeroToolStripMenuItem.Name = "aeroToolStripMenuItem";
+            aeroToolStripMenuItem.Size = new Size(180, 22);
+            aeroToolStripMenuItem.Text = "Aero";
+            aeroToolStripMenuItem.Click += aeroToolStripMenuItem_Click;
+            // 
+            // blurToolStripMenuItem
+            // 
+            blurToolStripMenuItem.Name = "blurToolStripMenuItem";
+            blurToolStripMenuItem.Size = new Size(180, 22);
+            blurToolStripMenuItem.Text = "Blur";
+            blurToolStripMenuItem.Click += blurToolStripMenuItem_Click;
             // 
             // frmMain
             // 
@@ -734,7 +813,7 @@
             Controls.Add(button1);
             MainMenuStrip = menuStrip1;
             Name = "frmMain";
-            Text = "Form1";
+            Text = "LuminaForms Controls Demo";
             contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
@@ -829,5 +908,14 @@
         private TextBox textBox2;
         private Button button7;
         private RichTextBox richTextBox1;
+        private ToolStripMenuItem 视图ToolStripMenuItem;
+        private ToolStripMenuItem luminaExtWinFormsToolStripMenuItem;
+        private ToolStripMenuItem clearEffectToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator3;
+        private ToolStripMenuItem micaToolStripMenuItem;
+        private ToolStripMenuItem micaAltToolStripMenuItem;
+        private ToolStripMenuItem acrylicToolStripMenuItem;
+        private ToolStripMenuItem aeroToolStripMenuItem;
+        private ToolStripMenuItem blurToolStripMenuItem;
     }
 }

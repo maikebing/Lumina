@@ -55,6 +55,11 @@ All agents working in this repository must treat the following rules as hard con
 - The `net10.0` LuminaForms target exists to prove the replacement path and AOT viability.
 - When adding or changing supported controls, properties, methods, events, or layout behavior, keep the Demo useful as a side-by-side migration sample.
 - Prefer changes that let the same app concept work across both targets with minimal divergence.
+- Keep `NativeFormsDemo` designer-friendly.
+- For designer-backed forms in `NativeFormsDemo`, prefer designer-serialized initialization in `.Designer.cs` and `.resx` for static UI state such as text, layout, items, images, and initial property values.
+- Do not move designer-owned static UI initialization into constructor code, form-load code, or other runtime-only paths unless the behavior is inherently runtime-only.
+- Do not place theme definitions, palette definitions, theme helper classes, or other reusable framework behavior inside `NativeFormsDemo`; that implementation belongs in `Lumina.Forms`.
+- Do not let the Demo accumulate extra sample-only infrastructure that is not required to prove control compatibility, migration ergonomics, designer support, or AOT viability.
 
 ## Agent Working Style For This Repository
 
@@ -65,6 +70,7 @@ All agents working in this repository must treat the following rules as hard con
 - Do not propose architecture changes that weaken designer support on `net10.0-windows`.
 - Do not propose implementation changes that weaken AOT support on `net10.0`.
 - Preserve the current split of responsibilities unless there is a clear user request to change it.
+- When editing designer-backed forms, preserve Visual Studio designer round-tripping and keep the design surface representative of the runtime UI whenever practical.
 
 ## Validation Expectations
 
