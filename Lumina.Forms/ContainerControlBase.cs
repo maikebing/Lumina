@@ -48,6 +48,20 @@ public abstract class ContainerControlBase : Control
         }
     }
 
+    internal bool RemoveChild(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+
+        if (!_childControls.Remove(control))
+        {
+            return false;
+        }
+
+        Owner?.DetachControl(control);
+        control.ClearParent();
+        return true;
+    }
+
     internal void AttachChildrenToOwner(Form owner)
     {
         foreach (Control child in ChildControls)
@@ -134,6 +148,11 @@ public abstract class ContainerControlBase : Control
         public void AddRange(params Control[] controls)
         {
             AddRange((IEnumerable<Control>)controls);
+        }
+
+        internal bool Remove(Control control)
+        {
+            return _owner.RemoveChild(control);
         }
 
         /// <summary>

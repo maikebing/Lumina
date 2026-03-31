@@ -29,21 +29,27 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            TreeNode treeNode14 = new TreeNode("节点4");
-            TreeNode treeNode15 = new TreeNode("节点6");
-            TreeNode treeNode16 = new TreeNode("节点5", new TreeNode[] { treeNode15 });
-            TreeNode treeNode17 = new TreeNode("节点0", new TreeNode[] { treeNode14, treeNode16 });
-            TreeNode treeNode18 = new TreeNode("节点7");
-            TreeNode treeNode19 = new TreeNode("节点1", new TreeNode[] { treeNode18 });
-            TreeNode treeNode20 = new TreeNode("节点8");
-            TreeNode treeNode21 = new TreeNode("节点9");
-            TreeNode treeNode22 = new TreeNode("节点2", new TreeNode[] { treeNode20, treeNode21 });
-            TreeNode treeNode23 = new TreeNode("节点12");
-            TreeNode treeNode24 = new TreeNode("节点11", new TreeNode[] { treeNode23 });
-            TreeNode treeNode25 = new TreeNode("节点10", new TreeNode[] { treeNode24 });
-            TreeNode treeNode26 = new TreeNode("节点3", new TreeNode[] { treeNode25 });
+            TreeNode treeNode1 = new TreeNode("节点4");
+            TreeNode treeNode2 = new TreeNode("节点6");
+            TreeNode treeNode3 = new TreeNode("节点5", new TreeNode[] { treeNode2 });
+            TreeNode treeNode4 = new TreeNode("节点0", new TreeNode[] { treeNode1, treeNode3 });
+            TreeNode treeNode5 = new TreeNode("节点7");
+            TreeNode treeNode6 = new TreeNode("节点1", new TreeNode[] { treeNode5 });
+            TreeNode treeNode7 = new TreeNode("节点8");
+            TreeNode treeNode8 = new TreeNode("节点9");
+            TreeNode treeNode9 = new TreeNode("节点2", new TreeNode[] { treeNode7, treeNode8 });
+            TreeNode treeNode10 = new TreeNode("节点12");
+            TreeNode treeNode11 = new TreeNode("节点11", new TreeNode[] { treeNode10 });
+            TreeNode treeNode12 = new TreeNode("节点10", new TreeNode[] { treeNode11 });
+            TreeNode treeNode13 = new TreeNode("节点3", new TreeNode[] { treeNode12 });
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             button1 = new Button();
+            contextMenuStrip1 = new ContextMenuStrip(components);
+            菜单1ToolStripMenuItem = new ToolStripMenuItem();
+            sdfToolStripMenuItem = new ToolStripMenuItem();
+            toolStripMenuItem2 = new ToolStripMenuItem();
+            toolStripTextBox1 = new ToolStripTextBox();
+            fsdaToolStripMenuItem = new ToolStripMenuItem();
             checkBox1 = new CheckBox();
             comboBox1 = new ComboBox();
             dateTimePicker1 = new DateTimePicker();
@@ -62,12 +68,6 @@
             textBox1 = new TextBox();
             toolTip1 = new ToolTip(components);
             treeView1 = new TreeView();
-            contextMenuStrip1 = new ContextMenuStrip(components);
-            菜单1ToolStripMenuItem = new ToolStripMenuItem();
-            sdfToolStripMenuItem = new ToolStripMenuItem();
-            toolStripMenuItem2 = new ToolStripMenuItem();
-            toolStripTextBox1 = new ToolStripTextBox();
-            fsdaToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1 = new MenuStrip();
             文件ToolStripMenuItem = new ToolStripMenuItem();
             编辑ToolStripMenuItem = new ToolStripMenuItem();
@@ -101,8 +101,8 @@
             checkBox3 = new CheckBox();
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
-            tabPage2 = new TabPage();
             button6 = new Button();
+            tabPage2 = new TabPage();
             comboBox2 = new ComboBox();
             tableLayoutPanel1 = new TableLayoutPanel();
             radioButton3 = new RadioButton();
@@ -110,9 +110,9 @@
             textBox2 = new TextBox();
             button7 = new Button();
             richTextBox1 = new RichTextBox();
+            contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
-            contextMenuStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
@@ -137,6 +137,42 @@
             button1.TabIndex = 0;
             button1.Text = "button1";
             button1.UseVisualStyleBackColor = true;
+            // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { 菜单1ToolStripMenuItem, sdfToolStripMenuItem, fsdaToolStripMenuItem });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new Size(108, 70);
+            // 
+            // 菜单1ToolStripMenuItem
+            // 
+            菜单1ToolStripMenuItem.Name = "菜单1ToolStripMenuItem";
+            菜单1ToolStripMenuItem.Size = new Size(107, 22);
+            菜单1ToolStripMenuItem.Text = "菜单1";
+            // 
+            // sdfToolStripMenuItem
+            // 
+            sdfToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem2, toolStripTextBox1 });
+            sdfToolStripMenuItem.Name = "sdfToolStripMenuItem";
+            sdfToolStripMenuItem.Size = new Size(107, 22);
+            sdfToolStripMenuItem.Text = "sdf";
+            // 
+            // toolStripMenuItem2
+            // 
+            toolStripMenuItem2.Name = "toolStripMenuItem2";
+            toolStripMenuItem2.Size = new Size(160, 22);
+            toolStripMenuItem2.Text = "23";
+            // 
+            // toolStripTextBox1
+            // 
+            toolStripTextBox1.Name = "toolStripTextBox1";
+            toolStripTextBox1.Size = new Size(100, 23);
+            // 
+            // fsdaToolStripMenuItem
+            // 
+            fsdaToolStripMenuItem.Name = "fsdaToolStripMenuItem";
+            fsdaToolStripMenuItem.Size = new Size(107, 22);
+            fsdaToolStripMenuItem.Text = "fsda";
             // 
             // checkBox1
             // 
@@ -280,71 +316,35 @@
             treeView1.ContextMenuStrip = contextMenuStrip1;
             treeView1.Location = new Point(610, 153);
             treeView1.Name = "treeView1";
-            treeNode14.Name = "节点4";
-            treeNode14.Text = "节点4";
-            treeNode15.Name = "节点6";
-            treeNode15.Text = "节点6";
-            treeNode16.Name = "节点5";
-            treeNode16.Text = "节点5";
-            treeNode17.Name = "节点0";
-            treeNode17.Text = "节点0";
-            treeNode18.Name = "节点7";
-            treeNode18.Text = "节点7";
-            treeNode19.Name = "节点1";
-            treeNode19.Text = "节点1";
-            treeNode20.Name = "节点8";
-            treeNode20.Text = "节点8";
-            treeNode21.Name = "节点9";
-            treeNode21.Text = "节点9";
-            treeNode22.Name = "节点2";
-            treeNode22.Text = "节点2";
-            treeNode23.Name = "节点12";
-            treeNode23.Text = "节点12";
-            treeNode24.Name = "节点11";
-            treeNode24.Text = "节点11";
-            treeNode25.Name = "节点10";
-            treeNode25.Text = "节点10";
-            treeNode26.Name = "节点3";
-            treeNode26.Text = "节点3";
-            treeView1.Nodes.AddRange(new TreeNode[] { treeNode17, treeNode19, treeNode22, treeNode26 });
+            treeNode1.Name = "节点4";
+            treeNode1.Text = "节点4";
+            treeNode2.Name = "节点6";
+            treeNode2.Text = "节点6";
+            treeNode3.Name = "节点5";
+            treeNode3.Text = "节点5";
+            treeNode4.Name = "节点0";
+            treeNode4.Text = "节点0";
+            treeNode5.Name = "节点7";
+            treeNode5.Text = "节点7";
+            treeNode6.Name = "节点1";
+            treeNode6.Text = "节点1";
+            treeNode7.Name = "节点8";
+            treeNode7.Text = "节点8";
+            treeNode8.Name = "节点9";
+            treeNode8.Text = "节点9";
+            treeNode9.Name = "节点2";
+            treeNode9.Text = "节点2";
+            treeNode10.Name = "节点12";
+            treeNode10.Text = "节点12";
+            treeNode11.Name = "节点11";
+            treeNode11.Text = "节点11";
+            treeNode12.Name = "节点10";
+            treeNode12.Text = "节点10";
+            treeNode13.Name = "节点3";
+            treeNode13.Text = "节点3";
+            treeView1.Nodes.AddRange(new TreeNode[] { treeNode4, treeNode6, treeNode9, treeNode13 });
             treeView1.Size = new Size(121, 97);
             treeView1.TabIndex = 16;
-            // 
-            // contextMenuStrip1
-            // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { 菜单1ToolStripMenuItem, sdfToolStripMenuItem, fsdaToolStripMenuItem });
-            contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(108, 70);
-            // 
-            // 菜单1ToolStripMenuItem
-            // 
-            菜单1ToolStripMenuItem.Name = "菜单1ToolStripMenuItem";
-            菜单1ToolStripMenuItem.Size = new Size(107, 22);
-            菜单1ToolStripMenuItem.Text = "菜单1";
-            // 
-            // sdfToolStripMenuItem
-            // 
-            sdfToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem2, toolStripTextBox1 });
-            sdfToolStripMenuItem.Name = "sdfToolStripMenuItem";
-            sdfToolStripMenuItem.Size = new Size(107, 22);
-            sdfToolStripMenuItem.Text = "sdf";
-            // 
-            // toolStripMenuItem2
-            // 
-            toolStripMenuItem2.Name = "toolStripMenuItem2";
-            toolStripMenuItem2.Size = new Size(160, 22);
-            toolStripMenuItem2.Text = "23";
-            // 
-            // toolStripTextBox1
-            // 
-            toolStripTextBox1.Name = "toolStripTextBox1";
-            toolStripTextBox1.Size = new Size(100, 23);
-            // 
-            // fsdaToolStripMenuItem
-            // 
-            fsdaToolStripMenuItem.Name = "fsdaToolStripMenuItem";
-            fsdaToolStripMenuItem.Size = new Size(107, 22);
-            fsdaToolStripMenuItem.Text = "fsda";
             // 
             // menuStrip1
             // 
@@ -565,7 +565,7 @@
             // 
             splitContainer1.Panel2.Controls.Add(checkBox3);
             splitContainer1.Size = new Size(282, 120);
-            splitContainer1.SplitterDistance = 94;
+            splitContainer1.SplitterDistance = 154;
             splitContainer1.TabIndex = 24;
             // 
             // button5
@@ -609,6 +609,15 @@
             tabPage1.Text = "tabPage1";
             tabPage1.UseVisualStyleBackColor = true;
             // 
+            // button6
+            // 
+            button6.Location = new Point(67, 88);
+            button6.Name = "button6";
+            button6.Size = new Size(75, 23);
+            button6.TabIndex = 0;
+            button6.Text = "button6";
+            button6.UseVisualStyleBackColor = true;
+            // 
             // tabPage2
             // 
             tabPage2.Controls.Add(comboBox2);
@@ -619,15 +628,6 @@
             tabPage2.TabIndex = 1;
             tabPage2.Text = "tabPage2";
             tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // button6
-            // 
-            button6.Location = new Point(67, 88);
-            button6.Name = "button6";
-            button6.Size = new Size(75, 23);
-            button6.TabIndex = 0;
-            button6.Text = "button6";
-            button6.UseVisualStyleBackColor = true;
             // 
             // comboBox2
             // 
@@ -735,9 +735,9 @@
             MainMenuStrip = menuStrip1;
             Name = "frmMain";
             Text = "Form1";
+            contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
-            contextMenuStrip1.ResumeLayout(false);
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             statusStrip1.ResumeLayout(false);

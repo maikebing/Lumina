@@ -595,6 +595,30 @@ public class Form : IDisposable
         }
     }
 
+    internal bool DetachControl(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+
+        if (control is ContainerControlBase container)
+        {
+            Control[] children = [.. container.ChildControls];
+            foreach (Control child in children)
+            {
+                DetachControl(child);
+            }
+        }
+
+        bool removed = false;
+        if (control.Id != 0)
+        {
+            removed = _controlsById.Remove(control.Id) || removed;
+        }
+
+        removed = _controlList.Remove(control) || removed;
+        control.DetachFromOwner();
+        return removed;
+    }
+
     internal void RefreshMainMenuStrip()
     {
         RefreshMainMenuStrip(previous: null);
@@ -1351,6 +1375,11 @@ public class Form : IDisposable
         public void AddRange(params Control[] controls)
         {
             AddRange((IEnumerable<Control>)controls);
+        }
+
+        internal bool Remove(Control control)
+        {
+            return _owner.DetachControl(control);
         }
 
         /// <summary>

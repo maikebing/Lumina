@@ -362,6 +362,15 @@ public abstract class Control : IDisposable
             return;
         }
 
+        if (Parent is ContainerControlBase parentContainer)
+        {
+            _ = parentContainer.Controls.Remove(this);
+        }
+        else if (Owner is not null)
+        {
+            _ = Owner.Controls.Remove(this);
+        }
+
         _disposed = true;
         OnDisposing();
 

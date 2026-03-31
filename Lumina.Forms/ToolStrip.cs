@@ -140,7 +140,7 @@ public class ToolStrip : ContainerControlBase
             {
                 if (_itemHosts.Remove(item, out Control? removedHost))
                 {
-                    removedHost.Visible = false;
+                    RemoveItemHost(removedHost);
                 }
 
                 continue;
@@ -155,7 +155,7 @@ public class ToolStrip : ContainerControlBase
 
                 if (existingHost is not null)
                 {
-                    existingHost.Visible = false;
+                    RemoveItemHost(existingHost);
                 }
             }
 
@@ -446,6 +446,12 @@ public class ToolStrip : ContainerControlBase
         }
 
         return new Point(host.Left, host.Bottom);
+    }
+
+    private void RemoveItemHost(Control host)
+    {
+        _ = RemoveChild(host);
+        host.Dispose();
     }
 
     private sealed class ItemButtonHost : Button

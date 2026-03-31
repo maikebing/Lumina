@@ -279,4 +279,26 @@ public sealed class CompatibilityControlsTests
         selMethod!.Invoke(null, [true]);
         incMethod!.Invoke(null, [-1]);
     }
+
+    [Fact]
+    public void StatusStrip_ReplacingItemHost_DoesNotAccumulateObsoleteControls()
+    {
+        var statusStrip = new StatusStrip();
+        var item = new ToolStripDropDownButton();
+
+        statusStrip.Items.Add(item);
+        statusStrip.PerformLayout();
+
+        Assert.Single(statusStrip.Controls);
+        Assert.IsAssignableFrom<Button>(statusStrip.Controls[0]);
+
+        using var bitmap = new Bitmap(16, 16);
+        item.DisplayStyle = ToolStripItemDisplayStyle.Image;
+        item.Image = bitmap;
+
+        statusStrip.PerformLayout();
+
+        Assert.Single(statusStrip.Controls);
+        Assert.IsAssignableFrom<PictureBox>(statusStrip.Controls[0]);
+    }
 }
