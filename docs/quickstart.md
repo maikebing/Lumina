@@ -36,6 +36,7 @@ public partial class MainForm : Form
 
 ```csharp
 using Lumina.Forms;
+using System.Drawing;
 
 internal static class Program
 {
@@ -82,6 +83,8 @@ form.SetPalette(new ThemePalette
     Accent = 0xFFFF7A00,
     FocusBorder = 0xFFFF7A00,
 });
+form.BackColor = Color.FromArgb(unchecked((int)0xFF1E1E24u));
+form.ForeColor = Color.FromArgb(unchecked((int)0xFFF3F3F3u));
 ```
 
 Sample theme files are included under `themes/nativeforms/` in the repository root.

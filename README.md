@@ -53,6 +53,7 @@ LuminaForms supports:
 - App-level visual overrides through `Application.ConfigureVisualStyles(...)`
 - Window-level overrides through `UseTheme(...)`, `SetThemeMode(...)`, and `SetPalette(...)`
 - JSON theme files through `NativeTheme` and semantic `ThemePalette` tokens
+- WinForms-style `BackColor` / `ForeColor` overrides on forms and controls, layered on top of the active theme
 - WinForms-like collection helpers such as `Controls.AddRange(...)`, `Controls.Find(...)`, `Items.AddRange(...)`, and `SelectedItem`
 - Compatibility analyzers through `Lumina.Forms.Analyzers`
 - WinForms-style autoscaling through `AutoScaleMode`, `AutoScaleDimensions`, and `PerformAutoScale()`

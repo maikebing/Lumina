@@ -98,6 +98,9 @@ public class PictureBox : Control, ISupportInitialize
     protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.SS_BITMAP | Win32.SS_NOTIFY;
 
     /// <inheritdoc />
+    private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
+
+    /// <inheritdoc />
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();

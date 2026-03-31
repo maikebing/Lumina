@@ -22,6 +22,6 @@ public class ListView : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
-        _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+        ApplyExplorerTheme();
     }
 }

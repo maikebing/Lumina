@@ -22,6 +22,10 @@ public abstract class Control : IDisposable
     private bool _disposed;
     private Padding _padding;
     private Padding _margin = new(3);
+    private Color _backColor = Color.Empty;
+    private Color _foreColor = Color.Empty;
+    private nint _backgroundBrush;
+    private bool _ownsBackgroundBrush;
     private nint _originalWindowProc;
     private long _lastContextMenuShownTick = long.MinValue;
     private Point _lastContextMenuScreenLocation = new(int.MinValue, int.MinValue);
@@ -113,6 +117,16 @@ public abstract class Control : IDisposable
     public event EventHandler? TextChanged;
 
     /// <summary>
+    /// Occurs when the <see cref="BackColor"/> property changes.
+    /// </summary>
+    public event EventHandler? BackColorChanged;
+
+    /// <summary>
+    /// Occurs when the <see cref="ForeColor"/> property changes.
+    /// </summary>
+    public event EventHandler? ForeColorChanged;
+
+    /// <summary>
     /// Gets or sets the text displayed by the control.
     /// </summary>
     public string Text
@@ -145,6 +159,47 @@ public abstract class Control : IDisposable
             }
 
             OnTextChanged(EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the background color used by the control. Set <see cref="Color.Empty"/> to fall back to the active theme.
+    /// </summary>
+    public Color BackColor
+    {
+        get => _backColor;
+        set
+        {
+            ThrowIfDisposed();
+            if (_backColor == value)
+            {
+                return;
+            }
+
+            _backColor = value;
+            ReleaseBackgroundBrush();
+            OnBackColorChanged(EventArgs.Empty);
+            RefreshTheme();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the foreground color used by the control. Set <see cref="Color.Empty"/> to fall back to the active theme.
+    /// </summary>
+    public Color ForeColor
+    {
+        get => _foreColor;
+        set
+        {
+            ThrowIfDisposed();
+            if (_foreColor == value)
+            {
+                return;
+            }
+
+            _foreColor = value;
+            OnForeColorChanged(EventArgs.Empty);
+            RefreshTheme();
         }
     }
 
@@ -285,6 +340,26 @@ public abstract class Control : IDisposable
     /// </summary>
     protected virtual bool ShouldCreateNativeHandle => true;
 
+    /// <summary>
+    /// Gets the default semantic background slot used when <see cref="BackColor"/> is not explicitly set.
+    /// </summary>
+    private protected virtual ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Control;
+
+    /// <summary>
+    /// Gets the default semantic foreground slot used when <see cref="ForeColor"/> is not explicitly set.
+    /// </summary>
+    private protected virtual ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Control;
+
+    /// <summary>
+    /// Gets a value indicating whether the control should inherit its background from the parent surface when themed.
+    /// </summary>
+    protected virtual bool UseParentBackgroundForTheming => false;
+
+    /// <summary>
+    /// Gets the current resolved visual style available to the control.
+    /// </summary>
+    protected ResolvedVisualStyle CurrentVisualStyle => Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle;
+
     internal void Attach(Form owner, int id, Control? parent)
     {
         ThrowIfDisposed();
@@ -417,6 +492,7 @@ public abstract class Control : IDisposable
             _ = Win32.DestroyWindow(Handle);
         }
 
+        ReleaseBackgroundBrush();
         ReleaseHandleRecursive();
     }
 
@@ -440,6 +516,7 @@ public abstract class Control : IDisposable
             }
         }
 
+        ReleaseBackgroundBrush();
         Handle = 0;
     }
 
@@ -510,6 +587,35 @@ public abstract class Control : IDisposable
     internal bool HandleNotify(int notificationCode, nint lParam)
         => OnNotify(notificationCode, lParam);
 
+    internal void RefreshTheme()
+    {
+        if (Handle != 0)
+        {
+            ApplyTheme();
+            Refresh();
+        }
+    }
+
+    internal bool TryGetThemeColors(out nint brush, out uint backgroundColorRef, out uint foregroundColorRef, out bool transparentBackground)
+    {
+        Form? owner = Owner;
+        if (owner is null)
+        {
+            brush = 0;
+            backgroundColorRef = 0;
+            foregroundColorRef = 0;
+            transparentBackground = false;
+            return false;
+        }
+
+        ResolvedVisualStyle visualStyle = owner.CurrentVisualStyle;
+        brush = GetResolvedBackgroundBrush(visualStyle);
+        backgroundColorRef = GetResolvedBackColorRef(visualStyle);
+        foregroundColorRef = GetResolvedForeColorRef(visualStyle);
+        transparentBackground = UseParentBackgroundForTheming && BackColor.IsEmpty;
+        return brush != 0;
+    }
+
     /// <summary>
     /// Lets a derived control expand or normalize its native height before the child window is created or resized.
     /// </summary>
@@ -576,6 +682,24 @@ public abstract class Control : IDisposable
     }
 
     /// <summary>
+    /// Raises the <see cref="BackColorChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnBackColorChanged(EventArgs e)
+    {
+        BackColorChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="ForeColorChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnForeColorChanged(EventArgs e)
+    {
+        ForeColorChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
     /// Raises the <see cref="TextChanged"/> event.
     /// </summary>
     /// <param name="e">The event arguments.</param>
@@ -606,6 +730,107 @@ public abstract class Control : IDisposable
         OnTextChanged(EventArgs.Empty);
         return true;
     }
+
+    /// <summary>
+    /// Applies the standard Explorer-themed native control styling and upgrades to the dark variant when supported.
+    /// </summary>
+    protected void ApplyExplorerTheme()
+    {
+        if (Handle == 0 || !OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string themeClass = CurrentVisualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+            ? "DarkMode_Explorer"
+            : "Explorer";
+
+        _ = Win32.SetWindowTheme(Handle, themeClass, null);
+    }
+
+    private nint GetResolvedBackgroundBrush(ResolvedVisualStyle visualStyle)
+    {
+        if (!BackColor.IsEmpty)
+        {
+            if (_backgroundBrush == 0)
+            {
+                _backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(ToArgb(BackColor)));
+                _ownsBackgroundBrush = _backgroundBrush != 0;
+            }
+
+            return _backgroundBrush != 0
+                ? _backgroundBrush
+                : GetFallbackBackgroundBrush();
+        }
+
+        if (UseParentBackgroundForTheming)
+        {
+            if (Parent is not null)
+            {
+                return Parent.GetResolvedBackgroundBrush(visualStyle);
+            }
+
+            return Owner?.GetThemeBrush(ThemeColorSlot.Window) ?? 0;
+        }
+
+        return Owner?.GetThemeBrush(DefaultBackgroundSlot) ?? GetFallbackBackgroundBrush();
+    }
+
+    private uint GetResolvedBackColorRef(ResolvedVisualStyle visualStyle)
+    {
+        if (!BackColor.IsEmpty)
+        {
+            return Win32.ToColorRef(ToArgb(BackColor));
+        }
+
+        if (UseParentBackgroundForTheming)
+        {
+            if (Parent is not null)
+            {
+                return Parent.GetResolvedBackColorRef(visualStyle);
+            }
+
+            return Owner?.GetThemeBackgroundColorRef(ThemeColorSlot.Window) ?? 0;
+        }
+
+        return Owner?.GetThemeBackgroundColorRef(DefaultBackgroundSlot)
+            ?? Win32.ToColorRef(visualStyle.Palette.GetBackground(DefaultBackgroundSlot));
+    }
+
+    private uint GetResolvedForeColorRef(ResolvedVisualStyle visualStyle)
+    {
+        if (!ForeColor.IsEmpty)
+        {
+            return Win32.ToColorRef(ToArgb(ForeColor));
+        }
+
+        return Owner?.GetThemeForegroundColorRef(DefaultForegroundSlot)
+            ?? Win32.ToColorRef(visualStyle.Palette.GetForeground(DefaultForegroundSlot));
+    }
+
+    private nint GetFallbackBackgroundBrush()
+    {
+        return DefaultBackgroundSlot switch
+        {
+            ThemeColorSlot.Window => Win32.GetSysColorBrush(Win32.COLOR_BTNFACE),
+            ThemeColorSlot.Surface => Win32.GetSysColorBrush(Win32.COLOR_BTNFACE),
+            _ => Win32.GetSysColorBrush(Win32.COLOR_WINDOW),
+        };
+    }
+
+    private void ReleaseBackgroundBrush()
+    {
+        if (_backgroundBrush != 0 && _ownsBackgroundBrush)
+        {
+            _ = Win32.DeleteObject(_backgroundBrush);
+        }
+
+        _backgroundBrush = 0;
+        _ownsBackgroundBrush = false;
+    }
+
+    private static uint ToArgb(Color color)
+        => unchecked((uint)color.ToArgb());
 
     private void RegisterSubclass()
     {

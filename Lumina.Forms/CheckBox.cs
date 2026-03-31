@@ -10,7 +10,7 @@ public class CheckBox : Control
     /// <summary>
     /// Gets or sets a value indicating whether the control should use system visual styles for its background.
     /// </summary>
-    public bool UseVisualStyleBackColor { get; set; }
+    public bool UseVisualStyleBackColor { get; set; } = true;
 
     /// <summary>
     /// Occurs when the <see cref="Checked"/> state changes.
@@ -60,6 +60,12 @@ public class CheckBox : Control
     protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_TABSTOP | Win32.BS_AUTOCHECKBOX;
 
     /// <inheritdoc />
+    private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
+
+    /// <inheritdoc />
+    protected override bool UseParentBackgroundForTheming => UseVisualStyleBackColor;
+
+    /// <inheritdoc />
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
@@ -87,7 +93,7 @@ public class CheckBox : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
-        _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+        ApplyExplorerTheme();
     }
 
     /// <summary>

@@ -364,4 +364,24 @@ public sealed class ThemePalette
 
         return palette;
     }
+
+    internal uint GetBackground(ThemeColorSlot slot)
+    {
+        return slot switch
+        {
+            ThemeColorSlot.Window => WindowBackground,
+            ThemeColorSlot.Surface => SurfaceBackground,
+            _ => ControlBackground,
+        };
+    }
+
+    internal uint GetForeground(ThemeColorSlot slot)
+    {
+        return slot switch
+        {
+            ThemeColorSlot.Window => WindowForeground,
+            ThemeColorSlot.Surface => SurfaceForeground,
+            _ => ControlForeground,
+        };
+    }
 }

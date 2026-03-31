@@ -28,6 +28,8 @@ public class Form : IDisposable
     private ThemeMode? _requestedThemeMode;
     private NativeTheme? _themeOverride;
     private ThemePalette? _paletteOverride;
+    private Color _backColor = Color.Empty;
+    private Color _foreColor = Color.Empty;
     private nint _windowBackgroundBrush;
     private bool _ownsWindowBackgroundBrush;
     private nint _surfaceBackgroundBrush;
@@ -79,6 +81,16 @@ public class Form : IDisposable
     public event EventHandler? SizeChanged;
 
     /// <summary>
+    /// Occurs when the <see cref="BackColor"/> property changes.
+    /// </summary>
+    public event EventHandler? BackColorChanged;
+
+    /// <summary>
+    /// Occurs when the <see cref="ForeColor"/> property changes.
+    /// </summary>
+    public event EventHandler? ForeColorChanged;
+
+    /// <summary>
     /// Gets or sets the window title text.
     /// </summary>
     public string Text { get; set; } = "Lumina Native Form";
@@ -87,6 +99,44 @@ public class Form : IDisposable
     /// Gets or sets the design-time or lookup name of the form.
     /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the form background color. Set <see cref="Color.Empty"/> to follow the active theme.
+    /// </summary>
+    public Color BackColor
+    {
+        get => _backColor;
+        set
+        {
+            if (_backColor == value)
+            {
+                return;
+            }
+
+            _backColor = value;
+            OnBackColorChanged(EventArgs.Empty);
+            ApplyApplicationDefaults();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the form foreground color. Set <see cref="Color.Empty"/> to follow the active theme.
+    /// </summary>
+    public Color ForeColor
+    {
+        get => _foreColor;
+        set
+        {
+            if (_foreColor == value)
+            {
+                return;
+            }
+
+            _foreColor = value;
+            OnForeColorChanged(EventArgs.Empty);
+            ApplyApplicationDefaults();
+        }
+    }
 
     /// <summary>
     /// Gets or sets how the form should scale itself and its child controls.
@@ -440,6 +490,24 @@ public class Form : IDisposable
     }
 
     /// <summary>
+    /// Raises the <see cref="BackColorChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnBackColorChanged(EventArgs e)
+    {
+        BackColorChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="ForeColorChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnForeColorChanged(EventArgs e)
+    {
+        ForeColorChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
     /// Called after a child control command is dispatched.
     /// </summary>
     /// <param name="controlId">The numeric child control identifier.</param>
@@ -706,6 +774,36 @@ public class Form : IDisposable
         ApplyApplicationDefaults();
     }
 
+    internal nint GetThemeBrush(ThemeColorSlot slot)
+    {
+        return slot switch
+        {
+            ThemeColorSlot.Window => _windowBackgroundBrush,
+            ThemeColorSlot.Surface => _surfaceBackgroundBrush,
+            _ => _controlBackgroundBrush,
+        };
+    }
+
+    internal uint GetThemeBackgroundColorRef(ThemeColorSlot slot)
+    {
+        return slot switch
+        {
+            ThemeColorSlot.Window => Win32.ToColorRef(ToArgb(GetResolvedBackColor(CurrentVisualStyle.Palette))),
+            ThemeColorSlot.Surface => _surfaceBackgroundColorRef,
+            _ => _controlBackgroundColorRef,
+        };
+    }
+
+    internal uint GetThemeForegroundColorRef(ThemeColorSlot slot)
+    {
+        return slot switch
+        {
+            ThemeColorSlot.Window => Win32.ToColorRef(ToArgb(GetResolvedForeColor(CurrentVisualStyle.Palette))),
+            ThemeColorSlot.Surface => _surfaceForegroundColorRef,
+            _ => _controlForegroundColorRef,
+        };
+    }
+
     private ResolvedVisualStyle ResolveCurrentVisualStyle()
     {
         ThemeMode requestedThemeMode = _themeExplicitlySet
@@ -757,11 +855,11 @@ public class Form : IDisposable
 
     private void ApplyResolvedPalette(ThemePalette palette)
     {
-        SetBrush(ref _windowBackgroundBrush, ref _ownsWindowBackgroundBrush, palette.WindowBackground, Win32.COLOR_BTNFACE);
+        SetBrush(ref _windowBackgroundBrush, ref _ownsWindowBackgroundBrush, ToArgb(GetResolvedBackColor(palette)), Win32.COLOR_BTNFACE);
         SetBrush(ref _surfaceBackgroundBrush, ref _ownsSurfaceBackgroundBrush, palette.SurfaceBackground, Win32.COLOR_BTNFACE);
         SetBrush(ref _controlBackgroundBrush, ref _ownsControlBackgroundBrush, palette.ControlBackground, Win32.COLOR_WINDOW);
 
-        _windowForegroundColorRef = Win32.ToColorRef(palette.WindowForeground);
+        _windowForegroundColorRef = Win32.ToColorRef(ToArgb(GetResolvedForeColor(palette)));
         _surfaceForegroundColorRef = Win32.ToColorRef(palette.SurfaceForeground);
         _controlForegroundColorRef = Win32.ToColorRef(palette.ControlForeground);
         _surfaceBackgroundColorRef = Win32.ToColorRef(palette.SurfaceBackground);
@@ -786,7 +884,7 @@ public class Form : IDisposable
 
     private static void RefreshControl(Control control)
     {
-        control.Refresh();
+        control.RefreshTheme();
 
         if (control is not ContainerControlBase container)
         {
@@ -799,6 +897,12 @@ public class Form : IDisposable
         }
     }
 
+    private Color GetResolvedBackColor(ThemePalette palette)
+        => BackColor.IsEmpty ? Color.FromArgb(unchecked((int)palette.WindowBackground)) : BackColor;
+
+    private Color GetResolvedForeColor(ThemePalette palette)
+        => ForeColor.IsEmpty ? Color.FromArgb(unchecked((int)palette.WindowForeground)) : ForeColor;
+
     private static void SetBrush(ref nint brush, ref bool ownsBrush, uint argb, int fallbackSysColor)
     {
         ReleaseBrush(ref brush, ref ownsBrush);
@@ -810,6 +914,9 @@ public class Form : IDisposable
             brush = Win32.GetSysColorBrush(fallbackSysColor);
         }
     }
+
+    private static uint ToArgb(Color color)
+        => unchecked((uint)color.ToArgb());
 
     private void ReleasePaletteResources()
     {
@@ -1169,6 +1276,22 @@ public class Form : IDisposable
         }
 
         _ = Control.TryGetControlByHandle(lParam, out Control? control);
+
+        if (control is not null && control.TryGetThemeColors(out nint controlBrush, out uint backgroundColorRef, out uint foregroundColorRef, out bool transparentBackground))
+        {
+            if (transparentBackground)
+            {
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+            }
+            else
+            {
+                _ = Win32.SetBkColor(wParam, backgroundColorRef);
+            }
+
+            _ = Win32.SetTextColor(wParam, foregroundColorRef);
+            brush = controlBrush;
+            return true;
+        }
 
         switch (message)
         {

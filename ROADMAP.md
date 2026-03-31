@@ -29,6 +29,7 @@ This section is the current readable Phase 6 snapshot for LuminaForms work.
 - [x] Kept `unsafe` interop details contained inside the library instead of leaking into the Demo or consumer code.
 - [x] Expanded the current compatibility surface for high-frequency controls, collections, item lists, events, and nested containers.
 - [x] Aligned common WinForms names, properties, methods, events, and default behavior for the controls currently implemented.
+- [x] Added WinForms-style `BackColor` and `ForeColor` overrides for forms and controls while preserving theme-driven defaults.
 - [x] Added compatibility notes, migration guidance, and a clear checklist for unsupported or still-growing areas.
 - [x] Added AOT-friendly compatibility and regression tests for autoscaling, containers, item collections, themes, and event behavior.
 - [x] Added `Lumina.Forms.Analyzers` with startup, `Application.Run`, `partial Form`, and migration-friendly rules.
@@ -43,6 +44,7 @@ This section is the current readable Phase 6 snapshot for LuminaForms work.
 - [x] Designed an extensible theme model with semantic tokens for windows, title bars, surfaces, controls, and state colors.
 - [x] Supported JSON theme loading, saving, import, and export so user-authored and AI-generated themes have a stable file format.
 - [x] Organized palette tokens with a grouped semantic structure inspired by `SkiaShell.Theme`.
+- [x] Propagated live theme refresh through open forms, nested containers, and high-frequency controls with parent-surface color inheritance.
 - [x] Added examples and validation for system theme following, effect fallback, and theme switching.
 
 ### Phase 6-C: Demo and Designer Friendliness

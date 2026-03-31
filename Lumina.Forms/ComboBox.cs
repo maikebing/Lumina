@@ -196,7 +196,7 @@ public class ComboBox : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
-        _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+        ApplyExplorerTheme();
     }
 
     private uint GetDropDownStyle()

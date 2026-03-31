@@ -8,7 +8,7 @@ public class Button : Control
     /// <summary>
     /// Gets or sets a value indicating whether the control should use system visual styles for its background.
     /// </summary>
-    public bool UseVisualStyleBackColor { get; set; }
+    public bool UseVisualStyleBackColor { get; set; } = true;
 
     /// <summary>
     /// Occurs when the user activates the button.
@@ -30,6 +30,9 @@ public class Button : Control
     protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_TABSTOP | Win32.BS_PUSHBUTTON;
 
     /// <inheritdoc />
+    protected override bool UseParentBackgroundForTheming => UseVisualStyleBackColor;
+
+    /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
         => Math.Max(24, requestedHeight);
 
@@ -48,7 +51,7 @@ public class Button : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
-        _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+        ApplyExplorerTheme();
     }
 
     /// <summary>

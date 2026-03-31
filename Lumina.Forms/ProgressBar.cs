@@ -39,6 +39,6 @@ public class ProgressBar : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
-        _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+        ApplyExplorerTheme();
     }
 }
