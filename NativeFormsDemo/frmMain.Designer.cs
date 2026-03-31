@@ -111,6 +111,13 @@
             button7 = new Button();
             richTextBox1 = new RichTextBox();
             视图ToolStripMenuItem = new ToolStripMenuItem();
+            themeToolStripMenuItem = new ToolStripMenuItem();
+            followSystemThemeToolStripMenuItem = new ToolStripMenuItem();
+            lightThemeToolStripMenuItem = new ToolStripMenuItem();
+            darkThemeToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator4 = new ToolStripSeparator();
+            systemColorsToolStripMenuItem = new ToolStripMenuItem();
+            customThemeToolStripMenuItem = new ToolStripMenuItem();
             luminaExtWinFormsToolStripMenuItem = new ToolStripMenuItem();
             clearEffectToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator3 = new ToolStripSeparator();
@@ -119,6 +126,9 @@
             acrylicToolStripMenuItem = new ToolStripMenuItem();
             aeroToolStripMenuItem = new ToolStripMenuItem();
             blurToolStripMenuItem = new ToolStripMenuItem();
+            navigationSectionLabel = new Label();
+            containerSectionLabel = new Label();
+            styleSectionLabel = new Label();
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -213,21 +223,21 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(24, 107);
+            label1.Location = new Point(24, 18);
             label1.Name = "label1";
-            label1.Size = new Size(209, 17);
+            label1.Size = new Size(159, 17);
             label1.TabIndex = 4;
-            label1.Text = "LuminaForms compatibility sample";
+            label1.Text = "LuminaForms Demo Page";
             // 
             // linkLabel1
             // 
             linkLabel1.AutoSize = true;
-            linkLabel1.Location = new Point(24, 130);
+            linkLabel1.Location = new Point(24, 40);
             linkLabel1.Name = "linkLabel1";
-            linkLabel1.Size = new Size(204, 17);
+            linkLabel1.Size = new Size(349, 17);
             linkLabel1.TabIndex = 5;
             linkLabel1.TabStop = true;
-            linkLabel1.Text = "Migration-friendly control surface";
+            linkLabel1.Text = "基础控件、列表导航、容器布局与风格演示都保持静态布局。";
             // 
             // listBox1
             // 
@@ -718,6 +728,33 @@
             button7.Text = "Apply";
             button7.UseVisualStyleBackColor = true;
             // 
+            // navigationSectionLabel
+            // 
+            navigationSectionLabel.AutoSize = true;
+            navigationSectionLabel.Location = new Point(260, 156);
+            navigationSectionLabel.Name = "navigationSectionLabel";
+            navigationSectionLabel.Size = new Size(68, 17);
+            navigationSectionLabel.TabIndex = 28;
+            navigationSectionLabel.Text = "列表导航";
+            // 
+            // containerSectionLabel
+            // 
+            containerSectionLabel.AutoSize = true;
+            containerSectionLabel.Location = new Point(24, 350);
+            containerSectionLabel.Name = "containerSectionLabel";
+            containerSectionLabel.Size = new Size(68, 17);
+            containerSectionLabel.TabIndex = 29;
+            containerSectionLabel.Text = "容器布局";
+            // 
+            // styleSectionLabel
+            // 
+            styleSectionLabel.AutoSize = true;
+            styleSectionLabel.Location = new Point(920, 42);
+            styleSectionLabel.Name = "styleSectionLabel";
+            styleSectionLabel.Size = new Size(68, 17);
+            styleSectionLabel.TabIndex = 30;
+            styleSectionLabel.Text = "风格演示";
+            // 
             // richTextBox1
             // 
             richTextBox1.BackColor = SystemColors.Window;
@@ -726,21 +763,68 @@
             richTextBox1.ReadOnly = true;
             richTextBox1.Size = new Size(496, 58);
             richTextBox1.TabIndex = 27;
-            richTextBox1.Text = "Use the View menu to preview window styles. The WinForms target uses Lumina.Ext.WinForms, and the net10.0 Lumina.Forms target uses the built-in methods with the same names.";
+            richTextBox1.Text = "默认主题会跟随系统，并优先采用当前操作系统最适合的配色。你也可以在“视图”菜单里切换浅色、深色、自定义主题，以及不同的窗口风格。";
             // 
             // 视图ToolStripMenuItem
             // 
-            视图ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { luminaExtWinFormsToolStripMenuItem });
+            视图ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { themeToolStripMenuItem, luminaExtWinFormsToolStripMenuItem });
             视图ToolStripMenuItem.Name = "视图ToolStripMenuItem";
             视图ToolStripMenuItem.Size = new Size(44, 21);
             视图ToolStripMenuItem.Text = "视图";
+            // 
+            // themeToolStripMenuItem
+            // 
+            themeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { followSystemThemeToolStripMenuItem, lightThemeToolStripMenuItem, darkThemeToolStripMenuItem, toolStripSeparator4, systemColorsToolStripMenuItem, customThemeToolStripMenuItem });
+            themeToolStripMenuItem.Name = "themeToolStripMenuItem";
+            themeToolStripMenuItem.Size = new Size(194, 22);
+            themeToolStripMenuItem.Text = "主题";
+            // 
+            // followSystemThemeToolStripMenuItem
+            // 
+            followSystemThemeToolStripMenuItem.Name = "followSystemThemeToolStripMenuItem";
+            followSystemThemeToolStripMenuItem.Size = new Size(180, 22);
+            followSystemThemeToolStripMenuItem.Text = "跟随系统";
+            followSystemThemeToolStripMenuItem.Click += followSystemThemeToolStripMenuItem_Click;
+            // 
+            // lightThemeToolStripMenuItem
+            // 
+            lightThemeToolStripMenuItem.Name = "lightThemeToolStripMenuItem";
+            lightThemeToolStripMenuItem.Size = new Size(180, 22);
+            lightThemeToolStripMenuItem.Text = "浅色主题";
+            lightThemeToolStripMenuItem.Click += lightThemeToolStripMenuItem_Click;
+            // 
+            // darkThemeToolStripMenuItem
+            // 
+            darkThemeToolStripMenuItem.Name = "darkThemeToolStripMenuItem";
+            darkThemeToolStripMenuItem.Size = new Size(180, 22);
+            darkThemeToolStripMenuItem.Text = "深色主题";
+            darkThemeToolStripMenuItem.Click += darkThemeToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator4
+            // 
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new Size(177, 6);
+            // 
+            // systemColorsToolStripMenuItem
+            // 
+            systemColorsToolStripMenuItem.Name = "systemColorsToolStripMenuItem";
+            systemColorsToolStripMenuItem.Size = new Size(180, 22);
+            systemColorsToolStripMenuItem.Text = "系统配色";
+            systemColorsToolStripMenuItem.Click += systemColorsToolStripMenuItem_Click;
+            // 
+            // customThemeToolStripMenuItem
+            // 
+            customThemeToolStripMenuItem.Name = "customThemeToolStripMenuItem";
+            customThemeToolStripMenuItem.Size = new Size(180, 22);
+            customThemeToolStripMenuItem.Text = "自定义主题";
+            customThemeToolStripMenuItem.Click += customThemeToolStripMenuItem_Click;
             // 
             // luminaExtWinFormsToolStripMenuItem
             // 
             luminaExtWinFormsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { clearEffectToolStripMenuItem, toolStripSeparator3, micaToolStripMenuItem, micaAltToolStripMenuItem, acrylicToolStripMenuItem, aeroToolStripMenuItem, blurToolStripMenuItem });
             luminaExtWinFormsToolStripMenuItem.Name = "luminaExtWinFormsToolStripMenuItem";
             luminaExtWinFormsToolStripMenuItem.Size = new Size(194, 22);
-            luminaExtWinFormsToolStripMenuItem.Text = "Lumina.Ext.WinForms";
+            luminaExtWinFormsToolStripMenuItem.Text = "窗口风格";
             // 
             // clearEffectToolStripMenuItem
             // 
@@ -794,6 +878,9 @@
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1460, 900);
+            Controls.Add(styleSectionLabel);
+            Controls.Add(containerSectionLabel);
+            Controls.Add(navigationSectionLabel);
             Controls.Add(richTextBox1);
             Controls.Add(tableLayoutPanel1);
             Controls.Add(tabControl1);
@@ -919,6 +1006,13 @@
         private Button button7;
         private RichTextBox richTextBox1;
         private ToolStripMenuItem 视图ToolStripMenuItem;
+        private ToolStripMenuItem themeToolStripMenuItem;
+        private ToolStripMenuItem followSystemThemeToolStripMenuItem;
+        private ToolStripMenuItem lightThemeToolStripMenuItem;
+        private ToolStripMenuItem darkThemeToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator4;
+        private ToolStripMenuItem systemColorsToolStripMenuItem;
+        private ToolStripMenuItem customThemeToolStripMenuItem;
         private ToolStripMenuItem luminaExtWinFormsToolStripMenuItem;
         private ToolStripMenuItem clearEffectToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator3;
@@ -927,5 +1021,8 @@
         private ToolStripMenuItem acrylicToolStripMenuItem;
         private ToolStripMenuItem aeroToolStripMenuItem;
         private ToolStripMenuItem blurToolStripMenuItem;
+        private Label navigationSectionLabel;
+        private Label containerSectionLabel;
+        private Label styleSectionLabel;
     }
 }

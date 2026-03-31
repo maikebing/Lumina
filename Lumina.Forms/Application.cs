@@ -336,9 +336,7 @@ public static class Application
             return theme.Palette;
         }
 
-        return themeMode == ThemeMode.Dark
-            ? ThemePalette.CreateDark(visualStyleKind)
-            : ThemePalette.CreateLight(visualStyleKind);
+        return ThemePalette.CreateSystem(themeMode, visualStyleKind);
     }
 
     internal static void RegisterOpenForm(Form form)

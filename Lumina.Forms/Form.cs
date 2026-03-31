@@ -399,6 +399,62 @@ public class Form : IDisposable
     }
 
     /// <summary>
+    /// Resets the form to the default system-following theme, including the current Windows accent color.
+    /// </summary>
+    public void UseSystemTheme()
+    {
+        ResetTheme();
+        ResetPalette();
+        ResetThemeMode();
+    }
+
+    /// <summary>
+    /// Applies the built-in light theme while still honoring the current Windows accent color.
+    /// </summary>
+    public void UseLightTheme()
+    {
+        ResetTheme();
+        ResetPalette();
+        SetThemeMode(ThemeMode.Light);
+    }
+
+    /// <summary>
+    /// Applies the built-in dark theme while still honoring the current Windows accent color.
+    /// </summary>
+    public void UseDarkTheme()
+    {
+        ResetTheme();
+        ResetPalette();
+        SetThemeMode(ThemeMode.Dark);
+    }
+
+    /// <summary>
+    /// Reapplies the current theme mode using the detected Windows accent color.
+    /// </summary>
+    public void UseSystemColors()
+    {
+        ResetTheme();
+        ThemeMode themeMode = _themeExplicitlySet ? _requestedThemeMode ?? ThemeMode.System : CurrentVisualStyle.ThemeMode;
+        SetPalette(ThemePalette.CreateSystem(themeMode, CurrentVisualStyle.VisualStyleKind));
+    }
+
+    /// <summary>
+    /// Applies a built-in custom accent palette while preserving the current light or dark mode.
+    /// </summary>
+    /// <param name="accent">The custom accent color in ARGB format.</param>
+    public void UseCustomTheme(uint accent = 0xFF_8B_5C_F6)
+    {
+        ResetTheme();
+        ThemeMode themeMode = _themeExplicitlySet ? _requestedThemeMode ?? ThemeMode.System : CurrentVisualStyle.ThemeMode;
+        if (themeMode == ThemeMode.System)
+        {
+            themeMode = CurrentVisualStyle.ThemeMode;
+        }
+
+        SetPalette(ThemePalette.CreateCustom(themeMode, accent, CurrentVisualStyle.VisualStyleKind));
+    }
+
+    /// <summary>
     /// Applies the Mica backdrop to the form.
     /// </summary>
     public void SetMica() => SetEffect(EffectKind.Mica);

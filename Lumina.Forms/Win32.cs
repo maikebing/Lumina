@@ -571,6 +571,9 @@ internal static class Win32
     [DllImport("dwmapi.dll")]
     internal static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
 
+    [DllImport("dwmapi.dll")]
+    internal static extern int DwmGetColorizationColor(out uint colorizationColor, [MarshalAs(UnmanagedType.Bool)] out bool opaqueBlend);
+
     [DllImport("user32.dll")]
     internal static extern uint GetDpiForSystem();
 

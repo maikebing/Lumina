@@ -146,6 +146,145 @@ public sealed class ThemePalette
     public uint Danger { get; set; } = 0xFF_DC_26_26;
 
     /// <summary>
+    /// Creates a copy of the current palette.
+    /// </summary>
+    /// <returns>A new palette containing the same semantic colors.</returns>
+    public ThemePalette Clone() => new()
+    {
+        WindowBackground = WindowBackground,
+        WindowForeground = WindowForeground,
+        WindowBorder = WindowBorder,
+        TitleBarBackground = TitleBarBackground,
+        TitleBarForeground = TitleBarForeground,
+        TitleBarBorder = TitleBarBorder,
+        SurfaceBackground = SurfaceBackground,
+        SurfaceForeground = SurfaceForeground,
+        SurfaceBorder = SurfaceBorder,
+        ControlBackground = ControlBackground,
+        ControlForeground = ControlForeground,
+        ControlBorder = ControlBorder,
+        ControlHoverBackground = ControlHoverBackground,
+        ControlHoverForeground = ControlHoverForeground,
+        ControlPressedBackground = ControlPressedBackground,
+        ControlPressedForeground = ControlPressedForeground,
+        ControlDisabledBackground = ControlDisabledBackground,
+        Accent = Accent,
+        AccentForeground = AccentForeground,
+        Selection = Selection,
+        SelectionForeground = SelectionForeground,
+        FocusBorder = FocusBorder,
+        DisabledForeground = DisabledForeground,
+        DisabledBorder = DisabledBorder,
+        MutedForeground = MutedForeground,
+        Success = Success,
+        Warning = Warning,
+        Danger = Danger,
+    };
+
+    /// <summary>
+    /// Creates a palette that follows the current operating system theme and accent color.
+    /// </summary>
+    /// <returns>A new palette instance aligned to the current system defaults.</returns>
+    public static ThemePalette CreateSystem() => CreateSystem(ThemeMode.System, VisualStyleKind.System);
+
+    /// <summary>
+    /// Creates a palette that follows the requested theme mode while still honoring the current system accent color.
+    /// </summary>
+    /// <param name="themeMode">The preferred theme mode.</param>
+    /// <returns>A new palette instance aligned to the requested mode and current OS accent color.</returns>
+    public static ThemePalette CreateSystem(ThemeMode themeMode) => CreateSystem(themeMode, VisualStyleKind.System);
+
+    /// <summary>
+    /// Creates a palette that follows the requested theme mode and visual style while honoring the current system accent color.
+    /// </summary>
+    /// <param name="themeMode">The preferred theme mode.</param>
+    /// <param name="visualStyleKind">The preferred system-aligned visual style.</param>
+    /// <returns>A new palette instance aligned to the requested mode, visual style, and OS accent color.</returns>
+    public static ThemePalette CreateSystem(ThemeMode themeMode, VisualStyleKind visualStyleKind)
+    {
+        ThemeMode resolvedThemeMode = Application.ResolveThemeMode(themeMode);
+        VisualStyleKind resolvedVisualStyleKind = Application.ResolveVisualStyleKind(visualStyleKind);
+        ThemePalette palette = resolvedThemeMode == ThemeMode.Dark
+            ? CreateDark(resolvedVisualStyleKind)
+            : CreateLight(resolvedVisualStyleKind);
+
+        if (TryGetSystemAccentColor(out uint accent))
+        {
+            palette.ApplyAccent(accent, resolvedThemeMode);
+        }
+
+        return palette;
+    }
+
+    /// <summary>
+    /// Creates a palette from the built-in light or dark defaults and applies a custom accent color.
+    /// </summary>
+    /// <param name="themeMode">The preferred light or dark mode.</param>
+    /// <param name="accent">The accent color in ARGB format.</param>
+    /// <param name="visualStyleKind">The preferred system-aligned visual style.</param>
+    /// <returns>A new palette instance with the requested accent.</returns>
+    public static ThemePalette CreateCustom(ThemeMode themeMode, uint accent, VisualStyleKind visualStyleKind = VisualStyleKind.System)
+    {
+        ThemeMode resolvedThemeMode = Application.ResolveThemeMode(themeMode);
+        VisualStyleKind resolvedVisualStyleKind = Application.ResolveVisualStyleKind(visualStyleKind);
+        ThemePalette palette = resolvedThemeMode == ThemeMode.Dark
+            ? CreateDark(resolvedVisualStyleKind)
+            : CreateLight(resolvedVisualStyleKind);
+
+        palette.ApplyAccent(accent, resolvedThemeMode);
+        return palette;
+    }
+
+    /// <summary>
+    /// Applies an accent color to the palette and updates dependent semantic tokens such as focus and selection colors.
+    /// </summary>
+    /// <param name="accent">The accent color in ARGB format.</param>
+    /// <param name="themeMode">The light or dark theme mode that should influence derived values.</param>
+    public void ApplyAccent(uint accent, ThemeMode themeMode)
+    {
+        uint resolvedAccent = EnsureOpaque(accent);
+        Accent = resolvedAccent;
+        AccentForeground = IsDarkColor(resolvedAccent) ? 0xFF_FF_FF_FF : 0xFF_08_08_08;
+        FocusBorder = resolvedAccent;
+        Selection = WithAlpha(themeMode == ThemeMode.Dark ? 0x66u : 0x33u, resolvedAccent);
+        SelectionForeground = themeMode == ThemeMode.Dark ? 0xFF_FF_FF_FF : 0xFF_0F_17_2A;
+        ControlHoverBackground = Blend(ControlBackground, resolvedAccent, themeMode == ThemeMode.Dark ? 0.18f : 0.10f);
+        ControlPressedBackground = Blend(ControlBackground, resolvedAccent, themeMode == ThemeMode.Dark ? 0.28f : 0.18f);
+        ControlPressedForeground = themeMode == ThemeMode.Dark ? 0xFF_FF_FF_FF : 0xFF_0F_17_2A;
+    }
+
+    /// <summary>
+    /// Attempts to read the current Windows accent color.
+    /// </summary>
+    /// <param name="accent">When this method returns, contains the ARGB accent color if available.</param>
+    /// <returns><see langword="true"/> when a system accent color was detected; otherwise, <see langword="false"/>.</returns>
+    public static bool TryGetSystemAccentColor(out uint accent)
+    {
+        accent = 0;
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        try
+        {
+            if (Win32.DwmGetColorizationColor(out uint colorizationColor, out _) == 0)
+            {
+                accent = EnsureOpaque(colorizationColor);
+                return true;
+            }
+        }
+        catch (DllNotFoundException)
+        {
+        }
+        catch (EntryPointNotFoundException)
+        {
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Creates the default light palette.
     /// </summary>
     /// <returns>A new light palette instance.</returns>
@@ -383,5 +522,40 @@ public sealed class ThemePalette
             ThemeColorSlot.Surface => SurfaceForeground,
             _ => ControlForeground,
         };
+    }
+
+    private static uint EnsureOpaque(uint argb) => 0xFF_00_00_00 | (argb & 0x00_FF_FF_FF);
+
+    private static uint WithAlpha(uint alpha, uint argb) => (alpha << 24) | (argb & 0x00_FF_FF_FF);
+
+    private static bool IsDarkColor(uint argb)
+    {
+        float red = ((argb >> 16) & 0xFF) / 255f;
+        float green = ((argb >> 8) & 0xFF) / 255f;
+        float blue = (argb & 0xFF) / 255f;
+        float luminance = (0.2126f * red) + (0.7152f * green) + (0.0722f * blue);
+        return luminance < 0.5f;
+    }
+
+    private static uint Blend(uint background, uint foreground, float amount)
+    {
+        amount = Math.Clamp(amount, 0f, 1f);
+
+        float backgroundRed = (background >> 16) & 0xFF;
+        float backgroundGreen = (background >> 8) & 0xFF;
+        float backgroundBlue = background & 0xFF;
+
+        float foregroundRed = (foreground >> 16) & 0xFF;
+        float foregroundGreen = (foreground >> 8) & 0xFF;
+        float foregroundBlue = foreground & 0xFF;
+
+        byte red = (byte)Math.Clamp((backgroundRed * (1f - amount)) + (foregroundRed * amount), 0f, 255f);
+        byte green = (byte)Math.Clamp((backgroundGreen * (1f - amount)) + (foregroundGreen * amount), 0f, 255f);
+        byte blue = (byte)Math.Clamp((backgroundBlue * (1f - amount)) + (foregroundBlue * amount), 0f, 255f);
+
+        return 0xFF_00_00_00
+            | ((uint)red << 16)
+            | ((uint)green << 8)
+            | blue;
     }
 }

@@ -6,7 +6,7 @@ namespace System.Windows.Forms;
 /// <summary>
 /// WinForms 扩展方法，为 <see cref="Form"/> 提供一行式效果 API。
 /// </summary>
-public static class LuminaFormExtensions
+public static partial class LuminaFormExtensions
 {
     /// <summary>应用 Mica 效果。</summary>
     public static void SetMica(this Form form)

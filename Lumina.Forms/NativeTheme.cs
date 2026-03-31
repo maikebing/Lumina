@@ -78,6 +78,19 @@ public sealed class NativeTheme
     public static NativeTheme LoadJson(string path) => FromJson(File.ReadAllText(path));
 
     /// <summary>
+    /// Creates a default system-following theme.
+    /// </summary>
+    /// <returns>A new built-in theme aligned to the current Windows theme mode, accent color, and visual style.</returns>
+    public static NativeTheme CreateSystemTheme() => new()
+    {
+        Name = "Lumina System",
+        Description = "Built-in theme that follows the current operating system theme mode, backdrop, and accent color.",
+        ThemeMode = ThemeMode.System,
+        PreferredVisualStyle = VisualStyleKind.System,
+        Palette = ThemePalette.CreateSystem(),
+    };
+
+    /// <summary>
     /// Creates a default light theme.
     /// </summary>
     /// <returns>A new built-in light theme.</returns>
@@ -88,7 +101,7 @@ public sealed class NativeTheme
         ThemeMode = ThemeMode.Light,
         PreferredVisualStyle = VisualStyleKind.Mica,
         PreferredEffect = EffectKind.MicaAlt,
-        Palette = ThemePalette.CreateLight(VisualStyleKind.Mica),
+        Palette = ThemePalette.CreateSystem(ThemeMode.Light, VisualStyleKind.Mica),
     };
 
     /// <summary>
@@ -102,7 +115,28 @@ public sealed class NativeTheme
         ThemeMode = ThemeMode.Dark,
         PreferredVisualStyle = VisualStyleKind.Mica,
         PreferredEffect = EffectKind.Mica,
-        Palette = ThemePalette.CreateDark(VisualStyleKind.Mica),
+        Palette = ThemePalette.CreateSystem(ThemeMode.Dark, VisualStyleKind.Mica),
+    };
+
+    /// <summary>
+    /// Creates a built-in customizable showcase theme with a richer accent color.
+    /// </summary>
+    /// <param name="name">The display name for the theme.</param>
+    /// <param name="themeMode">The preferred light or dark mode.</param>
+    /// <param name="accent">The custom accent color in ARGB format.</param>
+    /// <param name="preferredVisualStyle">The preferred system-aligned visual style family.</param>
+    /// <returns>A new built-in custom theme.</returns>
+    public static NativeTheme CreateCustomTheme(
+        string name = "Lumina Showcase",
+        ThemeMode themeMode = ThemeMode.Dark,
+        uint accent = 0xFF_8B_5C_F6,
+        VisualStyleKind preferredVisualStyle = VisualStyleKind.System) => new()
+    {
+        Name = name,
+        Description = "Built-in custom theme preset with a configurable accent color for demo and testing scenarios.",
+        ThemeMode = themeMode,
+        PreferredVisualStyle = preferredVisualStyle,
+        Palette = ThemePalette.CreateCustom(themeMode, accent, preferredVisualStyle),
     };
 }
 
