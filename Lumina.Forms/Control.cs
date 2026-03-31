@@ -240,6 +240,11 @@ public abstract class Control : IDisposable
     /// </summary>
     protected virtual uint ExStyle => 0;
 
+    /// <summary>
+    /// Gets a value indicating whether this control should materialize a native child window.
+    /// </summary>
+    protected virtual bool ShouldCreateNativeHandle => true;
+
     internal void Attach(Form owner, int id, Control? parent)
     {
         ThrowIfDisposed();
@@ -359,7 +364,7 @@ public abstract class Control : IDisposable
     {
         CreateHandle();
 
-        if (this is ContainerControlBase container)
+        if (Handle != 0 && this is ContainerControlBase container)
         {
             container.CreateChildHandles();
         }
@@ -388,6 +393,11 @@ public abstract class Control : IDisposable
         }
 
         if (Handle != 0)
+        {
+            return;
+        }
+
+        if (!ShouldCreateNativeHandle)
         {
             return;
         }
@@ -429,6 +439,9 @@ public abstract class Control : IDisposable
     internal bool HandleCommand(int notificationCode)
         => OnCommand(notificationCode);
 
+    internal bool HandleNotify(int notificationCode, nint lParam)
+        => OnNotify(notificationCode, lParam);
+
     /// <summary>
     /// Lets a derived control expand or normalize its native height before the child window is created or resized.
     /// </summary>
@@ -450,6 +463,14 @@ public abstract class Control : IDisposable
     /// <param name="notificationCode">The Win32 notification code.</param>
     /// <returns><see langword="true"/> if the notification was handled; otherwise, <see langword="false"/>.</returns>
     protected virtual bool OnCommand(int notificationCode) => false;
+
+    /// <summary>
+    /// Called when the parent form routes a <c>WM_NOTIFY</c> notification to the control.
+    /// </summary>
+    /// <param name="notificationCode">The Win32 notification code.</param>
+    /// <param name="lParam">The raw notification payload.</param>
+    /// <returns><see langword="true"/> if the notification was handled; otherwise, <see langword="false"/>.</returns>
+    protected virtual bool OnNotify(int notificationCode, nint lParam) => false;
 
     /// <summary>
     /// Called after the control bounds change.

@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Reflection;
 using Lumina.Forms;
 using Xunit;
 
@@ -101,11 +100,11 @@ public class ContainerControlTests
 
         Assert.False(firstPage.Visible);
         Assert.True(secondPage.Visible);
-        Assert.Equal(new Rectangle(0, 26, 200, 74), secondPage.Bounds);
+        Assert.Equal(new Rectangle(4, 26, 192, 70), secondPage.Bounds);
     }
 
     [Fact]
-    public void TabControl_HeaderButtonClick_ChangesSelectedIndex()
+    public void TabControl_SelectedIndex_ChangesVisiblePage()
     {
         var tabControl = new TabControl();
         var firstPage = new TabPage { Text = "First" };
@@ -115,16 +114,7 @@ public class ContainerControlTests
         tabControl.SetBounds(0, 0, 240, 100);
         tabControl.PerformLayout();
 
-        FieldInfo? headerButtonsField = typeof(TabControl).GetField("_headerButtons", BindingFlags.Instance | BindingFlags.NonPublic);
-        Assert.NotNull(headerButtonsField);
-
-        object headerButtons = Assert.IsType<Dictionary<TabPage, Button>>(headerButtonsField!.GetValue(tabControl));
-        var headers = (Dictionary<TabPage, Button>)headerButtons;
-
-        Assert.Equal(2, headers.Count);
-        Assert.Equal(2, tabControl.Controls.Count);
-
-        headers[secondPage].PerformClick();
+        tabControl.SelectedIndex = 1;
 
         Assert.Equal(1, tabControl.SelectedIndex);
         Assert.False(firstPage.Visible);

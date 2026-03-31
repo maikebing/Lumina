@@ -32,6 +32,7 @@ public sealed class ToolStripItemCollection : IEnumerable<ToolStripItem>
     {
         ArgumentNullException.ThrowIfNull(item);
         _items.Add(item);
+        item.Changed += OnItemChanged;
         _itemsChanged?.Invoke();
     }
 
@@ -68,5 +69,10 @@ public sealed class ToolStripItemCollection : IEnumerable<ToolStripItem>
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    private void OnItemChanged(object? sender, EventArgs e)
+    {
+        _itemsChanged?.Invoke();
     }
 }

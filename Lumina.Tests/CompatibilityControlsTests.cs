@@ -98,9 +98,13 @@ public sealed class CompatibilityControlsTests
     }
 
     [Fact]
-    public void MenuStrip_UsesMenuHostsInsteadOfButtons()
+    public void MenuStrip_DoesNotMaterializeHosts_WhenActingAsMainMenu()
     {
+        var form = new Form();
         var menuStrip = new MenuStrip();
+        form.Controls.Add(menuStrip);
+        form.MainMenuStrip = menuStrip;
+
         var fileMenu = new ToolStripMenuItem { Text = "File" };
         menuStrip.Items.Add(fileMenu);
         menuStrip.PerformLayout();
@@ -109,10 +113,7 @@ public sealed class CompatibilityControlsTests
         Assert.NotNull(itemHostsField);
 
         var itemHosts = Assert.IsType<Dictionary<ToolStripItem, Control>>(itemHostsField!.GetValue(menuStrip));
-        Control host = Assert.Single(itemHosts).Value;
-
-        Assert.False(host is Button);
-        Assert.IsNotType<Button>(host);
+        Assert.Empty(itemHosts);
     }
 
     [Fact]

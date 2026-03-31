@@ -20,9 +20,11 @@ public class Form : IDisposable
     private bool _shown;
     private int _nextControlId = 1000;
     private bool _effectExplicitlySet;
+    private bool _refreshingMainMenuStrip;
     private bool _themeExplicitlySet;
     private EffectKind _pendingEffectKind = EffectKind.None;
     private EffectOptions? _pendingEffectOptions;
+    private MenuStrip? _mainMenuStrip;
     private ThemeMode? _requestedThemeMode;
     private NativeTheme? _themeOverride;
     private ThemePalette? _paletteOverride;
@@ -130,7 +132,21 @@ public class Form : IDisposable
     /// <summary>
     /// Gets or sets the main menu strip associated with the form.
     /// </summary>
-    public MenuStrip? MainMenuStrip { get; set; }
+    public MenuStrip? MainMenuStrip
+    {
+        get => _mainMenuStrip;
+        set
+        {
+            if (ReferenceEquals(_mainMenuStrip, value))
+            {
+                return;
+            }
+
+            MenuStrip? previous = _mainMenuStrip;
+            _mainMenuStrip = value;
+            RefreshMainMenuStrip(previous);
+        }
+    }
 
     /// <summary>
     /// Gets the visual style currently resolved for this form after application defaults and form-level overrides are applied.
@@ -181,6 +197,7 @@ public class Form : IDisposable
         Handle = hwnd;
         Application.EnsureVisualStylesInitialized();
         ApplyApplicationDefaults();
+        RefreshMainMenuStrip();
 
         foreach (var control in CollectionsMarshal.AsSpan(_controlList))
         {
@@ -503,6 +520,8 @@ public class Form : IDisposable
 
         _disposed = true;
 
+        ReleaseMainMenuStrip();
+
         if (Handle != 0)
         {
             _ = Win32.DestroyWindow(Handle);
@@ -549,6 +568,68 @@ public class Form : IDisposable
         {
             container.AttachChildrenToOwner(this);
         }
+    }
+
+    internal void RefreshMainMenuStrip()
+    {
+        RefreshMainMenuStrip(previous: null);
+    }
+
+    private void RefreshMainMenuStrip(MenuStrip? previous)
+    {
+        if (_refreshingMainMenuStrip)
+        {
+            return;
+        }
+
+        _refreshingMainMenuStrip = true;
+        if (!OperatingSystem.IsWindows() || Handle == 0)
+        {
+            try
+            {
+                previous?.ReleaseNativeMenu();
+            }
+            finally
+            {
+                _refreshingMainMenuStrip = false;
+            }
+
+            return;
+        }
+
+        try
+        {
+            _ = Win32.SetMenu(Handle, 0);
+            previous?.ReleaseNativeMenu();
+
+            if (_mainMenuStrip is not null)
+            {
+                _mainMenuStrip.SynchronizeNativeMenu();
+                _ = Win32.SetMenu(Handle, _mainMenuStrip.GetNativeMenuHandle());
+            }
+
+            _ = Win32.DrawMenuBar(Handle);
+        }
+        finally
+        {
+            _refreshingMainMenuStrip = false;
+        }
+    }
+
+    private bool UsesNativeMainMenuBar()
+        => OperatingSystem.IsWindows()
+            && Handle != 0
+            && _mainMenuStrip is not null;
+
+    private void ReleaseMainMenuStrip()
+    {
+        if (Handle != 0 && OperatingSystem.IsWindows())
+        {
+            _ = Win32.SetMenu(Handle, 0);
+            _ = Win32.DrawMenuBar(Handle);
+        }
+
+        _mainMenuStrip?.ReleaseNativeMenu();
     }
 
     private void ApplyApplicationDefaults()
@@ -638,7 +719,7 @@ public class Form : IDisposable
                 lpfnWndProc = (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&WindowProcThunk,
             hInstance = instanceHandle,
             hCursor = Win32.LoadCursorW(0, (nint)Win32.IDC_ARROW),
-            hbrBackground = Win32.GetSysColorBrush(Win32.COLOR_WINDOW),
+            hbrBackground = Win32.GetSysColorBrush(Win32.COLOR_BTNFACE),
             lpszClassName = WindowClassName,
         };
 
@@ -684,12 +765,12 @@ public class Form : IDisposable
 
             case Win32.WM_KEYDOWN:
             case Win32.WM_SYSKEYDOWN:
-                if ((int)(nuint)wParam == Win32.VK_F10 && TryActivateFirstMenuItem())
+                if (TryHandleMenuShortcut(BuildShortcutKeyData(wParam)))
                 {
                     return 0;
                 }
 
-                if (TryHandleMenuShortcut(BuildShortcutKeyData(wParam)))
+                if (!UsesNativeMainMenuBar() && (int)(nuint)wParam == Win32.VK_F10 && TryActivateFirstMenuItem())
                 {
                     return 0;
                 }
@@ -697,7 +778,7 @@ public class Form : IDisposable
                 break;
 
             case Win32.WM_SYSCHAR:
-                if (TryHandleMenuMnemonic((char)(ushort)(nuint)wParam))
+                if (!UsesNativeMainMenuBar() && TryHandleMenuMnemonic((char)(ushort)(nuint)wParam))
                 {
                     return 0;
                 }
@@ -724,8 +805,20 @@ public class Form : IDisposable
                 break;
             }
 
+            case Win32.WM_NOTIFY:
+                if (HandleNotify(lParam))
+                {
+                    return 0;
+                }
+
+                return 0;
+
             case Win32.WM_COMMAND:
-                HandleCommand(wParam, lParam);
+                if (HandleCommand(wParam, lParam))
+                {
+                    return 0;
+                }
+
                 return 0;
 
             case Win32.WM_DESTROY:
@@ -733,6 +826,7 @@ public class Form : IDisposable
                 return 0;
 
             case Win32.WM_NCDESTROY:
+                ReleaseMainMenuStrip();
                 ReleaseControlHandles();
                 Handle = 0;
                 Win32.SetWindowLongPtrW(hwnd, Win32.GWLP_USERDATA, 0);
@@ -755,10 +849,15 @@ public class Form : IDisposable
         return Win32.DefWindowProcW(hwnd, message, wParam, lParam);
     }
 
-    private void HandleCommand(nint wParam, nint lParam)
+    private bool HandleCommand(nint wParam, nint lParam)
     {
         int controlId = Win32.LowWord(wParam);
         int notificationCode = Win32.HighWord(wParam);
+
+        if (_mainMenuStrip is not null && _mainMenuStrip.TryHandleNativeCommand(controlId))
+        {
+            return true;
+        }
 
         if (_controlsById.TryGetValue(controlId, out var control))
         {
@@ -766,6 +865,22 @@ public class Form : IDisposable
         }
 
         OnCommand(controlId, notificationCode, lParam);
+        return true;
+    }
+
+    private bool HandleNotify(nint lParam)
+    {
+        if (lParam == 0)
+        {
+            return false;
+        }
+
+        Win32.NMHDR header = Marshal.PtrToStructure<Win32.NMHDR>(lParam);
+        int controlId = unchecked((int)header.idFrom);
+        int notificationCode = unchecked((int)header.code);
+
+        return _controlsById.TryGetValue(controlId, out var control)
+            && control.HandleNotify(notificationCode, lParam);
     }
 
     private bool TryHandleMenuShortcut(Keys keyData)

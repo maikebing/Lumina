@@ -5,6 +5,27 @@ namespace Lumina.Forms;
 /// </summary>
 public class MenuStrip : ToolStrip
 {
+    private NativeMenu? _nativeMenu;
+
+    internal bool UsesNativeMenuBar => OperatingSystem.IsWindows()
+        && Owner is not null
+        && ReferenceEquals(Owner.MainMenuStrip, this);
+
+    /// <inheritdoc />
+    protected override bool ShouldCreateNativeHandle => !UsesNativeMenuBar;
+
+    /// <inheritdoc />
+    public override void PerformLayout()
+    {
+        if (UsesNativeMenuBar)
+        {
+            Owner?.RefreshMainMenuStrip();
+            return;
+        }
+
+        base.PerformLayout();
+    }
+
     /// <summary>
     /// Creates a menu-style top-level host for a direct command item.
     /// </summary>
@@ -27,6 +48,45 @@ public class MenuStrip : ToolStrip
         var host = new TopLevelMenuItemHost();
         host.Click += (_, _) => ShowDropDownWithSiblingNavigation((ToolStripDropDownItem)item, host);
         return host;
+    }
+
+    internal void SynchronizeNativeMenu()
+    {
+        if (!UsesNativeMenuBar)
+        {
+            ReleaseNativeMenu();
+            return;
+        }
+
+        _nativeMenu?.Dispose();
+        _nativeMenu = NativeMenu.CreateMenuBar(Items);
+    }
+
+    internal nint GetNativeMenuHandle()
+        => _nativeMenu?.Handle ?? 0;
+
+    internal bool TryHandleNativeCommand(int commandId)
+    {
+        if (_nativeMenu is null || !_nativeMenu.TryGetCommand(unchecked((uint)commandId), out ToolStripItem item))
+        {
+            return false;
+        }
+
+        item.PerformClick();
+        return true;
+    }
+
+    internal void ReleaseNativeMenu()
+    {
+        _nativeMenu?.Dispose();
+        _nativeMenu = null;
+    }
+
+    /// <inheritdoc />
+    protected override void OnDisposing()
+    {
+        ReleaseNativeMenu();
+        base.OnDisposing();
     }
 
     private sealed class TopLevelMenuItemHost : Label

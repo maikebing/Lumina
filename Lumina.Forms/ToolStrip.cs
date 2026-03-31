@@ -11,6 +11,8 @@ public class ToolStrip : ContainerControlBase
     private readonly ToolStripItemCollection _items;
     private readonly Dictionary<ToolStripItem, Control> _itemHosts = [];
 
+    internal event EventHandler? ItemsChanged;
+
     /// <summary>
     /// Initializes a tool strip with a typical strip height.
     /// </summary>
@@ -54,6 +56,8 @@ public class ToolStrip : ContainerControlBase
 
     private void OnItemsChanged()
     {
+        ItemsChanged?.Invoke(this, EventArgs.Empty);
+
         if (Owner is not null || Handle != 0)
         {
             PerformLayout();

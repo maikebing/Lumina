@@ -1,13 +1,13 @@
-using System.Collections.Generic;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
 
 /// <summary>
-/// Represents a lightweight tab control.
+/// Represents a WinForms-compatible tab control backed by the native common control.
 /// </summary>
 public class TabControl : ContainerControlBase
 {
-    private readonly Dictionary<TabPage, Button> _headerButtons = [];
     private readonly Dictionary<TabPage, EventHandler> _textChangedHandlers = [];
     private int _selectedIndex;
 
@@ -16,30 +16,43 @@ public class TabControl : ContainerControlBase
     /// </summary>
     public int SelectedIndex
     {
-        get => _selectedIndex;
+        get
+        {
+            if (Handle != 0)
+            {
+                int nativeIndex = (int)Win32.SendMessageW(Handle, Win32.TCM_GETCURSEL, 0, 0);
+                if (nativeIndex >= 0)
+                {
+                    _selectedIndex = nativeIndex;
+                }
+            }
+
+            return _selectedIndex;
+        }
         set
         {
             int pageCount = GetTabPages().Count;
             _selectedIndex = pageCount == 0
                 ? 0
                 : Math.Clamp(value, 0, pageCount - 1);
-            UpdateTabPages();
-            UpdateHeaderStates();
+
+            ApplySelectedIndex();
         }
     }
 
     /// <inheritdoc />
-    protected override string ClassName => "STATIC";
+    protected override string ClassName => "SysTabControl32";
 
     /// <inheritdoc />
-    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE;
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_TABSTOP | Win32.WS_CLIPSIBLINGS;
 
     /// <inheritdoc />
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
-        EnsureHeaderButtons();
-        UpdateTabPages();
+        SynchronizeTextHandlers();
+        SynchronizeNativeTabs();
+        ApplySelectedIndex();
     }
 
     /// <inheritdoc />
@@ -51,9 +64,9 @@ public class TabControl : ContainerControlBase
     /// <inheritdoc />
     public override void PerformLayout()
     {
-        EnsureHeaderButtons();
-        LayoutHeaderButtons();
-        UpdateTabPages();
+        SynchronizeTextHandlers();
+        SynchronizeNativeTabs();
+        ApplySelectedIndex();
         base.PerformLayout();
     }
 
@@ -65,126 +78,148 @@ public class TabControl : ContainerControlBase
             page.TextChanged -= handler;
         }
 
-        foreach (Button button in _headerButtons.Values)
-        {
-            button.Dispose();
-        }
-
         _textChangedHandlers.Clear();
-        _headerButtons.Clear();
-
         base.OnDisposing();
     }
 
-    private void EnsureHeaderButtons()
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        _ = Win32.SetWindowTheme(Handle, "Explorer", null);
+    }
+
+    /// <inheritdoc />
+    protected override bool OnNotify(int notificationCode, nint lParam)
+    {
+        if (notificationCode != Win32.TCN_SELCHANGE)
+        {
+            return false;
+        }
+
+        int nativeIndex = (int)Win32.SendMessageW(Handle, Win32.TCM_GETCURSEL, 0, 0);
+        if (nativeIndex >= 0)
+        {
+            _selectedIndex = nativeIndex;
+        }
+
+        UpdateTabPages();
+        return true;
+    }
+
+    private void ApplySelectedIndex()
+    {
+        if (Handle != 0 && GetTabPages().Count > 0)
+        {
+            _ = Win32.SendMessageW(Handle, Win32.TCM_SETCURSEL, (nint)_selectedIndex, 0);
+        }
+
+        UpdateTabPages();
+    }
+
+    private void SynchronizeTextHandlers()
     {
         List<TabPage> pages = GetTabPages();
         foreach (TabPage page in pages)
         {
-            if (!_headerButtons.TryGetValue(page, out Button? button))
-            {
-                button = CreateHeaderButton(page);
-                _headerButtons[page] = button;
-            }
-
-            if (button.Parent is null)
-            {
-                button.SetParent(this);
-            }
-
-            if (Owner is not null && button.Owner is null)
-            {
-                Owner.AttachControl(button, this);
-            }
-
-            if (Handle != 0 && button.Owner is not null && button.Handle == 0)
-            {
-                button.CreateHandleRecursive();
-            }
-
-            button.Visible = true;
-        }
-
-        foreach ((TabPage page, Button button) in _headerButtons)
-        {
-            if (!pages.Contains(page))
-            {
-                button.Visible = false;
-            }
-        }
-
-        UpdateHeaderStates();
-    }
-
-    private Button CreateHeaderButton(TabPage page)
-    {
-        var button = new TabHeaderButton
-        {
-            TabStop = false,
-            UseVisualStyleBackColor = true,
-            Text = ResolvePageText(page),
-        };
-
-        button.Click += (_, _) => SelectedIndex = GetTabPages().IndexOf(page);
-
-        EventHandler textChangedHandler = (_, _) =>
-        {
-            button.Text = ResolvePageText(page);
-            LayoutHeaderButtons();
-        };
-
-        page.TextChanged += textChangedHandler;
-        _textChangedHandlers[page] = textChangedHandler;
-        return button;
-    }
-
-    private void LayoutHeaderButtons()
-    {
-        int x = 0;
-        foreach (TabPage page in GetTabPages())
-        {
-            if (!_headerButtons.TryGetValue(page, out Button? button) || !button.Visible)
+            if (_textChangedHandlers.ContainsKey(page))
             {
                 continue;
             }
 
-            string text = ResolvePageText(page);
-            button.Text = text;
-            int width = Math.Max(64, text.Length * 8 + 18);
-            button.SetBounds(x, 0, width, 24);
-            x += width + 2;
+            EventHandler handler = (_, _) =>
+            {
+                SynchronizeNativeTabs();
+                ApplySelectedIndex();
+            };
+
+            page.TextChanged += handler;
+            _textChangedHandlers[page] = handler;
+        }
+
+        foreach ((TabPage page, EventHandler handler) in _textChangedHandlers.ToArray())
+        {
+            if (pages.Contains(page))
+            {
+                continue;
+            }
+
+            page.TextChanged -= handler;
+            _ = _textChangedHandlers.Remove(page);
         }
     }
 
-    private void UpdateHeaderStates()
+    private void SynchronizeNativeTabs()
     {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        _ = Win32.SendMessageW(Handle, Win32.TCM_DELETEALLITEMS, 0, 0);
+
         List<TabPage> pages = GetTabPages();
         for (int index = 0; index < pages.Count; index++)
         {
-            if (_headerButtons.TryGetValue(pages[index], out Button? button))
+            InsertNativeTab(index, ResolvePageText(pages[index]));
+        }
+    }
+
+    private void InsertNativeTab(int index, string text)
+    {
+        nint textPointer = Marshal.StringToHGlobalUni(text);
+        try
+        {
+            var item = new Win32.TCITEMW
             {
-                button.Enabled = index != _selectedIndex;
-            }
+                mask = Win32.TCIF_TEXT,
+                pszText = textPointer,
+                cchTextMax = text.Length,
+            };
+
+            _ = Win32.SendMessageW(Handle, Win32.TCM_INSERTITEMW, (nint)index, ref item);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(textPointer);
         }
     }
 
     private void UpdateTabPages()
     {
-        int headerHeight = 26;
-        int contentHeight = Math.Max(1, Height - headerHeight);
         List<TabPage> pages = GetTabPages();
         if (pages.Count == 0)
         {
+            _selectedIndex = 0;
             return;
         }
 
         _selectedIndex = Math.Clamp(_selectedIndex, 0, pages.Count - 1);
+        Rectangle pageBounds = GetPageBounds();
         for (int tabPageIndex = 0; tabPageIndex < pages.Count; tabPageIndex++)
         {
             TabPage tabPage = pages[tabPageIndex];
-            tabPage.SetBounds(0, headerHeight, Math.Max(1, Width), contentHeight);
+            tabPage.SetBounds(pageBounds.X, pageBounds.Y, pageBounds.Width, pageBounds.Height);
             tabPage.Visible = tabPageIndex == _selectedIndex;
         }
+    }
+
+    private Rectangle GetPageBounds()
+    {
+        if (Handle != 0 && Win32.GetClientRect(Handle, out var rect))
+        {
+            _ = Win32.SendMessageW(Handle, Win32.TCM_ADJUSTRECT, 0, ref rect);
+            return new Rectangle(
+                rect.Left,
+                rect.Top,
+                Math.Max(1, rect.Width),
+                Math.Max(1, rect.Height));
+        }
+
+        return new Rectangle(
+            4,
+            26,
+            Math.Max(1, Width - 8),
+            Math.Max(1, Height - 30));
     }
 
     private List<TabPage> GetTabPages()
@@ -211,11 +246,5 @@ public class TabControl : ContainerControlBase
         return string.IsNullOrWhiteSpace(page.Name)
             ? nameof(TabPage)
             : page.Name;
-    }
-
-    private sealed class TabHeaderButton : Button
-    {
-        protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(24, requestedHeight);
     }
 }

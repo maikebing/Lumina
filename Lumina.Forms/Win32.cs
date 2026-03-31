@@ -16,6 +16,7 @@ internal static class Win32
     public const uint WS_CHILD = 0x40000000;
     public const uint WS_VISIBLE = 0x10000000;
     public const uint WS_CLIPCHILDREN = 0x02000000;
+    public const uint WS_CLIPSIBLINGS = 0x04000000;
     public const uint WS_CAPTION = 0x00C00000;
     public const uint WS_SYSMENU = 0x00080000;
     public const uint WS_THICKFRAME = 0x00040000;
@@ -53,6 +54,7 @@ internal static class Win32
     public const int SW_HIDE = 0;
 
     public const int WM_SIZE = 0x0005;
+    public const int WM_NOTIFY = 0x004E;
     public const int WM_KEYDOWN = 0x0100;
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
@@ -89,12 +91,27 @@ internal static class Win32
     public const int PBM_SETPOS = 0x0402;
     public const int STM_SETIMAGE = 0x0172;
 
+    public const int TCM_FIRST = 0x1300;
+    public const int TCM_GETITEMCOUNT = TCM_FIRST + 4;
+    public const int TCM_DELETEALLITEMS = TCM_FIRST + 9;
+    public const int TCM_GETCURSEL = TCM_FIRST + 11;
+    public const int TCM_SETCURSEL = TCM_FIRST + 12;
+    public const int TCM_ADJUSTRECT = TCM_FIRST + 40;
+    public const int TCM_SETITEMW = TCM_FIRST + 61;
+    public const int TCM_INSERTITEMW = TCM_FIRST + 62;
+
+    public const int TCN_FIRST = -550;
+    public const int TCN_SELCHANGE = TCN_FIRST - 1;
+
+    public const uint TCIF_TEXT = 0x0001;
+
     public const uint IMAGE_BITMAP = 0;
     public const uint IMAGE_ICON = 1;
     public const uint LR_DEFAULTSIZE = 0x00000040;
     public const uint LR_LOADFROMFILE = 0x00000010;
 
     public const int COLOR_WINDOW = 5;
+    public const int COLOR_BTNFACE = 15;
     public const int DEFAULT_GUI_FONT = 17;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
@@ -222,6 +239,26 @@ internal static class Win32
         public nint hbmpItem;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NMHDR
+    {
+        public nint hwndFrom;
+        public nuint idFrom;
+        public uint code;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct TCITEMW
+    {
+        public uint mask;
+        public uint dwState;
+        public uint dwStateMask;
+        public nint pszText;
+        public int cchTextMax;
+        public int iImage;
+        public nint lParam;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct TEXTMETRICW
     {
@@ -321,6 +358,12 @@ internal static class Win32
     [DllImport("user32.dll", EntryPoint = "SendMessageW")]
     internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, nint lParam);
 
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, ref RECT lParam);
+
+    [DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode)]
+    internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, ref TCITEMW lParam);
+
     [DllImport("user32.dll", EntryPoint = "MoveWindow", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool MoveWindow(nint hWnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
@@ -374,6 +417,9 @@ internal static class Win32
     [DllImport("user32.dll")]
     internal static extern nint CreatePopupMenu();
 
+    [DllImport("user32.dll")]
+    internal static extern nint CreateMenu();
+
     [DllImport("user32.dll", EntryPoint = "AppendMenuW", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool AppendMenuW(nint hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
@@ -388,6 +434,14 @@ internal static class Win32
 
     [DllImport("user32.dll")]
     internal static extern uint TrackPopupMenu(nint hMenu, uint uFlags, int x, int y, int nReserved, nint hWnd, nint prcRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetMenu(nint hWnd, nint hMenu);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool DrawMenuBar(nint hWnd);
 
     [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern nint GetModuleHandleW(string? lpModuleName);

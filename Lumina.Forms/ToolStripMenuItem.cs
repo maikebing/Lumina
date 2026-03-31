@@ -5,36 +5,67 @@ namespace Lumina.Forms;
 /// </summary>
 public class ToolStripMenuItem : ToolStripDropDownItem
 {
+	private Keys _shortcutKeys;
+	private string _shortcutKeyDisplayString = string.Empty;
+	private bool _showShortcutKeys = true;
+	private bool _checked;
+	private bool _checkOnClick;
+	private bool _radioCheck;
+
 	/// <summary>
 	/// Gets or sets the shortcut keys associated with the menu item.
 	/// </summary>
-	public Keys ShortcutKeys { get; set; }
+	public Keys ShortcutKeys
+	{
+		get => _shortcutKeys;
+		set => SetValue(ref _shortcutKeys, value);
+	}
 
 	/// <summary>
 	/// Gets or sets the explicit shortcut text displayed in the menu.
 	/// </summary>
-	public string ShortcutKeyDisplayString { get; set; } = string.Empty;
+	public string ShortcutKeyDisplayString
+	{
+		get => _shortcutKeyDisplayString;
+		set => SetValue(ref _shortcutKeyDisplayString, value ?? string.Empty);
+	}
 
 	/// <summary>
 	/// Gets or sets a value indicating whether shortcut text should be displayed.
 	/// </summary>
-	public bool ShowShortcutKeys { get; set; } = true;
+	public bool ShowShortcutKeys
+	{
+		get => _showShortcutKeys;
+		set => SetValue(ref _showShortcutKeys, value);
+	}
 
 	/// <summary>
 	/// Gets or sets a value indicating whether the menu item is checked.
 	/// </summary>
-	public bool Checked { get; set; }
+	public bool Checked
+	{
+		get => _checked;
+		set => SetValue(ref _checked, value);
+	}
 
 	/// <summary>
 	/// Gets or sets a value indicating whether the checked state toggles when the item is clicked.
 	/// </summary>
-	public bool CheckOnClick { get; set; }
+	public bool CheckOnClick
+	{
+		get => _checkOnClick;
+		set => SetValue(ref _checkOnClick, value);
+	}
 
 	/// <summary>
 	/// Gets or sets a value indicating whether the check mark displayed beside a checked menu item
 	/// is a radio-button style mark instead of a standard check mark.
 	/// </summary>
-	public bool RadioCheck { get; set; }
+	public bool RadioCheck
+	{
+		get => _radioCheck;
+		set => SetValue(ref _radioCheck, value);
+	}
 
 	internal bool MatchesShortcut(Keys keyData)
 	{
@@ -71,6 +102,17 @@ public class ToolStripMenuItem : ToolStripDropDownItem
 	private static Keys NormalizeShortcut(Keys keyData)
 	{
 		return keyData & (Keys.KeyCode | Keys.Modifiers);
+	}
+
+	private void SetValue<T>(ref T field, T value)
+	{
+		if (EqualityComparer<T>.Default.Equals(field, value))
+		{
+			return;
+		}
+
+		field = value;
+		NotifyChanged();
 	}
 
 	private static string FormatShortcutKeys(Keys shortcutKeys)
