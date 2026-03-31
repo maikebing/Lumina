@@ -104,23 +104,35 @@ internal static class ToolStripPopupMenu
 
     private static string GetDisplayText(ToolStripItem item)
     {
+        string baseText;
         if (!string.IsNullOrWhiteSpace(item.Text))
         {
-            return item.Text;
+            baseText = item.Text;
         }
-
-        if (item is ToolStripComboBox comboBox && comboBox.SelectedIndex >= 0 && comboBox.SelectedIndex < comboBox.Items.Count)
+        else if (item is ToolStripComboBox comboBox && comboBox.SelectedIndex >= 0 && comboBox.SelectedIndex < comboBox.Items.Count)
         {
-            return comboBox.Items[comboBox.SelectedIndex]?.ToString() ?? comboBox.Name;
+            baseText = comboBox.Items[comboBox.SelectedIndex]?.ToString() ?? comboBox.Name;
         }
-
-        if (item is ToolStripProgressBar progressBar)
+        else if (item is ToolStripProgressBar progressBar)
         {
-            return $"{progressBar.Name} {progressBar.Value}".Trim();
+            baseText = $"{progressBar.Name} {progressBar.Value}".Trim();
+        }
+        else
+        {
+            baseText = string.IsNullOrWhiteSpace(item.Name)
+                ? item.GetType().Name
+                : item.Name;
         }
 
-        return string.IsNullOrWhiteSpace(item.Name)
-            ? item.GetType().Name
-            : item.Name;
+        if (item is ToolStripMenuItem menuItem)
+        {
+            string shortcutText = menuItem.GetShortcutDisplayText();
+            if (!string.IsNullOrWhiteSpace(shortcutText))
+            {
+                return $"{baseText}\t{shortcutText}";
+            }
+        }
+
+        return baseText;
     }
 }

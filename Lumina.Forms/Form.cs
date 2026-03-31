@@ -676,6 +676,15 @@ public class Form : IDisposable
                 PerformLayout();
                 return 0;
 
+            case Win32.WM_KEYDOWN:
+            case Win32.WM_SYSKEYDOWN:
+                if (TryHandleMenuShortcut(BuildShortcutKeyData(wParam)))
+                {
+                    return 0;
+                }
+
+                break;
+
             case Win32.WM_SETTINGCHANGE:
             case Win32.WM_THEMECHANGED:
                 RefreshVisualStyles();
@@ -723,6 +732,62 @@ public class Form : IDisposable
         }
 
         OnCommand(controlId, notificationCode, lParam);
+    }
+
+    private bool TryHandleMenuShortcut(Keys keyData)
+    {
+        if (MainMenuStrip is null || keyData == Keys.None)
+        {
+            return false;
+        }
+
+        return TryHandleMenuShortcut(MainMenuStrip.Items, keyData);
+    }
+
+    private static bool TryHandleMenuShortcut(IEnumerable<ToolStripItem> items, Keys keyData)
+    {
+        foreach (ToolStripItem item in items)
+        {
+            if (!item.Visible || !item.Enabled)
+            {
+                continue;
+            }
+
+            if (item is ToolStripMenuItem menuItem && menuItem.MatchesShortcut(keyData))
+            {
+                menuItem.PerformClick();
+                return true;
+            }
+
+            if (item is ToolStripDropDownItem dropDownItem && TryHandleMenuShortcut(dropDownItem.DropDownItems, keyData))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Keys BuildShortcutKeyData(nint virtualKey)
+    {
+        Keys keyData = (Keys)(unchecked((int)(nuint)virtualKey) & (int)Keys.KeyCode);
+
+        if ((Win32.GetKeyState(Win32.VK_CONTROL) & 0x8000) != 0)
+        {
+            keyData |= Keys.Control;
+        }
+
+        if ((Win32.GetKeyState(Win32.VK_SHIFT) & 0x8000) != 0)
+        {
+            keyData |= Keys.Shift;
+        }
+
+        if ((Win32.GetKeyState(Win32.VK_MENU) & 0x8000) != 0)
+        {
+            keyData |= Keys.Alt;
+        }
+
+        return keyData;
     }
 
     private void ReleaseControlHandles()

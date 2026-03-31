@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 using Lumina.Forms;
 using Xunit;
 
@@ -108,5 +109,43 @@ public sealed class CompatibilityControlsTests
 
         item.PerformClick();
         Assert.False(item.Checked);
+    }
+
+    [Fact]
+    public void ToolStripMenuItem_GetShortcutDisplayText_UsesFormattedShortcutKeys()
+    {
+        var item = new ToolStripMenuItem
+        {
+            ShortcutKeys = Keys.Control | Keys.Shift | Keys.S,
+        };
+
+        MethodInfo? method = typeof(ToolStripMenuItem).GetMethod("GetShortcutDisplayText", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        string shortcutText = Assert.IsType<string>(method!.Invoke(item, null));
+        Assert.Equal("Ctrl+Shift+S", shortcutText);
+    }
+
+    [Fact]
+    public void Form_MenuShortcut_InvokesMatchingMenuItem()
+    {
+        var form = new Form();
+        var menuStrip = new MenuStrip();
+        var fileMenu = new ToolStripMenuItem { Text = "File" };
+        var saveItem = new ToolStripMenuItem { ShortcutKeys = Keys.Control | Keys.S };
+        int clickCount = 0;
+        saveItem.Click += (_, _) => clickCount++;
+
+        fileMenu.DropDownItems.Add(saveItem);
+        menuStrip.Items.Add(fileMenu);
+        form.MainMenuStrip = menuStrip;
+
+        MethodInfo? method = typeof(Form).GetMethod("TryHandleMenuShortcut", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(Keys)], null);
+        Assert.NotNull(method);
+
+        bool handled = Assert.IsType<bool>(method!.Invoke(form, [Keys.Control | Keys.S]));
+
+        Assert.True(handled);
+        Assert.Equal(1, clickCount);
     }
 }

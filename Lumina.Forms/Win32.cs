@@ -52,9 +52,11 @@ internal static class Win32
     public const int SW_HIDE = 0;
 
     public const int WM_SIZE = 0x0005;
+    public const int WM_KEYDOWN = 0x0100;
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
     public const int WM_CONTEXTMENU = 0x007B;
+    public const int WM_SYSKEYDOWN = 0x0104;
     public const int WM_DESTROY = 0x0002;
     public const int WM_NCCREATE = 0x0081;
     public const int WM_NCDESTROY = 0x0082;
@@ -93,6 +95,9 @@ internal static class Win32
     public const int DEFAULT_GUI_FONT = 17;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
+    public const int VK_SHIFT = 0x10;
+    public const int VK_CONTROL = 0x11;
+    public const int VK_MENU = 0x12;
     public const int GWLP_WNDPROC = -4;
     public const int GWLP_USERDATA = -21;
     public const int LOGPIXELSX = 88;
@@ -317,6 +322,9 @@ internal static class Win32
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("user32.dll")]
+    internal static extern short GetKeyState(int nVirtKey);
 
     [DllImport("user32.dll")]
     internal static extern nint CreatePopupMenu();
