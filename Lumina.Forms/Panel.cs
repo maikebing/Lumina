@@ -9,5 +9,5 @@ public class Panel : ContainerControlBase
     protected override string ClassName => "STATIC";
 
     /// <inheritdoc />
-    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE;
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_CLIPCHILDREN | Win32.WS_CLIPSIBLINGS;
 }

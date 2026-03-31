@@ -55,6 +55,7 @@ internal static class Win32
 
     public const int WM_SIZE = 0x0005;
     public const int WM_NULL = 0x0000;
+    public const int WM_SETCURSOR = 0x0020;
     public const int WM_ERASEBKGND = 0x0014;
     public const int WM_CTLCOLORMSGBOX = 0x0132;
     public const int WM_CTLCOLOREDIT = 0x0133;
@@ -65,6 +66,9 @@ internal static class Win32
     public const int WM_PARENTNOTIFY = 0x0210;
     public const int WM_NOTIFY = 0x004E;
     public const int WM_KEYDOWN = 0x0100;
+    public const int WM_MOUSEMOVE = 0x0200;
+    public const int WM_LBUTTONDOWN = 0x0201;
+    public const int WM_LBUTTONUP = 0x0202;
     public const int WM_RBUTTONDOWN = 0x0204;
     public const int WM_RBUTTONUP = 0x0205;
     public const int WM_SETTINGCHANGE = 0x001A;
@@ -136,6 +140,9 @@ internal static class Win32
     public const uint DEFAULT_PITCH = 0;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
+    public const int IDC_SIZEWE = 32644;
+    public const int IDC_SIZENS = 32645;
+    public const int HTCLIENT = 1;
     public const int VK_F10 = 0x79;
     public const int VK_SHIFT = 0x10;
     public const int VK_CONTROL = 0x11;
@@ -437,8 +444,21 @@ internal static class Win32
     internal static extern bool GetCursorPos(out POINT lpPoint);
 
     [DllImport("user32.dll")]
+    internal static extern nint SetCursor(nint hCursor);
+
+    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ClientToScreen(nint hWnd, ref POINT lpPoint);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern nint SetCapture(nint hWnd);
+
+    [DllImport("user32.dll")]
+    internal static extern nint GetCapture();
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ReleaseCapture();
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

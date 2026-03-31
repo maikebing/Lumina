@@ -20,6 +20,8 @@ public abstract class Control : IDisposable
     private bool _enabled = true;
     private bool _visible = true;
     private bool _disposed;
+    private Padding _padding;
+    private Padding _margin = new(3);
     private nint _originalWindowProc;
     private long _lastContextMenuShownTick = long.MinValue;
     private Point _lastContextMenuScreenLocation = new(int.MinValue, int.MinValue);
@@ -58,6 +60,42 @@ public abstract class Control : IDisposable
     /// Gets or sets a value indicating whether the user can move the focus to this control with the Tab key.
     /// </summary>
     public bool TabStop { get; set; }
+
+    /// <summary>
+    /// Gets or sets the interior spacing between the control border and its content area.
+    /// </summary>
+    public Padding Padding
+    {
+        get => _padding;
+        set
+        {
+            if (_padding == value)
+            {
+                return;
+            }
+
+            _padding = value;
+            PerformLayout();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the exterior spacing between this control and surrounding layout.
+    /// </summary>
+    public Padding Margin
+    {
+        get => _margin;
+        set
+        {
+            if (_margin == value)
+            {
+                return;
+            }
+
+            _margin = value;
+            Parent?.PerformLayout();
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether the control has been disposed.
@@ -503,6 +541,20 @@ public abstract class Control : IDisposable
     protected virtual bool OnNotify(int notificationCode, nint lParam) => false;
 
     /// <summary>
+    /// Gives derived controls access to raw subclassed window messages before the native control processes them.
+    /// </summary>
+    /// <param name="message">The window message identifier.</param>
+    /// <param name="wParam">The message <c>wParam</c> value.</param>
+    /// <param name="lParam">The message <c>lParam</c> value.</param>
+    /// <param name="result">Receives the handled result.</param>
+    /// <returns><see langword="true"/> if the message was handled; otherwise, <see langword="false"/>.</returns>
+    protected virtual bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
+    {
+        result = 0;
+        return false;
+    }
+
+    /// <summary>
     /// Called after the control bounds change.
     /// </summary>
     protected virtual void OnBoundsChanged()
@@ -591,6 +643,11 @@ public abstract class Control : IDisposable
 
     private nint SubclassWindowProc(nint hwnd, uint message, nint wParam, nint lParam)
     {
+        if (HandleWindowMessage(message, wParam, lParam, out nint interceptedResult))
+        {
+            return interceptedResult;
+        }
+
         nint result = _originalWindowProc != 0
             ? Win32.CallWindowProcW(_originalWindowProc, hwnd, message, wParam, lParam)
             : Win32.DefWindowProcW(hwnd, message, wParam, lParam);

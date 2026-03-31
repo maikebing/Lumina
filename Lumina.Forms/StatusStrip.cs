@@ -55,6 +55,31 @@ public class StatusStrip : ToolStrip
     }
 
     /// <inheritdoc />
+    protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
+    {
+        if (ContextMenuStrip is not null)
+        {
+            if (message == Win32.WM_CONTEXTMENU
+                && ShouldHandleBlankAreaContextMenu(lParam)
+                && TryShowAttachedContextMenu(Handle, lParam))
+            {
+                result = 0;
+                return true;
+            }
+
+            if (message == Win32.WM_RBUTTONUP
+                && IsBlankAreaClientPoint(ExtractPoint(lParam))
+                && TryShowAttachedContextMenuFromClientPoint(Handle, lParam))
+            {
+                result = 0;
+                return true;
+            }
+        }
+
+        return base.HandleWindowMessage(message, wParam, lParam, out result);
+    }
+
+    /// <inheritdoc />
     public override void PerformLayout()
     {
         if (_performingStatusLayout)
@@ -178,17 +203,19 @@ public class StatusStrip : ToolStrip
     {
         if (item is ToolStripSeparator)
         {
-            return 8;
+            return 10;
         }
 
         Size preferredSize = ResolveHostSize(item, availableHeight);
         return item switch
         {
-            ToolStripStatusLabel => Math.Max(48, preferredSize.Width),
-            ToolStripProgressBar => Math.Max(72, preferredSize.Width + 6),
-            ToolStripComboBox => Math.Max(96, preferredSize.Width + 6),
-            ToolStripTextBox => Math.Max(72, preferredSize.Width + 6),
-            _ => Math.Max(22, preferredSize.Width + 4),
+            ToolStripStatusLabel => Math.Max(56, preferredSize.Width + 10),
+            ToolStripProgressBar => Math.Max(84, preferredSize.Width + 10),
+            ToolStripComboBox => Math.Max(104, preferredSize.Width + 10),
+            ToolStripTextBox => Math.Max(84, preferredSize.Width + 10),
+            _ when IsImageOnlyItem(item)
+                => Math.Max(28, preferredSize.Width + 10),
+            _ => Math.Max(26, preferredSize.Width + 8),
         };
     }
 
@@ -197,14 +224,54 @@ public class StatusStrip : ToolStrip
         var nativeRect = new Win32.RECT();
         _ = Win32.SendMessageW(Handle, Win32.SB_GETRECT, (nint)partIndex, ref nativeRect);
 
-        int innerWidth = Math.Max(1, nativeRect.Width - 4);
-        int innerHeight = Math.Max(1, nativeRect.Height - 4);
+        int leftInset;
+        int rightInset;
+        int topInset;
+        int bottomInset;
+
+        switch (item)
+        {
+            case ToolStripProgressBar:
+            case ToolStripComboBox:
+            case ToolStripTextBox:
+                leftInset = 4;
+                rightInset = 4;
+                topInset = 2;
+                bottomInset = 2;
+                break;
+
+            default:
+                if (IsImageOnlyItem(item))
+                {
+                    leftInset = 5;
+                    rightInset = 5;
+                    topInset = 2;
+                    bottomInset = 2;
+                }
+                else
+                {
+                    leftInset = 3;
+                    rightInset = 3;
+                    topInset = 2;
+                    bottomInset = 2;
+                }
+
+                break;
+        }
+
+        int innerWidth = Math.Max(1, nativeRect.Width - leftInset - rightInset);
+        int innerHeight = Math.Max(1, nativeRect.Height - topInset - bottomInset);
         Size preferredSize = ResolveHostSize(item, availableHeight);
 
         int hostWidth = Math.Max(1, Math.Min(innerWidth, preferredSize.Width));
         int hostHeight = Math.Max(1, Math.Min(innerHeight, preferredSize.Height));
-        int x = nativeRect.Left + 2;
-        int y = nativeRect.Top + Math.Max(0, (nativeRect.Height - hostHeight) / 2);
+        int x = nativeRect.Left + leftInset;
+        if (IsImageOnlyItem(item))
+        {
+            x = nativeRect.Left + Math.Max(leftInset, (nativeRect.Width - hostWidth) / 2);
+        }
+
+        int y = nativeRect.Top + topInset + Math.Max(0, (innerHeight - hostHeight) / 2);
 
         host.SetBounds(x, y, hostWidth, hostHeight);
         host.Visible = item.Visible;
@@ -248,6 +315,48 @@ public class StatusStrip : ToolStrip
 
         SetBounds(0, top, width, height);
     }
+
+    private bool ShouldHandleBlankAreaContextMenu(nint lParam)
+    {
+        if (lParam == (nint)(-1))
+        {
+            return true;
+        }
+
+        return !IsPointOverHostedControl(ExtractPoint(lParam), useScreenCoordinates: true);
+    }
+
+    private bool IsBlankAreaClientPoint(Point clientPoint)
+        => !IsPointOverHostedControl(clientPoint, useScreenCoordinates: false);
+
+    private bool IsPointOverHostedControl(Point point, bool useScreenCoordinates)
+    {
+        foreach (Control child in ChildControls)
+        {
+            if (!child.Visible)
+            {
+                continue;
+            }
+
+            Rectangle bounds = child.Bounds;
+            if (useScreenCoordinates && child.Handle != 0 && Win32.GetWindowRect(child.Handle, out var rect))
+            {
+                bounds = new Rectangle(rect.Left, rect.Top, rect.Width, rect.Height);
+            }
+
+            if (bounds.Contains(point))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsImageOnlyItem(ToolStripItem item)
+        => OperatingSystem.IsWindows()
+            && item.DisplayStyle == ToolStripItemDisplayStyle.Image
+            && item.Image is not null;
 
     private readonly record struct PartLayoutPlan(int[] PartRightEdges, int[] ItemPartIndices);
 }

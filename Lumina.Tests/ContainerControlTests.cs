@@ -81,8 +81,28 @@ public class ContainerControlTests
         splitContainer.PerformLayout();
 
         Assert.Equal(90, splitContainer.Panel1.Width);
-        Assert.Equal(94, splitContainer.Panel2.Left);
-        Assert.Equal(206, splitContainer.Panel2.Width);
+        Assert.Equal(96, splitContainer.Panel2.Left);
+        Assert.Equal(204, splitContainer.Panel2.Width);
+    }
+
+    [Fact]
+    public void SplitContainer_PerformLayout_ClampsHorizontalPanelsAgainstMinimumSizes()
+    {
+        var splitContainer = new SplitContainer
+        {
+            Orientation = Orientation.Horizontal,
+            Panel1MinSize = 30,
+            Panel2MinSize = 40,
+        };
+
+        splitContainer.SetBounds(0, 0, 140, 120);
+        splitContainer.SplitterDistance = 100;
+
+        splitContainer.PerformLayout();
+
+        Assert.Equal(74, splitContainer.Panel1.Height);
+        Assert.Equal(80, splitContainer.Panel2.Top);
+        Assert.Equal(40, splitContainer.Panel2.Height);
     }
 
     [Fact]
@@ -138,6 +158,10 @@ public class ContainerControlTests
 
         var firstControl = new Button();
         var secondControl = new Button();
+        firstControl.Size = new Size(100, 50);
+        secondControl.Size = new Size(100, 50);
+        firstControl.Margin = Padding.Empty;
+        secondControl.Margin = Padding.Empty;
         tableLayoutPanel.Controls.Add(firstControl, 0, 0);
         tableLayoutPanel.Controls.Add(secondControl, 1, 1);
 
@@ -145,5 +169,52 @@ public class ContainerControlTests
 
         Assert.Equal(new Rectangle(0, 0, 100, 50), firstControl.Bounds);
         Assert.Equal(new Rectangle(100, 50, 100, 50), secondControl.Bounds);
+    }
+
+    [Fact]
+    public void TableLayoutPanel_PerformLayout_UsesDefaultMarginsInsideCells()
+    {
+        var tableLayoutPanel = new TableLayoutPanel
+        {
+            ColumnCount = 2,
+            RowCount = 2,
+        };
+
+        tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        tableLayoutPanel.SetBounds(0, 0, 200, 100);
+
+        var firstControl = new Button { Size = new Size(75, 23) };
+        var secondControl = new TextBox { Size = new Size(80, 23) };
+        tableLayoutPanel.Controls.Add(firstControl, 0, 0);
+        tableLayoutPanel.Controls.Add(secondControl, 1, 1);
+
+        tableLayoutPanel.PerformLayout();
+
+        Assert.Equal(new Rectangle(3, 3, 75, 23), firstControl.Bounds);
+        Assert.Equal(new Rectangle(103, 53, 80, 23), secondControl.Bounds);
+    }
+
+    [Fact]
+    public void FlowLayoutPanel_PerformLayout_UsesPaddingMarginsAndWrap()
+    {
+        var flowLayoutPanel = new FlowLayoutPanel
+        {
+            Padding = new Padding(4),
+        };
+        flowLayoutPanel.SetBounds(0, 0, 70, 80);
+
+        var firstControl = new Button { Size = new Size(20, 10) };
+        var secondControl = new Button { Size = new Size(20, 10) };
+        var thirdControl = new Button { Size = new Size(20, 10) };
+
+        flowLayoutPanel.Controls.AddRange(firstControl, secondControl, thirdControl);
+        flowLayoutPanel.PerformLayout();
+
+        Assert.Equal(new Point(7, 7), firstControl.Location);
+        Assert.Equal(new Point(33, 7), secondControl.Location);
+        Assert.Equal(new Point(7, 23), thirdControl.Location);
     }
 }

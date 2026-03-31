@@ -3,8 +3,13 @@ namespace Lumina.Forms;
 /// <summary>
 /// Represents the interior spacing between a control boundary and its contents.
 /// </summary>
-public readonly struct Padding
+public readonly struct Padding : IEquatable<Padding>
 {
+    /// <summary>
+    /// Gets an empty padding value.
+    /// </summary>
+    public static Padding Empty => default;
+
     /// <summary>
     /// Initializes uniform padding on all sides.
     /// </summary>
@@ -48,4 +53,39 @@ public readonly struct Padding
     /// Gets the bottom padding.
     /// </summary>
     public int Bottom { get; }
+
+    /// <summary>
+    /// Gets the combined horizontal padding.
+    /// </summary>
+    public int Horizontal => Left + Right;
+
+    /// <summary>
+    /// Gets the combined vertical padding.
+    /// </summary>
+    public int Vertical => Top + Bottom;
+
+    /// <inheritdoc />
+    public bool Equals(Padding other)
+        => Left == other.Left
+            && Top == other.Top
+            && Right == other.Right
+            && Bottom == other.Bottom;
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+        => obj is Padding other && Equals(other);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+        => HashCode.Combine(Left, Top, Right, Bottom);
+
+    /// <summary>
+    /// Determines whether two padding values are equal.
+    /// </summary>
+    public static bool operator ==(Padding left, Padding right) => left.Equals(right);
+
+    /// <summary>
+    /// Determines whether two padding values are different.
+    /// </summary>
+    public static bool operator !=(Padding left, Padding right) => !left.Equals(right);
 }

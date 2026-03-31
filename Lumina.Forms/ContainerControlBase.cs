@@ -36,6 +36,7 @@ public abstract class ContainerControlBase : Control
 
         control.SetParent(this);
         _childControls.Add(control);
+        OnChildAdded(control);
 
         if (Owner is not null)
         {
@@ -57,6 +58,7 @@ public abstract class ContainerControlBase : Control
             return false;
         }
 
+        OnChildRemoved(control);
         Owner?.DetachControl(control);
         control.ClearParent();
         return true;
@@ -87,6 +89,14 @@ public abstract class ContainerControlBase : Control
         }
 
         base.PerformLayout();
+    }
+
+    internal virtual void OnChildAdded(Control control)
+    {
+    }
+
+    internal virtual void OnChildRemoved(Control control)
+    {
     }
 
     /// <summary>
