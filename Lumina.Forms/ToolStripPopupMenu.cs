@@ -1,4 +1,6 @@
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Lumina.Forms;
@@ -21,9 +23,10 @@ internal static class ToolStripPopupMenu
         }
 
         var commands = new Dictionary<uint, ToolStripItem>();
+        List<nint> imageHandles = [];
         try
         {
-            PopulateMenu(menuHandle, items, commands);
+            PopulateMenu(menuHandle, items, commands, imageHandles);
             _ = Win32.SetForegroundWindow(ownerHandle);
 
             uint command = Win32.TrackPopupMenu(
@@ -42,12 +45,21 @@ internal static class ToolStripPopupMenu
         }
         finally
         {
+            foreach (nint imageHandle in imageHandles)
+            {
+                if (imageHandle != 0)
+                {
+                    _ = Win32.DeleteObject(imageHandle);
+                }
+            }
+
             _ = Win32.DestroyMenu(menuHandle);
         }
     }
 
-    private static void PopulateMenu(nint menuHandle, IEnumerable<ToolStripItem> items, Dictionary<uint, ToolStripItem> commands)
+    private static void PopulateMenu(nint menuHandle, IEnumerable<ToolStripItem> items, Dictionary<uint, ToolStripItem> commands, List<nint> imageHandles)
     {
+        uint position = 0;
         foreach (ToolStripItem item in items)
         {
             if (!item.Visible)
@@ -57,8 +69,23 @@ internal static class ToolStripPopupMenu
 
             if (item is ToolStripSeparator)
             {
-                _ = Win32.AppendMenuW(menuHandle, Win32.MF_SEPARATOR, 0, null);
+                var separatorInfo = new Win32.MENUITEMINFOW
+                {
+                    cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.MENUITEMINFOW>(),
+                    fMask = Win32.MIIM_FTYPE,
+                    fType = Win32.MFT_SEPARATOR,
+                };
+
+                _ = Win32.InsertMenuItemW(menuHandle, position++, true, ref separatorInfo);
                 continue;
+            }
+
+            nint menuBitmap = OperatingSystem.IsWindows()
+                ? CreateMenuBitmap(item)
+                : 0;
+            if (menuBitmap != 0)
+            {
+                imageHandles.Add(menuBitmap);
             }
 
             if (item is ToolStripDropDownItem dropDownItem && dropDownItem.DropDownItems.Count > 0)
@@ -69,37 +96,111 @@ internal static class ToolStripPopupMenu
                     continue;
                 }
 
-                PopulateMenu(subMenuHandle, dropDownItem.DropDownItems, commands);
-                uint flags = Win32.MF_POPUP | Win32.MF_STRING;
+                PopulateMenu(subMenuHandle, dropDownItem.DropDownItems, commands, imageHandles);
+                var itemInfo = CreateMenuItemInfo(item, menuBitmap);
+                itemInfo.fMask |= Win32.MIIM_SUBMENU;
+                itemInfo.hSubMenu = subMenuHandle;
+                itemInfo.fType = Win32.MFT_STRING;
                 if (!item.Enabled)
                 {
-                    flags |= Win32.MF_GRAYED;
+                    itemInfo.fState |= Win32.MFS_DISABLED;
                 }
 
                 if (item is ToolStripMenuItem { Checked: true })
                 {
-                    flags |= Win32.MF_CHECKED;
+                    itemInfo.fState |= Win32.MFS_CHECKED;
                 }
 
-                _ = Win32.AppendMenuW(menuHandle, flags, unchecked((nuint)subMenuHandle), GetDisplayText(item));
+                _ = Win32.InsertMenuItemW(menuHandle, position++, true, ref itemInfo);
                 continue;
             }
 
             uint commandId = unchecked((uint)Interlocked.Increment(ref s_nextCommandId));
             commands[commandId] = item;
-            uint itemFlags = Win32.MF_STRING;
+            var commandItemInfo = CreateMenuItemInfo(item, menuBitmap);
+            commandItemInfo.fMask |= Win32.MIIM_ID;
+            commandItemInfo.wID = commandId;
             if (!item.Enabled || item is ToolStripComboBox || item is ToolStripTextBox || item is ToolStripProgressBar)
             {
-                itemFlags |= Win32.MF_GRAYED;
+                commandItemInfo.fState |= Win32.MFS_DISABLED;
             }
 
             if (item is ToolStripMenuItem { Checked: true })
             {
-                itemFlags |= Win32.MF_CHECKED;
+                commandItemInfo.fState |= Win32.MFS_CHECKED;
             }
 
-            _ = Win32.AppendMenuW(menuHandle, itemFlags, commandId, GetDisplayText(item));
+            _ = Win32.InsertMenuItemW(menuHandle, position++, true, ref commandItemInfo);
         }
+    }
+
+    private static Win32.MENUITEMINFOW CreateMenuItemInfo(ToolStripItem item, nint menuBitmap)
+    {
+        string displayText = GetDisplayText(item);
+        var itemInfo = new Win32.MENUITEMINFOW
+        {
+            cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.MENUITEMINFOW>(),
+            fMask = Win32.MIIM_FTYPE | Win32.MIIM_STATE | Win32.MIIM_STRING,
+            fType = Win32.MFT_STRING,
+            fState = 0,
+            dwTypeData = displayText,
+            cch = (uint)displayText.Length,
+        };
+
+        if (menuBitmap != 0)
+        {
+            itemInfo.fMask |= Win32.MIIM_BITMAP;
+            itemInfo.hbmpItem = menuBitmap;
+        }
+
+        return itemInfo;
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static nint CreateMenuBitmap(ToolStripItem item)
+    {
+        if (!item.SupportsMenuImage)
+        {
+            return 0;
+        }
+
+        using var surface = new Bitmap(16, 16, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(surface);
+        graphics.Clear(Color.Transparent);
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+        using var preparedImage = PrepareMenuImage(item.Image!, item.ImageTransparentColor);
+        Rectangle targetBounds = CalculateImageBounds(preparedImage.Size, new Size(16, 16));
+        graphics.DrawImage(preparedImage, targetBounds);
+
+        return surface.GetHbitmap(Color.FromArgb(0));
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static Image PrepareMenuImage(Image sourceImage, Color transparentColor)
+    {
+        var bitmap = new Bitmap(sourceImage);
+        if (transparentColor != Color.Empty)
+        {
+            bitmap.MakeTransparent(transparentColor);
+        }
+
+        return bitmap;
+    }
+
+    private static Rectangle CalculateImageBounds(Size imageSize, Size canvasSize)
+    {
+        if (imageSize.Width <= 0 || imageSize.Height <= 0)
+        {
+            return Rectangle.Empty;
+        }
+
+        double scale = Math.Min((double)canvasSize.Width / imageSize.Width, (double)canvasSize.Height / imageSize.Height);
+        int width = Math.Max(1, (int)Math.Round(imageSize.Width * scale, MidpointRounding.AwayFromZero));
+        int height = Math.Max(1, (int)Math.Round(imageSize.Height * scale, MidpointRounding.AwayFromZero));
+        int x = Math.Max(0, (canvasSize.Width - width) / 2);
+        int y = Math.Max(0, (canvasSize.Height - height) / 2);
+        return new Rectangle(x, y, width, height);
     }
 
     private static string GetDisplayText(ToolStripItem item)

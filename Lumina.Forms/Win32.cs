@@ -56,6 +56,7 @@ internal static class Win32
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
     public const int WM_CONTEXTMENU = 0x007B;
+    public const int WM_SYSCHAR = 0x0106;
     public const int WM_SYSKEYDOWN = 0x0104;
     public const int WM_DESTROY = 0x0002;
     public const int WM_NCCREATE = 0x0081;
@@ -95,6 +96,7 @@ internal static class Win32
     public const int DEFAULT_GUI_FONT = 17;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
+    public const int VK_F10 = 0x79;
     public const int VK_SHIFT = 0x10;
     public const int VK_CONTROL = 0x11;
     public const int VK_MENU = 0x12;
@@ -110,6 +112,19 @@ internal static class Win32
     public const uint MF_POPUP = 0x00000010;
     public const uint TPM_RIGHTBUTTON = 0x0002;
     public const uint TPM_RETURNCMD = 0x0100;
+
+    public const uint MIIM_STATE = 0x00000001;
+    public const uint MIIM_ID = 0x00000002;
+    public const uint MIIM_SUBMENU = 0x00000004;
+    public const uint MIIM_STRING = 0x00000040;
+    public const uint MIIM_BITMAP = 0x00000080;
+    public const uint MIIM_FTYPE = 0x00000100;
+
+    public const uint MFT_STRING = 0x00000000;
+    public const uint MFT_SEPARATOR = 0x00000800;
+
+    public const uint MFS_DISABLED = 0x00000003;
+    public const uint MFS_CHECKED = 0x00000008;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct WNDCLASSEXW
@@ -175,6 +190,23 @@ internal static class Win32
         public int Width => Right - Left;
 
         public int Height => Bottom - Top;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct MENUITEMINFOW
+    {
+        public uint cbSize;
+        public uint fMask;
+        public uint fType;
+        public uint fState;
+        public uint wID;
+        public nint hSubMenu;
+        public nint hbmpChecked;
+        public nint hbmpUnchecked;
+        public nuint dwItemData;
+        public string? dwTypeData;
+        public uint cch;
+        public nint hbmpItem;
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -332,6 +364,10 @@ internal static class Win32
     [DllImport("user32.dll", EntryPoint = "AppendMenuW", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool AppendMenuW(nint hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
+
+    [DllImport("user32.dll", EntryPoint = "InsertMenuItemW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool InsertMenuItemW(nint hMenu, uint item, bool fByPosition, ref MENUITEMINFOW menuItemInfo);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

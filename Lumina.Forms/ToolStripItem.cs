@@ -64,6 +64,35 @@ public class ToolStripItem : Component
     /// </summary>
     public ToolStripItemDisplayStyle DisplayStyle { get; set; } = ToolStripItemDisplayStyle.ImageAndText;
 
+    internal bool SupportsMenuImage => Image is not null && DisplayStyle is not ToolStripItemDisplayStyle.Text and not ToolStripItemDisplayStyle.None;
+
+    internal char? GetMnemonic()
+    {
+        if (string.IsNullOrEmpty(Text))
+        {
+            return null;
+        }
+
+        for (int index = 0; index < Text.Length - 1; index++)
+        {
+            if (Text[index] != '&')
+            {
+                continue;
+            }
+
+            char nextCharacter = Text[index + 1];
+            if (nextCharacter == '&')
+            {
+                index++;
+                continue;
+            }
+
+            return char.ToUpperInvariant(nextCharacter);
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Programmatically invokes the item.
     /// </summary>

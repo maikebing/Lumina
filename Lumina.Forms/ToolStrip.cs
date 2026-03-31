@@ -60,6 +60,48 @@ public class ToolStrip : ContainerControlBase
         }
     }
 
+    internal bool TryActivateMnemonic(char mnemonic)
+    {
+        EnsureItemHosts();
+
+        char normalizedMnemonic = char.ToUpperInvariant(mnemonic);
+        foreach (ToolStripItem item in Items)
+        {
+            if (!item.Visible || !item.Enabled)
+            {
+                continue;
+            }
+
+            if (item.GetMnemonic() != normalizedMnemonic)
+            {
+                continue;
+            }
+
+            ActivateItem(item);
+            return true;
+        }
+
+        return false;
+    }
+
+    internal bool TryActivateFirstItem()
+    {
+        EnsureItemHosts();
+
+        foreach (ToolStripItem item in Items)
+        {
+            if (!item.Visible || !item.Enabled)
+            {
+                continue;
+            }
+
+            ActivateItem(item);
+            return true;
+        }
+
+        return false;
+    }
+
     private void EnsureItemHosts()
     {
         foreach (ToolStripItem item in Items)
@@ -195,6 +237,20 @@ public class ToolStrip : ContainerControlBase
         return string.IsNullOrWhiteSpace(item.Name)
             ? item.GetType().Name
             : item.Name;
+    }
+
+    private void ActivateItem(ToolStripItem item)
+    {
+        if (item is ToolStripDropDownItem dropDownItem && dropDownItem.DropDownItems.Count > 0)
+        {
+            if (_itemHosts.TryGetValue(item, out Control? host))
+            {
+                ShowDropDown(dropDownItem, host);
+                return;
+            }
+        }
+
+        item.PerformClick();
     }
 
     private void ShowDropDown(ToolStripDropDownItem item, Control host)

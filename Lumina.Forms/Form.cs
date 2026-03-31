@@ -678,7 +678,20 @@ public class Form : IDisposable
 
             case Win32.WM_KEYDOWN:
             case Win32.WM_SYSKEYDOWN:
+                if ((int)(nuint)wParam == Win32.VK_F10 && TryActivateFirstMenuItem())
+                {
+                    return 0;
+                }
+
                 if (TryHandleMenuShortcut(BuildShortcutKeyData(wParam)))
+                {
+                    return 0;
+                }
+
+                break;
+
+            case Win32.WM_SYSCHAR:
+                if (TryHandleMenuMnemonic((char)(ushort)(nuint)wParam))
                 {
                     return 0;
                 }
@@ -766,6 +779,21 @@ public class Form : IDisposable
         }
 
         return false;
+    }
+
+    private bool TryHandleMenuMnemonic(char mnemonic)
+    {
+        if (MainMenuStrip is null || char.IsControl(mnemonic))
+        {
+            return false;
+        }
+
+        return MainMenuStrip.TryActivateMnemonic(mnemonic);
+    }
+
+    private bool TryActivateFirstMenuItem()
+    {
+        return MainMenuStrip is not null && MainMenuStrip.TryActivateFirstItem();
     }
 
     private static Keys BuildShortcutKeyData(nint virtualKey)

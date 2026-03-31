@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Lumina.Forms;
 using Xunit;
 
@@ -148,4 +149,78 @@ public sealed class CompatibilityControlsTests
         Assert.True(handled);
         Assert.Equal(1, clickCount);
     }
+
+    [Fact]
+    public void ToolStrip_TryActivateMnemonic_InvokesMatchingItem()
+    {
+        var menuStrip = new MenuStrip();
+        var fileMenu = new ToolStripMenuItem { Text = "&File" };
+        int clickCount = 0;
+        fileMenu.Click += (_, _) => clickCount++;
+        menuStrip.Items.Add(fileMenu);
+
+        MethodInfo? method = typeof(ToolStrip).GetMethod("TryActivateMnemonic", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        bool handled = Assert.IsType<bool>(method!.Invoke(menuStrip, ['f']));
+
+        Assert.True(handled);
+        Assert.Equal(1, clickCount);
+    }
+
+    [Fact]
+    public void Form_MenuMnemonic_InvokesMatchingTopLevelItem()
+    {
+        var form = new Form();
+        var menuStrip = new MenuStrip();
+        var helpItem = new ToolStripMenuItem { Text = "&Help" };
+        int clickCount = 0;
+        helpItem.Click += (_, _) => clickCount++;
+        menuStrip.Items.Add(helpItem);
+        form.MainMenuStrip = menuStrip;
+
+        MethodInfo? method = typeof(Form).GetMethod("TryHandleMenuMnemonic", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        bool handled = Assert.IsType<bool>(method!.Invoke(form, ['h']));
+
+        Assert.True(handled);
+        Assert.Equal(1, clickCount);
+    }
+
+    [Fact]
+    public void ToolStripPopupMenu_CreateMenuBitmap_ReturnsBitmapHandleForImageItems()
+    {
+        using var bitmap = new Bitmap(12, 12);
+        using (Graphics graphics = Graphics.FromImage(bitmap))
+        {
+            graphics.Clear(Color.Red);
+        }
+
+        var item = new ToolStripMenuItem
+        {
+            Image = bitmap,
+        };
+
+        Type popupMenuType = typeof(MenuStrip).Assembly.GetType("Lumina.Forms.ToolStripPopupMenu", throwOnError: true)!;
+        MethodInfo? method = popupMenuType.GetMethod("CreateMenuBitmap", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+
+        nint bitmapHandle = Assert.IsType<nint>(method!.Invoke(null, [item]));
+        try
+        {
+            Assert.NotEqual(0, bitmapHandle);
+        }
+        finally
+        {
+            if (bitmapHandle != 0)
+            {
+                _ = DeleteObject(bitmapHandle);
+            }
+        }
+    }
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeleteObject(nint hObject);
 }
