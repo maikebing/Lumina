@@ -703,6 +703,21 @@ public class Form : IDisposable
                 RefreshVisualStyles();
                 break;
 
+            case Win32.WM_INITMENUPOPUP:
+                ToolStripPopupMenu.NotifyMenuDepthChange(+1);
+                break;
+
+            case Win32.WM_UNINITMENUPOPUP:
+                ToolStripPopupMenu.NotifyMenuDepthChange(-1);
+                break;
+
+            case Win32.WM_MENUSELECT:
+            {
+                int flags = Win32.HighWord(wParam);
+                ToolStripPopupMenu.NotifyMenuSelectionChanged((flags & (int)Win32.MF_POPUP) != 0);
+                break;
+            }
+
             case Win32.WM_COMMAND:
                 HandleCommand(wParam, lParam);
                 return 0;

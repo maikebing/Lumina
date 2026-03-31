@@ -223,4 +223,41 @@ public sealed class CompatibilityControlsTests
     [DllImport("gdi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DeleteObject(nint hObject);
+
+    [Fact]
+    public void ToolStripMenuItem_RadioCheck_PropertyRoundTrips()
+    {
+        var item = new ToolStripMenuItem { Text = "Option A", Checked = true, RadioCheck = true };
+
+        Assert.True(item.RadioCheck);
+        Assert.True(item.Checked);
+
+        item.RadioCheck = false;
+        Assert.False(item.RadioCheck);
+    }
+
+    [Fact]
+    public void ToolStripMenuItem_RadioCheck_DefaultIsFalse()
+    {
+        var item = new ToolStripMenuItem { Text = "Option B" };
+
+        Assert.False(item.RadioCheck);
+    }
+
+    [Fact]
+    public void ToolStripPopupMenu_NotifyMenuDepthChange_DoesNotThrow()
+    {
+        // Depth tracking calls are safe to invoke directly (they just update ThreadStatic state).
+        Type type = typeof(MenuStrip).Assembly.GetType("Lumina.Forms.ToolStripPopupMenu", throwOnError: true)!;
+        MethodInfo? incMethod = type.GetMethod("NotifyMenuDepthChange", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+        MethodInfo? selMethod = type.GetMethod("NotifyMenuSelectionChanged", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+        Assert.NotNull(incMethod);
+        Assert.NotNull(selMethod);
+
+        // Increment, then decrement — should not throw.
+        incMethod!.Invoke(null, [1]);
+        selMethod!.Invoke(null, [true]);
+        incMethod!.Invoke(null, [-1]);
+    }
 }

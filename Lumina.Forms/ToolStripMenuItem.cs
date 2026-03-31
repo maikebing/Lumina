@@ -30,6 +30,12 @@ public class ToolStripMenuItem : ToolStripDropDownItem
 	/// </summary>
 	public bool CheckOnClick { get; set; }
 
+	/// <summary>
+	/// Gets or sets a value indicating whether the check mark displayed beside a checked menu item
+	/// is a radio-button style mark instead of a standard check mark.
+	/// </summary>
+	public bool RadioCheck { get; set; }
+
 	internal bool MatchesShortcut(Keys keyData)
 	{
 		return NormalizeShortcut(ShortcutKeys) != Keys.None

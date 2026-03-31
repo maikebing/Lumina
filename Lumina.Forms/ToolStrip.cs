@@ -167,7 +167,7 @@ public class ToolStrip : ContainerControlBase
     private Control CreateDropDownHost(ToolStripItem item)
     {
         var button = new ItemButtonHost();
-        button.Click += (_, _) => ShowDropDown((ToolStripDropDownItem)item, button);
+        button.Click += (_, _) => ShowDropDownWithSiblingNavigation((ToolStripDropDownItem)item, button);
         return button;
     }
 
@@ -245,12 +245,55 @@ public class ToolStrip : ContainerControlBase
         {
             if (_itemHosts.TryGetValue(item, out Control? host))
             {
-                ShowDropDown(dropDownItem, host);
+                ShowDropDownWithSiblingNavigation(dropDownItem, host);
                 return;
             }
         }
 
         item.PerformClick();
+    }
+
+    /// <summary>
+    /// Shows the drop-down for a top-level item and handles Left/Right sibling navigation
+    /// by looping until the user either selects a command or presses Escape.
+    /// </summary>
+    private void ShowDropDownWithSiblingNavigation(ToolStripDropDownItem initialItem, Control initialHost)
+    {
+        // Build ordered list of navigable drop-down items on this strip.
+        List<ToolStripDropDownItem> navigable = [];
+        foreach (ToolStripItem it in Items)
+        {
+            if (it is ToolStripDropDownItem ddi && ddi.Visible && ddi.Enabled && ddi.DropDownItems.Count > 0)
+            {
+                navigable.Add(ddi);
+            }
+        }
+
+        int count = navigable.Count;
+        int currentIndex = navigable.IndexOf(initialItem);
+
+        if (currentIndex < 0 || count == 0 || !OperatingSystem.IsWindows())
+        {
+            ShowDropDown(initialItem, initialHost);
+            return;
+        }
+
+        while (true)
+        {
+            ToolStripDropDownItem item = navigable[currentIndex];
+            Control host = _itemHosts.TryGetValue(item, out Control? h) ? h : initialHost;
+            Point screenLocation = GetDropDownScreenLocation(host);
+            nint ownerHandle = Owner?.Handle ?? Handle;
+
+            int direction = ToolStripPopupMenu.ShowForMenuBar(item.DropDownItems, ownerHandle, screenLocation);
+
+            if (direction == 0)
+            {
+                break;
+            }
+
+            currentIndex = ((currentIndex + direction) % count + count) % count;
+        }
     }
 
     private void ShowDropDown(ToolStripDropDownItem item, Control host)
@@ -261,13 +304,18 @@ public class ToolStrip : ContainerControlBase
             return;
         }
 
-        Point screenLocation = new(host.Left, host.Bottom);
+        Point screenLocation = GetDropDownScreenLocation(host);
+        ToolStripPopupMenu.Show(item.DropDownItems, Owner?.Handle ?? Handle, screenLocation);
+    }
+
+    private static Point GetDropDownScreenLocation(Control host)
+    {
         if (host.Handle != 0 && Win32.GetWindowRect(host.Handle, out var rect))
         {
-            screenLocation = new Point(rect.Left, rect.Bottom);
+            return new Point(rect.Left, rect.Bottom);
         }
 
-        ToolStripPopupMenu.Show(item.DropDownItems, Owner?.Handle ?? Handle, screenLocation);
+        return new Point(host.Left, host.Bottom);
     }
 
     private sealed class ItemButtonHost : Button

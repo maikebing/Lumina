@@ -100,6 +100,9 @@ internal static class Win32
     public const int VK_SHIFT = 0x10;
     public const int VK_CONTROL = 0x11;
     public const int VK_MENU = 0x12;
+    public const int VK_LEFT = 0x25;
+    public const int VK_RIGHT = 0x27;
+    public const int VK_ESCAPE = 0x1B;
     public const int GWLP_WNDPROC = -4;
     public const int GWLP_USERDATA = -21;
     public const int LOGPIXELSX = 88;
@@ -122,9 +125,17 @@ internal static class Win32
 
     public const uint MFT_STRING = 0x00000000;
     public const uint MFT_SEPARATOR = 0x00000800;
+    public const uint MFT_RADIOCHECK = 0x00000200;
 
     public const uint MFS_DISABLED = 0x00000003;
     public const uint MFS_CHECKED = 0x00000008;
+
+    public const int WH_MSGFILTER = -1;
+    public const int MSGF_MENU = 2;
+
+    public const int WM_INITMENUPOPUP = 0x0117;
+    public const int WM_UNINITMENUPOPUP = 0x0125;
+    public const int WM_MENUSELECT = 0x011F;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct WNDCLASSEXW
@@ -398,6 +409,19 @@ internal static class Win32
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern nint SetWindowsHookExW(int idHook, nint lpfn, nint hmod, uint dwThreadId);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool UnhookWindowsHookEx(nint hhk);
+
+    [DllImport("user32.dll")]
+    internal static extern nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+
+    [DllImport("kernel32.dll")]
+    internal static extern uint GetCurrentThreadId();
 
     [DllImport("dwmapi.dll")]
     internal static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
