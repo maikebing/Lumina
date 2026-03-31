@@ -1077,12 +1077,32 @@ public class Form : IDisposable
             return false;
         }
 
-        if (!TryResolveControlFromScreenPoint(lParam, out Control? control, out nint controlHandle, out Point screenLocation))
+        if (!TryResolveControlFromParentClientPoint(lParam, out Control? control, out nint controlHandle, out Point screenLocation))
         {
             return false;
         }
 
         return control!.TryShowAttachedContextMenuAtScreenPoint(controlHandle, screenLocation);
+    }
+
+    private bool TryResolveControlFromParentClientPoint(nint lParam, out Control? control, out nint controlHandle, out Point screenLocation)
+    {
+        Point parentClientPoint = Control.ExtractPoint(lParam);
+        var screenPoint = new Win32.POINT
+        {
+            x = parentClientPoint.X,
+            y = parentClientPoint.Y,
+        };
+
+        if (Handle != 0
+            && Win32.ClientToScreen(Handle, ref screenPoint)
+            && TryGetControlFromScreenPoint(new Point(screenPoint.x, screenPoint.y), out control, out controlHandle))
+        {
+            screenLocation = new Point(screenPoint.x, screenPoint.y);
+            return true;
+        }
+
+        return TryResolveControlFromScreenPoint(lParam, out control, out controlHandle, out screenLocation);
     }
 
     private static bool TryResolveControlFromScreenPoint(nint lParam, out Control? control, out nint controlHandle, out Point screenLocation)

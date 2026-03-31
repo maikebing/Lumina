@@ -122,7 +122,7 @@ public class SplitContainer : ContainerControlBase, ISupportInitialize
     protected override string ClassName => "STATIC";
 
     /// <inheritdoc />
-    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_CLIPCHILDREN | Win32.WS_CLIPSIBLINGS;
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.WS_CLIPCHILDREN | Win32.WS_CLIPSIBLINGS | Win32.SS_NOTIFY;
 
     /// <inheritdoc />
     public void BeginInit()
