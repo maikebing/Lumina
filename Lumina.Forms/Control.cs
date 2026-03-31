@@ -260,6 +260,17 @@ public abstract class Control : IDisposable
         Parent = parent;
     }
 
+    internal void ClearParent()
+    {
+        Parent = null;
+    }
+
+    internal void DetachFromOwner()
+    {
+        Owner = null;
+        Id = 0;
+    }
+
     /// <summary>
     /// Updates the control bounds using client coordinates.
     /// </summary>

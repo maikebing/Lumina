@@ -106,13 +106,57 @@ public class ToolStrip : ContainerControlBase
         return false;
     }
 
-    private void EnsureItemHosts()
+    private protected bool TryGetItemHost(ToolStripItem item, out Control? host)
+        => _itemHosts.TryGetValue(item, out host);
+
+    private protected virtual bool ShouldCreateHostControl(ToolStripItem item) => true;
+
+    private protected virtual bool IsCompatibleHostControl(Control host, ToolStripItem item)
+    {
+        if (OperatingSystem.IsWindows()
+            && item.DisplayStyle == ToolStripItemDisplayStyle.Image
+            && item.Image is not null)
+        {
+            return host is PictureBox;
+        }
+
+        return item switch
+        {
+            ToolStripStatusLabel => host is Label,
+            ToolStripProgressBar => host is ProgressBar,
+            ToolStripComboBox => host is ComboBox,
+            ToolStripTextBox => host is TextBox,
+            ToolStripSeparator => host is Panel,
+            ToolStripDropDownItem => host is Button,
+            _ => host is Button,
+        };
+    }
+
+    private protected void EnsureItemHosts()
     {
         foreach (ToolStripItem item in Items)
         {
-            if (_itemHosts.ContainsKey(item))
+            if (!ShouldCreateHostControl(item))
             {
+                if (_itemHosts.Remove(item, out Control? removedHost))
+                {
+                    removedHost.Visible = false;
+                }
+
                 continue;
+            }
+
+            if (_itemHosts.TryGetValue(item, out Control? existingHost))
+            {
+                if (existingHost is not null && IsCompatibleHostControl(existingHost, item))
+                {
+                    continue;
+                }
+
+                if (existingHost is not null)
+                {
+                    existingHost.Visible = false;
+                }
             }
 
             Control host = CreateHostControl(item);
@@ -121,7 +165,7 @@ public class ToolStrip : ContainerControlBase
         }
     }
 
-    private void LayoutItemHosts()
+    private protected virtual void LayoutItemHosts()
     {
         int x = 3;
         int availableHeight = Math.Max(1, Height - 6);
@@ -241,7 +285,7 @@ public class ToolStrip : ContainerControlBase
         return pictureBox;
     }
 
-    private void ApplyItemState(Control host, ToolStripItem item)
+    private protected virtual void ApplyItemState(Control host, ToolStripItem item)
     {
         host.Enabled = item.Enabled;
 
@@ -279,7 +323,7 @@ public class ToolStrip : ContainerControlBase
         }
     }
 
-    private Size ResolveHostSize(ToolStripItem item, int availableHeight)
+    private protected virtual Size ResolveHostSize(ToolStripItem item, int availableHeight)
     {
         if (item.Size.Width > 0 && item.Size.Height > 0)
         {

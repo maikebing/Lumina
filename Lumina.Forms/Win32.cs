@@ -101,6 +101,10 @@ internal static class Win32
     public const int LB_SETCURSEL = 0x0186;
     public const int PBM_SETPOS = 0x0402;
     public const int STM_SETIMAGE = 0x0172;
+    public const int SB_SETPARTS = 0x0404;
+    public const int SB_SETMINHEIGHT = 0x0408;
+    public const int SB_GETRECT = 0x040A;
+    public const int SB_SETTEXTW = 0x040B;
 
     public const int TCM_FIRST = 0x1300;
     public const int TCM_GETITEMCOUNT = TCM_FIRST + 4;
@@ -382,6 +386,9 @@ internal static class Win32
 
     [DllImport("user32.dll", EntryPoint = "SendMessageW")]
     internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, ref RECT lParam);
+
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, [In] int[] lParam);
 
     [DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode)]
     internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, ref TCITEMW lParam);
