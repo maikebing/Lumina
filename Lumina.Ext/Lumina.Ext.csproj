@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
-    <Platforms>x64</Platforms>
     <InvariantGlobalization>true</InvariantGlobalization>
     <NativeLib>Shared</NativeLib>
     <SelfContained>true</SelfContained>

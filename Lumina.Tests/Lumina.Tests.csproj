@@ -4,7 +4,6 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Platforms>x64</Platforms>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -19,7 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../Lumina.Core/Lumina.Core.csproj" />
-    <ProjectReference Include="../Lumina.NativeForms/Lumina.NativeForms.csproj" />
+    <ProjectReference Include="..\Lumina.WinForms.Analyzers\Lumina.WinForms.Analyzers.csproj" />
+    <ProjectReference Include="..\Lumina.WinForms\Lumina.WinForms.csproj" />
   </ItemGroup>
 
 </Project>

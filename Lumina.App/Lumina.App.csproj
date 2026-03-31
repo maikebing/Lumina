@@ -8,7 +8,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>../msix/Assets/lumina-tray.ico</ApplicationIcon>
     <PublishAot>true</PublishAot>
-    <Platforms>x64</Platforms>
     <InvariantGlobalization>true</InvariantGlobalization>
     <SelfContained>true</SelfContained>
   </PropertyGroup>
