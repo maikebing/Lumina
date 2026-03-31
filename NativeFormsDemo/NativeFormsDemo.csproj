@@ -23,9 +23,6 @@
 		<ProjectReference Include="..\Lumina.Forms\Lumina.Forms.csproj" />
 	  <Using Include="Lumina.Forms" />
 	  <Using Include="System.Drawing" />
-	  <Compile Remove="Properties\Resources.Designer.cs" />
-	  <EmbeddedResource Remove="Properties\Resources.resx" />
-
   </ItemGroup>
 
 	<ItemGroup Condition="'$(UseWindowsForms)' == 'true'">
@@ -34,16 +31,6 @@
 
 	<ItemGroup>
 	  <PackageReference Include="System.Resources.Extensions" Version="10.0.5" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(UseLuminaForms)' == 'true'">
-	  <Content Include="Resources\SplashScreen.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="..\msix\Assets\lumina-tray.ico">
-		  <Link>Resources\lumina-tray.ico</Link>
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
 	</ItemGroup>
 
 </Project>

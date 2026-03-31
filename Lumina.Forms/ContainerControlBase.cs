@@ -64,6 +64,17 @@ public abstract class ContainerControlBase : Control
         }
     }
 
+    /// <inheritdoc />
+    public override void PerformLayout()
+    {
+        foreach (Control child in ChildControls)
+        {
+            child.PerformLayout();
+        }
+
+        base.PerformLayout();
+    }
+
     /// <summary>
     /// Represents a child-control collection for a LuminaForms container control.
     /// </summary>
@@ -82,6 +93,23 @@ public abstract class ContainerControlBase : Control
         /// <param name="control">The child control to add.</param>
         public void Add(Control control)
         {
+            _owner.AddChild(control);
+        }
+
+        /// <summary>
+        /// Adds a child control at the specified logical table layout position.
+        /// </summary>
+        /// <param name="control">The child control to add.</param>
+        /// <param name="column">The zero-based column index.</param>
+        /// <param name="row">The zero-based row index.</param>
+        public void Add(Control control, int column, int row)
+        {
+            if (_owner is TableLayoutPanel tableLayoutPanel)
+            {
+                tableLayoutPanel.AddCell(control, column, row);
+                return;
+            }
+
             _owner.AddChild(control);
         }
 

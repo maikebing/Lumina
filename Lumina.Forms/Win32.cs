@@ -54,6 +54,7 @@ internal static class Win32
     public const int WM_SIZE = 0x0005;
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
+    public const int WM_CONTEXTMENU = 0x007B;
     public const int WM_DESTROY = 0x0002;
     public const int WM_NCCREATE = 0x0081;
     public const int WM_NCDESTROY = 0x0082;
@@ -84,14 +85,26 @@ internal static class Win32
     public const int STM_SETIMAGE = 0x0172;
 
     public const uint IMAGE_BITMAP = 0;
+    public const uint IMAGE_ICON = 1;
+    public const uint LR_DEFAULTSIZE = 0x00000040;
+    public const uint LR_LOADFROMFILE = 0x00000010;
 
     public const int COLOR_WINDOW = 5;
     public const int DEFAULT_GUI_FONT = 17;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     public const int IDC_ARROW = 32512;
+    public const int GWLP_WNDPROC = -4;
     public const int GWLP_USERDATA = -21;
     public const int LOGPIXELSX = 88;
     public const int LOGPIXELSY = 90;
+
+    public const uint MF_STRING = 0x00000000;
+    public const uint MF_GRAYED = 0x00000001;
+    public const uint MF_CHECKED = 0x00000008;
+    public const uint MF_SEPARATOR = 0x00000800;
+    public const uint MF_POPUP = 0x00000010;
+    public const uint TPM_RIGHTBUTTON = 0x0002;
+    public const uint TPM_RETURNCMD = 0x0100;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct WNDCLASSEXW
@@ -208,6 +221,9 @@ internal static class Win32
     [DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
     internal static extern nint DefWindowProcW(nint hWnd, uint msg, nint wParam, nint lParam);
 
+    [DllImport("user32.dll", EntryPoint = "CallWindowProcW")]
+    internal static extern nint CallWindowProcW(nint lpPrevWndFunc, nint hWnd, uint msg, nint wParam, nint lParam);
+
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool DestroyWindow(nint hWnd);
@@ -235,6 +251,13 @@ internal static class Win32
 
     [DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
     internal static extern nint LoadCursorW(nint hInstance, nint lpCursorName);
+
+    [DllImport("user32.dll", EntryPoint = "LoadImageW", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern nint LoadImageW(nint hInst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool DestroyIcon(nint hIcon);
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
     internal static extern nint GetWindowLongPtrW(nint hWnd, int nIndex);
@@ -271,6 +294,10 @@ internal static class Win32
     internal static extern bool GetClientRect(nint hWnd, out RECT lpRect);
 
     [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetWindowRect(nint hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
     internal static extern nint GetDC(nint hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -282,6 +309,28 @@ internal static class Win32
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool InvalidateRect(nint hWnd, nint lpRect, bool bErase);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetCursorPos(out POINT lpPoint);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("user32.dll")]
+    internal static extern nint CreatePopupMenu();
+
+    [DllImport("user32.dll", EntryPoint = "AppendMenuW", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool AppendMenuW(nint hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool DestroyMenu(nint hMenu);
+
+    [DllImport("user32.dll")]
+    internal static extern uint TrackPopupMenu(nint hMenu, uint uFlags, int x, int y, int nReserved, nint hWnd, nint prcRect);
 
     [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern nint GetModuleHandleW(string? lpModuleName);

@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
 
@@ -7,6 +8,10 @@ namespace Lumina.Forms;
 /// </summary>
 public abstract class Control : IDisposable
 {
+    private static readonly Lock s_subclassLock = new();
+    private static readonly Dictionary<nint, Control> s_controlsByHandle = [];
+    private static readonly Win32.WindowProc s_subclassProc = SubclassWindowProcThunk;
+
     private string _text = string.Empty;
     private int _left;
     private int _top;
@@ -15,6 +20,7 @@ public abstract class Control : IDisposable
     private bool _enabled = true;
     private bool _visible = true;
     private bool _disposed;
+    private nint _originalWindowProc;
 
     /// <summary>
     /// Gets or sets the design-time or lookup name of the control.
@@ -30,6 +36,11 @@ public abstract class Control : IDisposable
     /// Gets or sets an arbitrary user-defined value associated with the control.
     /// </summary>
     public object? Tag { get; set; }
+
+    /// <summary>
+    /// Gets or sets the context menu associated with the control.
+    /// </summary>
+    public ContextMenuStrip? ContextMenuStrip { get; set; }
 
     /// <summary>
     /// Gets or sets the tab order index used by designer-style layout code.
@@ -253,6 +264,11 @@ public abstract class Control : IDisposable
     {
         ThrowIfDisposed();
 
+        bool boundsChanged = _left != left
+            || _top != top
+            || _width != Math.Max(1, width)
+            || _height != Math.Max(1, height);
+
         _left = left;
         _top = top;
         _width = Math.Max(1, width);
@@ -261,6 +277,11 @@ public abstract class Control : IDisposable
         if (Handle != 0)
         {
             ApplyBounds();
+        }
+
+        if (boundsChanged)
+        {
+            OnBoundsChanged();
         }
     }
 
@@ -285,6 +306,32 @@ public abstract class Control : IDisposable
             Invalidate();
             _ = Win32.UpdateWindow(Handle);
         }
+    }
+
+    /// <summary>
+    /// Suspends layout logic for compatibility with designer-generated code.
+    /// </summary>
+    public virtual void SuspendLayout()
+    {
+    }
+
+    /// <summary>
+    /// Resumes layout logic for compatibility with designer-generated code.
+    /// </summary>
+    /// <param name="performLayout">Whether layout should be performed immediately.</param>
+    public virtual void ResumeLayout(bool performLayout)
+    {
+        if (performLayout)
+        {
+            PerformLayout();
+        }
+    }
+
+    /// <summary>
+    /// Performs layout for compatibility with designer-generated code.
+    /// </summary>
+    public virtual void PerformLayout()
+    {
     }
 
     /// <summary>
@@ -366,6 +413,8 @@ public abstract class Control : IDisposable
             throw new InvalidOperationException($"Failed to create control '{ClassName}'.");
         }
 
+        RegisterSubclass();
+
         if (Owner.UiFontHandle != 0)
         {
             _ = Win32.SendMessageW(Handle, Win32.WM_SETFONT, Owner.UiFontHandle, (nint)1);
@@ -401,6 +450,13 @@ public abstract class Control : IDisposable
     /// <param name="notificationCode">The Win32 notification code.</param>
     /// <returns><see langword="true"/> if the notification was handled; otherwise, <see langword="false"/>.</returns>
     protected virtual bool OnCommand(int notificationCode) => false;
+
+    /// <summary>
+    /// Called after the control bounds change.
+    /// </summary>
+    protected virtual void OnBoundsChanged()
+    {
+    }
 
     /// <summary>
     /// Called before the control destroys its native resources during disposal.
@@ -446,6 +502,94 @@ public abstract class Control : IDisposable
         _text = currentText;
         OnTextChanged(EventArgs.Empty);
         return true;
+    }
+
+    private void RegisterSubclass()
+    {
+        if (Handle == 0 || _originalWindowProc != 0)
+        {
+            return;
+        }
+
+        nint subclassPointer = Marshal.GetFunctionPointerForDelegate(s_subclassProc);
+        nint previousWindowProc = Win32.SetWindowLongPtrW(Handle, Win32.GWLP_WNDPROC, subclassPointer);
+        if (previousWindowProc == 0)
+        {
+            return;
+        }
+
+        _originalWindowProc = previousWindowProc;
+        lock (s_subclassLock)
+        {
+            s_controlsByHandle[Handle] = this;
+        }
+    }
+
+    private static nint SubclassWindowProcThunk(nint hwnd, uint message, nint wParam, nint lParam)
+    {
+        Control? control;
+        lock (s_subclassLock)
+        {
+            _ = s_controlsByHandle.TryGetValue(hwnd, out control);
+        }
+
+        return control is null
+            ? Win32.DefWindowProcW(hwnd, message, wParam, lParam)
+            : control.SubclassWindowProc(hwnd, message, wParam, lParam);
+    }
+
+    private nint SubclassWindowProc(nint hwnd, uint message, nint wParam, nint lParam)
+    {
+        if (message == Win32.WM_CONTEXTMENU && ContextMenuStrip is not null)
+        {
+            ShowAttachedContextMenu(hwnd, lParam);
+            return 0;
+        }
+
+        nint result = _originalWindowProc != 0
+            ? Win32.CallWindowProcW(_originalWindowProc, hwnd, message, wParam, lParam)
+            : Win32.DefWindowProcW(hwnd, message, wParam, lParam);
+
+        if (message == Win32.WM_NCDESTROY)
+        {
+            lock (s_subclassLock)
+            {
+                _ = s_controlsByHandle.Remove(hwnd);
+            }
+
+            _originalWindowProc = 0;
+        }
+
+        return result;
+    }
+
+    private void ShowAttachedContextMenu(nint hwnd, nint lParam)
+    {
+        ContextMenuStrip? contextMenuStrip = ContextMenuStrip;
+        if (contextMenuStrip is null)
+        {
+            return;
+        }
+
+        Point screenLocation;
+        if (lParam == (nint)(-1))
+        {
+            if (!Win32.GetCursorPos(out var cursor))
+            {
+                return;
+            }
+
+            screenLocation = new Point(cursor.x, cursor.y);
+        }
+        else
+        {
+            screenLocation = new Point(
+                unchecked((short)(nuint)lParam),
+                unchecked((short)(((nuint)lParam >> 16) & 0xFFFF)));
+        }
+
+        nint ownerHandle = Owner?.Handle ?? Parent?.Handle ?? hwnd;
+        contextMenuStrip.ShowAtScreenPoint(ownerHandle, screenLocation);
     }
 
     private void ApplyBounds()

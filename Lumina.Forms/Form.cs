@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
@@ -128,6 +129,11 @@ public class Form : IDisposable
     public ControlCollection Controls => _controls;
 
     /// <summary>
+    /// Gets or sets the main menu strip associated with the form.
+    /// </summary>
+    public MenuStrip? MainMenuStrip { get; set; }
+
+    /// <summary>
     /// Gets the visual style currently resolved for this form after application defaults and form-level overrides are applied.
     /// </summary>
     public ResolvedVisualStyle CurrentVisualStyle => ResolveCurrentVisualStyle();
@@ -184,7 +190,7 @@ public class Form : IDisposable
         Application.RegisterOpenForm(this);
         OnCreated();
         OnLoad();
-        OnLayout();
+        PerformLayout();
 
         _ = Win32.ShowWindow(Handle, Win32.SW_SHOW);
         _ = Win32.UpdateWindow(Handle);
@@ -226,6 +232,11 @@ public class Form : IDisposable
     /// </summary>
     public void PerformLayout()
     {
+        foreach (var control in CollectionsMarshal.AsSpan(_controlList))
+        {
+            control.PerformLayout();
+        }
+
         OnLayout();
     }
 
@@ -662,7 +673,7 @@ public class Form : IDisposable
         {
             case Win32.WM_SIZE:
                 OnSizeChanged();
-                OnLayout();
+                PerformLayout();
                 return 0;
 
             case Win32.WM_SETTINGCHANGE:

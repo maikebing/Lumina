@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Reflection;
 using Lumina.Forms;
 using Xunit;
 
@@ -69,5 +70,90 @@ public class ContainerControlTests
         Assert.Single(form.Controls.Find("confirmButton", searchAllChildren: false));
         Assert.Single(form.Controls.Find("statusText", searchAllChildren: true));
         Assert.Single(panel.Controls.Find("statusText", searchAllChildren: false));
+    }
+
+    [Fact]
+    public void SplitContainer_PerformLayout_SizesPanelsFromSplitterDistance()
+    {
+        var splitContainer = new SplitContainer();
+        splitContainer.SetBounds(0, 0, 300, 120);
+        splitContainer.SplitterDistance = 90;
+
+        splitContainer.PerformLayout();
+
+        Assert.Equal(90, splitContainer.Panel1.Width);
+        Assert.Equal(94, splitContainer.Panel2.Left);
+        Assert.Equal(206, splitContainer.Panel2.Width);
+    }
+
+    [Fact]
+    public void TabControl_PerformLayout_SetsPageBoundsAndVisibility()
+    {
+        var tabControl = new TabControl();
+        var firstPage = new TabPage();
+        var secondPage = new TabPage();
+
+        tabControl.Controls.AddRange(firstPage, secondPage);
+        tabControl.SetBounds(0, 0, 200, 100);
+        tabControl.SelectedIndex = 1;
+
+        tabControl.PerformLayout();
+
+        Assert.False(firstPage.Visible);
+        Assert.True(secondPage.Visible);
+        Assert.Equal(new Rectangle(0, 26, 200, 74), secondPage.Bounds);
+    }
+
+    [Fact]
+    public void TabControl_HeaderButtonClick_ChangesSelectedIndex()
+    {
+        var tabControl = new TabControl();
+        var firstPage = new TabPage { Text = "First" };
+        var secondPage = new TabPage { Text = "Second" };
+
+        tabControl.Controls.AddRange(firstPage, secondPage);
+        tabControl.SetBounds(0, 0, 240, 100);
+        tabControl.PerformLayout();
+
+        FieldInfo? headerButtonsField = typeof(TabControl).GetField("_headerButtons", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(headerButtonsField);
+
+        object headerButtons = Assert.IsType<Dictionary<TabPage, Button>>(headerButtonsField!.GetValue(tabControl));
+        var headers = (Dictionary<TabPage, Button>)headerButtons;
+
+        Assert.Equal(2, headers.Count);
+        Assert.Equal(2, tabControl.Controls.Count);
+
+        headers[secondPage].PerformClick();
+
+        Assert.Equal(1, tabControl.SelectedIndex);
+        Assert.False(firstPage.Visible);
+        Assert.True(secondPage.Visible);
+    }
+
+    [Fact]
+    public void TableLayoutPanel_PerformLayout_AssignsControlsToCells()
+    {
+        var tableLayoutPanel = new TableLayoutPanel
+        {
+            ColumnCount = 2,
+            RowCount = 2,
+        };
+
+        tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        tableLayoutPanel.SetBounds(0, 0, 200, 100);
+
+        var firstControl = new Button();
+        var secondControl = new Button();
+        tableLayoutPanel.Controls.Add(firstControl, 0, 0);
+        tableLayoutPanel.Controls.Add(secondControl, 1, 1);
+
+        tableLayoutPanel.PerformLayout();
+
+        Assert.Equal(new Rectangle(0, 0, 100, 50), firstControl.Bounds);
+        Assert.Equal(new Rectangle(100, 50, 100, 50), secondControl.Bounds);
     }
 }

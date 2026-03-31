@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Drawing;
 using Lumina.Forms;
 using Xunit;
 
@@ -40,5 +41,72 @@ public sealed class CompatibilityControlsTests
         Assert.Equal(12m, numericUpDown.Value);
         Assert.True(notifyIcon.Visible);
         Assert.Equal(2, container.Components.Count);
+    }
+
+    [Fact]
+    public void PictureBox_AutoSize_UsesSourceImageDimensions()
+    {
+        string imagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.png");
+        File.WriteAllBytes(imagePath, Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGD4DwABBAEAAPp7WQAAAABJRU5ErkJggg=="));
+
+        try
+        {
+            var pictureBox = new PictureBox
+            {
+                SizeMode = PictureBoxSizeMode.AutoSize,
+                ImageLocation = imagePath,
+            };
+
+            pictureBox.Load();
+
+            Assert.Equal(new Size(1, 1), pictureBox.Size);
+        }
+        finally
+        {
+            if (File.Exists(imagePath))
+            {
+                File.Delete(imagePath);
+            }
+        }
+    }
+
+    [Fact]
+    public void ToolStripItem_PerformClick_RaisesClick()
+    {
+        var item = new ToolStripMenuItem();
+        int clickCount = 0;
+        item.Click += (_, _) => clickCount++;
+
+        item.PerformClick();
+
+        Assert.Equal(1, clickCount);
+    }
+
+    [Fact]
+    public void MenuStrip_CanBeConstructed_WithoutThrowing()
+    {
+        var menuStrip = new MenuStrip();
+        var fileMenu = new ToolStripMenuItem { Text = "File" };
+
+        menuStrip.Items.Add(fileMenu);
+        menuStrip.PerformLayout();
+
+        Assert.Single(menuStrip.Items);
+        Assert.Same(fileMenu, menuStrip.Items[0]);
+    }
+
+    [Fact]
+    public void ToolStripMenuItem_CheckOnClick_TogglesCheckedState()
+    {
+        var item = new ToolStripMenuItem
+        {
+            CheckOnClick = true,
+        };
+
+        item.PerformClick();
+        Assert.True(item.Checked);
+
+        item.PerformClick();
+        Assert.False(item.Checked);
     }
 }
