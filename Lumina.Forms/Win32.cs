@@ -177,6 +177,11 @@ internal static class Win32
     public const uint MFS_DISABLED = 0x00000003;
     public const uint MFS_CHECKED = 0x00000008;
 
+    public const uint ICC_WIN95_CLASSES = 0x000000FF;
+    public const uint ICC_DATE_CLASSES = 0x00000100;
+    public const uint ICC_USEREX_CLASSES = 0x00000200;
+    public const uint ICC_STANDARD_CLASSES = 0x00004000;
+
     public const int WH_MSGFILTER = -1;
     public const int MSGF_MENU = 2;
     public const int TRANSPARENT = 1;
@@ -311,6 +316,13 @@ internal static class Win32
         public byte tmStruckOut;
         public byte tmPitchAndFamily;
         public byte tmCharSet;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct INITCOMMONCONTROLSEX
+    {
+        public uint dwSize;
+        public uint dwICC;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -554,6 +566,10 @@ internal static class Win32
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool InitCommonControlsEx(ref INITCOMMONCONTROLSEX iccex);
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern nint SetWindowsHookExW(int idHook, nint lpfn, nint hmod, uint dwThreadId);

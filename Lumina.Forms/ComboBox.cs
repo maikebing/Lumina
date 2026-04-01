@@ -199,6 +199,16 @@ public class ComboBox : Control
         ApplyExplorerTheme();
     }
 
+    /// <inheritdoc />
+    protected override string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
+        => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+            ? "DarkMode_CFD"
+            : "CFD";
+
+    /// <inheritdoc />
+    protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
+        => base.GetPreferredThemeClass(visualStyle);
+
     private uint GetDropDownStyle()
     {
         return DropDownStyle switch

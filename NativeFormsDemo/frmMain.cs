@@ -14,10 +14,10 @@ namespace NativeFormsDemo
 
         private void InitializeViewMenu()
         {
-            SetSelectedWindowStyle(clearEffectToolStripMenuItem);
+            SetSelectedWindowStyle(recommendedStyleToolStripMenuItem);
             SetSelectedThemeMode(followSystemThemeToolStripMenuItem);
             SetSelectedPalette(systemColorsToolStripMenuItem);
-            toolStripStatusLabel1.Text = "Ready";
+            UpdateStatusSummary();
         }
 
         private void frmMain_Shown(object? sender, EventArgs e)
@@ -29,6 +29,7 @@ namespace NativeFormsDemo
 
             _themeInitialized = true;
             ApplyThemeSelection(followSystemThemeToolStripMenuItem, systemColorsToolStripMenuItem);
+            ApplyRecommendedWindowStyle();
         }
 
         private void followSystemThemeToolStripMenuItem_Click(object? sender, EventArgs e)
@@ -59,6 +60,11 @@ namespace NativeFormsDemo
         private void clearEffectToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             TryApplyStyle(clearEffectToolStripMenuItem, "Default", () => this.ClearLuminaEffect());
+        }
+
+        private void recommendedStyleToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            ApplyRecommendedWindowStyle();
         }
 
         private void micaToolStripMenuItem_Click(object? sender, EventArgs e)
@@ -116,7 +122,7 @@ namespace NativeFormsDemo
 
                 SetSelectedThemeMode(selectedThemeItem);
                 SetSelectedPalette(selectedPaletteItem);
-                toolStripStatusLabel1.Text = BuildThemeStatusText(selectedThemeItem, selectedPaletteItem);
+                UpdateStatusSummary();
             }
             catch (Exception ex)
             {
@@ -130,7 +136,7 @@ namespace NativeFormsDemo
             {
                 applyStyle();
                 SetSelectedWindowStyle(selectedItem);
-                toolStripStatusLabel1.Text = $"Applied {styleName} style.";
+                UpdateStatusSummary();
             }
             catch (Exception ex)
             {
@@ -138,11 +144,10 @@ namespace NativeFormsDemo
             }
         }
 
-        private static string BuildThemeStatusText(ToolStripMenuItem themeItem, ToolStripMenuItem paletteItem)
+        private void ApplyRecommendedWindowStyle()
         {
-            string themeName = themeItem.Text ?? string.Empty;
-            string paletteName = paletteItem.Text ?? string.Empty;
-            return $"Applied {themeName} / {paletteName}.";
+            string styleName = GetRecommendedWindowStyleName();
+            TryApplyStyle(recommendedStyleToolStripMenuItem, $"Recommended ({styleName})", ApplyRecommendedWindowStyleCore);
         }
 
         private ToolStripMenuItem GetSelectedThemeMenuItem()
@@ -167,6 +172,41 @@ namespace NativeFormsDemo
                 : systemColorsToolStripMenuItem;
         }
 
+        private ToolStripMenuItem GetSelectedWindowStyleMenuItem()
+        {
+            if (micaToolStripMenuItem.Checked)
+            {
+                return micaToolStripMenuItem;
+            }
+
+            if (micaAltToolStripMenuItem.Checked)
+            {
+                return micaAltToolStripMenuItem;
+            }
+
+            if (acrylicToolStripMenuItem.Checked)
+            {
+                return acrylicToolStripMenuItem;
+            }
+
+            if (aeroToolStripMenuItem.Checked)
+            {
+                return aeroToolStripMenuItem;
+            }
+
+            if (blurToolStripMenuItem.Checked)
+            {
+                return blurToolStripMenuItem;
+            }
+
+            if (clearEffectToolStripMenuItem.Checked)
+            {
+                return clearEffectToolStripMenuItem;
+            }
+
+            return recommendedStyleToolStripMenuItem;
+        }
+
         private void SetSelectedThemeMode(ToolStripMenuItem selectedItem)
         {
             followSystemThemeToolStripMenuItem.Checked = selectedItem == followSystemThemeToolStripMenuItem;
@@ -182,12 +222,64 @@ namespace NativeFormsDemo
 
         private void SetSelectedWindowStyle(ToolStripMenuItem selectedItem)
         {
+            recommendedStyleToolStripMenuItem.Checked = selectedItem == recommendedStyleToolStripMenuItem;
             clearEffectToolStripMenuItem.Checked = selectedItem == clearEffectToolStripMenuItem;
             micaToolStripMenuItem.Checked = selectedItem == micaToolStripMenuItem;
             micaAltToolStripMenuItem.Checked = selectedItem == micaAltToolStripMenuItem;
             acrylicToolStripMenuItem.Checked = selectedItem == acrylicToolStripMenuItem;
             aeroToolStripMenuItem.Checked = selectedItem == aeroToolStripMenuItem;
             blurToolStripMenuItem.Checked = selectedItem == blurToolStripMenuItem;
+        }
+
+        private void UpdateStatusSummary()
+        {
+            toolStripStatusLabel1.Text = BuildStatusText(
+                GetSelectedThemeMenuItem(),
+                GetSelectedPaletteMenuItem(),
+                GetSelectedWindowStyleMenuItem());
+        }
+
+        private string BuildStatusText(ToolStripMenuItem themeItem, ToolStripMenuItem paletteItem, ToolStripMenuItem styleItem)
+        {
+            string themeName = themeItem.Text ?? string.Empty;
+            string paletteName = paletteItem.Text ?? string.Empty;
+            string styleName = styleItem == recommendedStyleToolStripMenuItem
+                ? $"Recommended ({GetRecommendedWindowStyleName()})"
+                : styleItem.Text ?? string.Empty;
+
+            return $"Theme: {themeName} | Palette: {paletteName} | Window style: {styleName}";
+        }
+
+        private void ApplyRecommendedWindowStyleCore()
+        {
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
+            {
+                this.SetMica();
+                return;
+            }
+
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
+            {
+                this.SetAero();
+                return;
+            }
+
+            this.ClearLuminaEffect();
+        }
+
+        private static string GetRecommendedWindowStyleName()
+        {
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
+            {
+                return "Mica";
+            }
+
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
+            {
+                return "Aero";
+            }
+
+            return "Default";
         }
     }
 }

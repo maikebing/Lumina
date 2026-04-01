@@ -34,7 +34,7 @@ public class Button : Control
 
     /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
-        => Math.Max(24, requestedHeight);
+        => Math.Max(30, requestedHeight);
 
     /// <inheritdoc />
     protected override bool OnCommand(int notificationCode)

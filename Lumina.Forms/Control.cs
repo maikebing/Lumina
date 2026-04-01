@@ -741,12 +741,43 @@ public abstract class Control : IDisposable
             return;
         }
 
-        string themeClass = CurrentVisualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+        ResolvedVisualStyle visualStyle = CurrentVisualStyle;
+        string preferredThemeClass = GetPreferredThemeClass(visualStyle);
+        if (string.IsNullOrWhiteSpace(preferredThemeClass))
+        {
+            return;
+        }
+
+        if (Win32.SetWindowTheme(Handle, preferredThemeClass, null) == 0)
+        {
+            return;
+        }
+
+        string fallbackThemeClass = GetFallbackThemeClass(visualStyle);
+        if (!string.IsNullOrWhiteSpace(fallbackThemeClass)
+            && !string.Equals(preferredThemeClass, fallbackThemeClass, StringComparison.Ordinal))
+        {
+            _ = Win32.SetWindowTheme(Handle, fallbackThemeClass, null);
+        }
+    }
+
+    /// <summary>
+    /// Gets the preferred native theme class for the control.
+    /// </summary>
+    /// <param name="visualStyle">The resolved visual style currently active for the owning form.</param>
+    /// <returns>The preferred native theme class name.</returns>
+    protected virtual string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
+        => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
             ? "DarkMode_Explorer"
             : "Explorer";
 
-        _ = Win32.SetWindowTheme(Handle, themeClass, null);
-    }
+    /// <summary>
+    /// Gets the fallback native theme class for the control if the preferred one is unavailable.
+    /// </summary>
+    /// <param name="visualStyle">The resolved visual style currently active for the owning form.</param>
+    /// <returns>The fallback native theme class name.</returns>
+    protected virtual string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
+        => "Explorer";
 
     private nint GetResolvedBackgroundBrush(ResolvedVisualStyle visualStyle)
     {

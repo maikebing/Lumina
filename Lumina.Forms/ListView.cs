@@ -24,4 +24,10 @@ public class ListView : Control
     {
         ApplyExplorerTheme();
     }
+
+    /// <inheritdoc />
+    protected override string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
+        => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+            ? "DarkMode_Explorer"
+            : "ItemsView";
 }

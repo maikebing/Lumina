@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using Lumina;
+using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
 
@@ -11,6 +12,7 @@ public static class Application
     private const string PersonalizeRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private static readonly Lock s_syncRoot = new();
     private static readonly HashSet<Form> s_openForms = [];
+    private static bool s_commonControlsInitialized;
     private static bool s_visualStylesEnabled;
     private static bool s_compatibleTextRenderingDefault;
 
@@ -29,6 +31,7 @@ public static class Application
     /// </summary>
     public static void EnableVisualStyles()
     {
+        EnsureCommonControlsInitialized();
         s_visualStylesEnabled = true;
         NotifyVisualStylesChanged();
     }
@@ -256,6 +259,23 @@ public static class Application
         }
 
         return VisualStyleKind.Classic;
+    }
+
+    private static void EnsureCommonControlsInitialized()
+    {
+        if (s_commonControlsInitialized)
+        {
+            return;
+        }
+
+        var initCommonControls = new Win32.INITCOMMONCONTROLSEX
+        {
+            dwSize = (uint)Marshal.SizeOf<Win32.INITCOMMONCONTROLSEX>(),
+            dwICC = Win32.ICC_WIN95_CLASSES | Win32.ICC_DATE_CLASSES | Win32.ICC_STANDARD_CLASSES | Win32.ICC_USEREX_CLASSES,
+        };
+
+        _ = Win32.InitCommonControlsEx(ref initCommonControls);
+        s_commonControlsInitialized = true;
     }
 
     private static EffectKind ResolveEffectKind(

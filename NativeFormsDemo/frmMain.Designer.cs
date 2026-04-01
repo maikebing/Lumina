@@ -55,6 +55,7 @@
             dateTimePicker1 = new DateTimePicker();
             label1 = new Label();
             linkLabel1 = new LinkLabel();
+            basicSectionLabel = new Label();
             listBox1 = new ListBox();
             listView1 = new ListView();
             maskedTextBox1 = new MaskedTextBox();
@@ -119,6 +120,7 @@
             systemColorsToolStripMenuItem = new ToolStripMenuItem();
             customThemeToolStripMenuItem = new ToolStripMenuItem();
             luminaExtWinFormsToolStripMenuItem = new ToolStripMenuItem();
+            recommendedStyleToolStripMenuItem = new ToolStripMenuItem();
             clearEffectToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator3 = new ToolStripSeparator();
             micaToolStripMenuItem = new ToolStripMenuItem();
@@ -150,9 +152,9 @@
             // button1
             // 
             button1.ContextMenuStrip = contextMenuStrip1;
-            button1.Location = new Point(24, 64);
+            button1.Location = new Point(24, 166);
             button1.Name = "button1";
-            button1.Size = new Size(120, 32);
+            button1.Size = new Size(132, 32);
             button1.TabIndex = 0;
             button1.Text = "Primary Button";
             button1.UseVisualStyleBackColor = true;
@@ -196,7 +198,7 @@
             // checkBox1
             // 
             checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(160, 70);
+            checkBox1.Location = new Point(176, 172);
             checkBox1.Name = "checkBox1";
             checkBox1.Size = new Size(108, 21);
             checkBox1.TabIndex = 1;
@@ -207,7 +209,7 @@
             // 
             comboBox1.FormattingEnabled = true;
             comboBox1.Items.AddRange(new object[] { "1", "2", "3", "4" });
-            comboBox1.Location = new Point(286, 67);
+            comboBox1.Location = new Point(500, 168);
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(140, 25);
             comboBox1.TabIndex = 2;
@@ -215,42 +217,51 @@
             // 
             // dateTimePicker1
             // 
-            dateTimePicker1.Location = new Point(548, 67);
+            dateTimePicker1.Location = new Point(760, 168);
             dateTimePicker1.Name = "dateTimePicker1";
-            dateTimePicker1.Size = new Size(220, 23);
+            dateTimePicker1.Size = new Size(240, 23);
             dateTimePicker1.TabIndex = 3;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(24, 18);
+            label1.Location = new Point(24, 58);
             label1.Name = "label1";
-            label1.Size = new Size(159, 17);
+            label1.Size = new Size(156, 17);
             label1.TabIndex = 4;
-            label1.Text = "LuminaForms Demo Page";
+            label1.Text = "LuminaForms Showcase";
             // 
             // linkLabel1
             // 
             linkLabel1.AutoSize = true;
-            linkLabel1.Location = new Point(24, 40);
+            linkLabel1.Location = new Point(24, 94);
             linkLabel1.Name = "linkLabel1";
-            linkLabel1.Size = new Size(349, 17);
+            linkLabel1.Size = new Size(366, 17);
             linkLabel1.TabIndex = 5;
             linkLabel1.TabStop = true;
-            linkLabel1.Text = "基础控件、列表导航、容器布局与风格演示都保持静态布局。";
+            linkLabel1.Text = "基础控件、列表导航、容器布局与风格演示均采用静态设计器布局。";
+            // 
+            // basicSectionLabel
+            // 
+            basicSectionLabel.AutoSize = true;
+            basicSectionLabel.Location = new Point(24, 138);
+            basicSectionLabel.Name = "basicSectionLabel";
+            basicSectionLabel.Size = new Size(68, 17);
+            basicSectionLabel.TabIndex = 31;
+            basicSectionLabel.Text = "基础控件";
             // 
             // listBox1
             // 
             listBox1.FormattingEnabled = true;
             listBox1.Items.AddRange(new object[] { "1", "2", "3", "4", "5" });
-            listBox1.Location = new Point(260, 180);
+            listBox1.Location = new Point(260, 286);
             listBox1.Name = "listBox1";
             listBox1.Size = new Size(160, 174);
             listBox1.TabIndex = 6;
             // 
             // listView1
             // 
-            listView1.Location = new Point(436, 180);
+            listView1.Location = new Point(436, 286);
             listView1.Name = "listView1";
             listView1.Size = new Size(236, 174);
             listView1.TabIndex = 7;
@@ -258,14 +269,14 @@
             // 
             // maskedTextBox1
             // 
-            maskedTextBox1.Location = new Point(784, 67);
+            maskedTextBox1.Location = new Point(260, 210);
             maskedTextBox1.Name = "maskedTextBox1";
-            maskedTextBox1.Size = new Size(120, 23);
+            maskedTextBox1.Size = new Size(140, 23);
             maskedTextBox1.TabIndex = 8;
             // 
             // monthCalendar1
             // 
-            monthCalendar1.Location = new Point(24, 180);
+            monthCalendar1.Location = new Point(24, 286);
             monthCalendar1.Name = "monthCalendar1";
             monthCalendar1.TabIndex = 9;
             // 
@@ -277,34 +288,34 @@
             // 
             // numericUpDown1
             // 
-            numericUpDown1.Location = new Point(440, 67);
+            numericUpDown1.Location = new Point(654, 168);
             numericUpDown1.Name = "numericUpDown1";
-            numericUpDown1.Size = new Size(92, 23);
+            numericUpDown1.Size = new Size(90, 23);
             numericUpDown1.TabIndex = 10;
             // 
             // pictureBox1
             // 
             pictureBox1.ContextMenuStrip = contextMenuStrip1;
             pictureBox1.Image = Properties.Resources.SplashScreen;
-            pictureBox1.Location = new Point(260, 370);
+            pictureBox1.Location = new Point(1040, 270);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(658, 336);
+            pictureBox1.Size = new Size(396, 236);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 11;
             pictureBox1.TabStop = false;
             // 
             // progressBar1
             // 
-            progressBar1.Location = new Point(286, 107);
+            progressBar1.Location = new Point(416, 214);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(482, 18);
+            progressBar1.Size = new Size(584, 18);
             progressBar1.TabIndex = 12;
             progressBar1.Value = 40;
             // 
             // radioButton1
             // 
             radioButton1.AutoSize = true;
-            radioButton1.Location = new Point(1210, 68);
+            radioButton1.Location = new Point(378, 172);
             radioButton1.Name = "radioButton1";
             radioButton1.Size = new Size(77, 21);
             radioButton1.TabIndex = 13;
@@ -315,7 +326,7 @@
             // 
             radioButton2.AutoSize = true;
             radioButton2.Checked = true;
-            radioButton2.Location = new Point(1120, 68);
+            radioButton2.Location = new Point(286, 172);
             radioButton2.Name = "radioButton2";
             radioButton2.Size = new Size(77, 21);
             radioButton2.TabIndex = 14;
@@ -326,16 +337,16 @@
             // textBox1
             // 
             textBox1.ContextMenuStrip = contextMenuStrip1;
-            textBox1.Location = new Point(920, 67);
+            textBox1.Location = new Point(24, 210);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(180, 23);
+            textBox1.Size = new Size(220, 23);
             textBox1.TabIndex = 15;
             textBox1.Text = "ABC 我在那";
             // 
             // treeView1
             // 
             treeView1.ContextMenuStrip = contextMenuStrip1;
-            treeView1.Location = new Point(688, 180);
+            treeView1.Location = new Point(688, 286);
             treeView1.Name = "treeView1";
             treeNode1.Name = "节点4";
             treeNode1.Text = "节点4";
@@ -364,7 +375,7 @@
             treeNode13.Name = "节点3";
             treeNode13.Text = "节点3";
             treeView1.Nodes.AddRange(new TreeNode[] { treeNode4, treeNode6, treeNode9, treeNode13 });
-            treeView1.Size = new Size(230, 174);
+            treeView1.Size = new Size(312, 174);
             treeView1.TabIndex = 16;
             // 
             // menuStrip1
@@ -519,10 +530,10 @@
             flowLayoutPanel1.Controls.Add(button2);
             flowLayoutPanel1.Controls.Add(checkBox2);
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
-            flowLayoutPanel1.Location = new Point(24, 374);
+            flowLayoutPanel1.Location = new Point(24, 510);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
             flowLayoutPanel1.Padding = new Padding(12);
-            flowLayoutPanel1.Size = new Size(220, 90);
+            flowLayoutPanel1.Size = new Size(300, 96);
             flowLayoutPanel1.TabIndex = 21;
             flowLayoutPanel1.WrapContents = false;
             // 
@@ -550,9 +561,9 @@
             // groupBox1
             // 
             groupBox1.Controls.Add(button3);
-            groupBox1.Location = new Point(24, 480);
+            groupBox1.Location = new Point(350, 510);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(220, 108);
+            groupBox1.Size = new Size(300, 96);
             groupBox1.TabIndex = 22;
             groupBox1.TabStop = false;
             groupBox1.Text = "Grouped Controls";
@@ -570,9 +581,9 @@
             // 
             panel1.ContextMenuStrip = contextMenuStrip1;
             panel1.Controls.Add(button4);
-            panel1.Location = new Point(24, 604);
+            panel1.Location = new Point(676, 510);
             panel1.Name = "panel1";
-            panel1.Size = new Size(220, 102);
+            panel1.Size = new Size(300, 96);
             panel1.TabIndex = 23;
             // 
             // button4
@@ -587,7 +598,7 @@
             // splitContainer1
             // 
             splitContainer1.IsSplitterFixed = true;
-            splitContainer1.Location = new Point(260, 718);
+            splitContainer1.Location = new Point(24, 622);
             splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -597,8 +608,8 @@
             // splitContainer1.Panel2
             // 
             splitContainer1.Panel2.Controls.Add(checkBox3);
-            splitContainer1.Size = new Size(332, 98);
-            splitContainer1.SplitterDistance = 170;
+            splitContainer1.Size = new Size(952, 98);
+            splitContainer1.SplitterDistance = 476;
             splitContainer1.TabIndex = 24;
             // 
             // button5
@@ -624,10 +635,10 @@
             // 
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
-            tabControl1.Location = new Point(938, 180);
+            tabControl1.Location = new Point(1040, 520);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(478, 526);
+            tabControl1.Size = new Size(396, 218);
             tabControl1.TabIndex = 25;
             // 
             // tabPage1
@@ -637,7 +648,7 @@
             tabPage1.Location = new Point(4, 26);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
-            tabPage1.Size = new Size(470, 496);
+            tabPage1.Size = new Size(388, 188);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "General";
             tabPage1.UseVisualStyleBackColor = true;
@@ -657,7 +668,7 @@
             tabPage2.Location = new Point(4, 26);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(470, 496);
+            tabPage2.Size = new Size(388, 188);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Input";
             tabPage2.UseVisualStyleBackColor = true;
@@ -681,12 +692,12 @@
             tableLayoutPanel1.Controls.Add(radioButton4, 0, 1);
             tableLayoutPanel1.Controls.Add(textBox2, 1, 0);
             tableLayoutPanel1.Controls.Add(button7, 1, 1);
-            tableLayoutPanel1.Location = new Point(1040, 718);
+            tableLayoutPanel1.Location = new Point(1040, 752);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 2;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanel1.Size = new Size(376, 98);
+            tableLayoutPanel1.Size = new Size(396, 88);
             tableLayoutPanel1.TabIndex = 26;
             // 
             // radioButton3
@@ -731,7 +742,7 @@
             // navigationSectionLabel
             // 
             navigationSectionLabel.AutoSize = true;
-            navigationSectionLabel.Location = new Point(260, 156);
+            navigationSectionLabel.Location = new Point(24, 258);
             navigationSectionLabel.Name = "navigationSectionLabel";
             navigationSectionLabel.Size = new Size(68, 17);
             navigationSectionLabel.TabIndex = 28;
@@ -740,7 +751,7 @@
             // containerSectionLabel
             // 
             containerSectionLabel.AutoSize = true;
-            containerSectionLabel.Location = new Point(24, 350);
+            containerSectionLabel.Location = new Point(24, 482);
             containerSectionLabel.Name = "containerSectionLabel";
             containerSectionLabel.Size = new Size(68, 17);
             containerSectionLabel.TabIndex = 29;
@@ -749,7 +760,7 @@
             // styleSectionLabel
             // 
             styleSectionLabel.AutoSize = true;
-            styleSectionLabel.Location = new Point(920, 42);
+            styleSectionLabel.Location = new Point(1040, 138);
             styleSectionLabel.Name = "styleSectionLabel";
             styleSectionLabel.Size = new Size(68, 17);
             styleSectionLabel.TabIndex = 30;
@@ -758,12 +769,12 @@
             // richTextBox1
             // 
             richTextBox1.BackColor = SystemColors.Window;
-            richTextBox1.Location = new Point(920, 105);
+            richTextBox1.Location = new Point(1040, 166);
             richTextBox1.Name = "richTextBox1";
             richTextBox1.ReadOnly = true;
-            richTextBox1.Size = new Size(496, 58);
+            richTextBox1.Size = new Size(396, 86);
             richTextBox1.TabIndex = 27;
-            richTextBox1.Text = "默认主题会跟随系统，并优先采用当前操作系统最适合的配色。你也可以在“视图”菜单里切换浅色、深色、自定义主题，以及不同的窗口风格。";
+            richTextBox1.Text = "默认主题会跟随系统，并优先采用当前操作系统最适合的配色。你可以在“视图”菜单里切换浅色、深色、系统配色、自定义主题，以及系统推荐或指定的窗口风格。";
             // 
             // 视图ToolStripMenuItem
             // 
@@ -821,10 +832,17 @@
             // 
             // luminaExtWinFormsToolStripMenuItem
             // 
-            luminaExtWinFormsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { clearEffectToolStripMenuItem, toolStripSeparator3, micaToolStripMenuItem, micaAltToolStripMenuItem, acrylicToolStripMenuItem, aeroToolStripMenuItem, blurToolStripMenuItem });
+            luminaExtWinFormsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { recommendedStyleToolStripMenuItem, clearEffectToolStripMenuItem, toolStripSeparator3, micaToolStripMenuItem, micaAltToolStripMenuItem, acrylicToolStripMenuItem, aeroToolStripMenuItem, blurToolStripMenuItem });
             luminaExtWinFormsToolStripMenuItem.Name = "luminaExtWinFormsToolStripMenuItem";
             luminaExtWinFormsToolStripMenuItem.Size = new Size(194, 22);
             luminaExtWinFormsToolStripMenuItem.Text = "窗口风格";
+            // 
+            // recommendedStyleToolStripMenuItem
+            // 
+            recommendedStyleToolStripMenuItem.Name = "recommendedStyleToolStripMenuItem";
+            recommendedStyleToolStripMenuItem.Size = new Size(180, 22);
+            recommendedStyleToolStripMenuItem.Text = "系统推荐";
+            recommendedStyleToolStripMenuItem.Click += recommendedStyleToolStripMenuItem_Click;
             // 
             // clearEffectToolStripMenuItem
             // 
@@ -881,6 +899,7 @@
             Controls.Add(styleSectionLabel);
             Controls.Add(containerSectionLabel);
             Controls.Add(navigationSectionLabel);
+            Controls.Add(basicSectionLabel);
             Controls.Add(richTextBox1);
             Controls.Add(tableLayoutPanel1);
             Controls.Add(tabControl1);
@@ -1014,6 +1033,7 @@
         private ToolStripMenuItem systemColorsToolStripMenuItem;
         private ToolStripMenuItem customThemeToolStripMenuItem;
         private ToolStripMenuItem luminaExtWinFormsToolStripMenuItem;
+        private ToolStripMenuItem recommendedStyleToolStripMenuItem;
         private ToolStripMenuItem clearEffectToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator3;
         private ToolStripMenuItem micaToolStripMenuItem;
@@ -1021,6 +1041,7 @@
         private ToolStripMenuItem acrylicToolStripMenuItem;
         private ToolStripMenuItem aeroToolStripMenuItem;
         private ToolStripMenuItem blurToolStripMenuItem;
+        private Label basicSectionLabel;
         private Label navigationSectionLabel;
         private Label containerSectionLabel;
         private Label styleSectionLabel;

@@ -185,6 +185,16 @@ public class ListBox : Control
         ApplyExplorerTheme();
     }
 
+    /// <inheritdoc />
+    protected override string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
+        => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+            ? "DarkMode_CFD"
+            : "CFD";
+
+    /// <inheritdoc />
+    protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
+        => base.GetPreferredThemeClass(visualStyle);
+
     private void ValidateSelectedIndex(int value)
     {
         if (value < -1 || value >= _items.Count)

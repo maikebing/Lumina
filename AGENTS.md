@@ -55,6 +55,10 @@ All agents working in this repository must treat the following rules as hard con
 - The `net10.0` LuminaForms target exists to prove the replacement path and AOT viability.
 - When adding or changing supported controls, properties, methods, events, or layout behavior, keep the Demo useful as a side-by-side migration sample.
 - Prefer changes that let the same app concept work across both targets with minimal divergence.
+- Keep `NativeFormsDemo` designer-friendly on the `net10.0-windows` target.
+- Prefer static designer-declared Demo layouts and showcase content. Do not dynamically create, remove, or rearrange Demo controls at runtime.
+- Keep theme and styling implementation in `Lumina.Forms` or `Lumina.Ext.WinForms`, not in Demo-specific theme classes.
+- When Demo needs cross-target theme or style actions, prefer same-named APIs on both targets and call them directly from Demo without target-specific preprocessor branches.
 - Keep `NativeFormsDemo` designer-friendly.
 - For designer-backed forms in `NativeFormsDemo`, prefer designer-serialized initialization in `.Designer.cs` and `.resx` for static UI state such as text, layout, items, images, and initial property values.
 - Do not move designer-owned static UI initialization into constructor code, form-load code, or other runtime-only paths unless the behavior is inherently runtime-only.

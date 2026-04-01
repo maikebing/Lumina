@@ -24,11 +24,21 @@ public class DateTimePicker : Control
 
     /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
-        => Math.Max(24, requestedHeight);
+        => Math.Max(30, requestedHeight);
 
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
     }
+
+    /// <inheritdoc />
+    protected override string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
+        => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
+            ? "DarkMode_CFD"
+            : "CFD";
+
+    /// <inheritdoc />
+    protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
+        => base.GetPreferredThemeClass(visualStyle);
 }
