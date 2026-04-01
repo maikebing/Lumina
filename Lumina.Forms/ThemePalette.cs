@@ -302,16 +302,17 @@ public sealed class ThemePalette
         switch (visualStyleKind)
         {
             case VisualStyleKind.Mica:
+                // Window (#F3) → Surface (#F9, slightly off-white panels) → Control (#FF, pure white inputs)
                 palette.WindowBackground = 0xFF_F3_F3_F3;
-                palette.WindowBorder = 0xFF_E6_E6_E6;
+                palette.WindowBorder = 0xFF_E0_E0_E0;
                 palette.TitleBarBackground = 0xD9_F8_F8_F8;
                 palette.TitleBarBorder = 0xFF_E8_E8_E8;
-                palette.SurfaceBackground = 0xFF_FF_FF_FF;
-                palette.SurfaceBorder = 0xFF_E5_E5_E5;
-                palette.ControlBackground = 0xFF_FC_FC_FC;
-                palette.ControlBorder = 0xFF_DA_DA_DA;
-                palette.ControlHoverBackground = 0xFF_F5_F5_F5;
-                palette.ControlPressedBackground = 0xFF_EE_EE_EE;
+                palette.SurfaceBackground = 0xFF_F9_F9_F9;
+                palette.SurfaceBorder = 0xFF_E8_E8_E8;
+                palette.ControlBackground = 0xFF_FF_FF_FF;
+                palette.ControlBorder = 0xFF_CC_CC_CC;
+                palette.ControlHoverBackground = 0xFF_EF_EF_EF;
+                palette.ControlPressedBackground = 0xFF_E6_E6_E6;
                 palette.ControlDisabledBackground = 0xFF_F5_F5_F5;
                 palette.Accent = 0xFF_00_5F_B8;
                 palette.FocusBorder = 0xFF_00_5F_B8;
@@ -321,12 +322,17 @@ public sealed class ThemePalette
                 break;
 
             case VisualStyleKind.AeroGlass:
+                // Window (#EFF5FB, blue-tinted) → Surface (#EEF6FF, light blue panel) → Control (#FFF, white input)
                 palette.WindowBackground = 0xFF_EF_F5_FB;
                 palette.WindowBorder = 0xFF_9B_B6_D4;
                 palette.TitleBarBackground = 0xCC_EC_F4_FD;
                 palette.TitleBarBorder = 0xFF_9B_B6_D4;
+                palette.SurfaceBackground = 0xFF_EE_F6_FF;
                 palette.SurfaceBorder = 0xFF_C5_D7_EA;
+                palette.ControlBackground = 0xFF_FF_FF_FF;
                 palette.ControlBorder = 0xFF_A9_BD_D2;
+                palette.ControlHoverBackground = 0xFF_E0_ED_FC;
+                palette.ControlPressedBackground = 0xFF_CD_E1_F7;
                 palette.Accent = 0xFF_4D_79_A6;
                 palette.FocusBorder = 0xFF_4D_79_A6;
                 palette.Selection = 0x33_4D_79_A6;
@@ -334,24 +340,34 @@ public sealed class ThemePalette
                 break;
 
             case VisualStyleKind.Modern:
+                // Window (#F3) → Surface (#F9) → Control (#FF)
                 palette.WindowBackground = 0xFF_F3_F3_F3;
                 palette.WindowBorder = 0xFF_D0_D0_D0;
                 palette.TitleBarBackground = 0xFF_F7_F7_F7;
                 palette.TitleBarBorder = 0xFF_D0_D0_D0;
+                palette.SurfaceBackground = 0xFF_F9_F9_F9;
                 palette.SurfaceBorder = 0xFF_D9_D9_D9;
+                palette.ControlBackground = 0xFF_FF_FF_FF;
                 palette.ControlBorder = 0xFF_BB_BB_BB;
+                palette.ControlHoverBackground = 0xFF_F0_F0_F0;
+                palette.ControlPressedBackground = 0xFF_E5_E5_E5;
                 palette.Accent = 0xFF_00_78_D7;
                 palette.FocusBorder = 0xFF_00_78_D7;
                 palette.Selection = 0x33_00_78_D7;
                 break;
 
             case VisualStyleKind.Fluent:
+                // Window (#F6F7FA, blue-gray) → Surface (#F8F9FD, subtle blue tint) → Control (#FFF, white)
                 palette.WindowBackground = 0xFF_F6_F7_FA;
                 palette.WindowBorder = 0xFF_D7_D9_E0;
                 palette.TitleBarBackground = 0xE6_FF_FF_FF;
                 palette.TitleBarBorder = 0xFF_D7_D9_E0;
+                palette.SurfaceBackground = 0xFF_F8_F9_FD;
                 palette.SurfaceBorder = 0xFF_E2_E4_EA;
+                palette.ControlBackground = 0xFF_FF_FF_FF;
                 palette.ControlBorder = 0xFF_C9_CF_DB;
+                palette.ControlHoverBackground = 0xFF_ED_F0_FC;
+                palette.ControlPressedBackground = 0xFF_E1_E8_FA;
                 palette.Accent = 0xFF_00_7A_CC;
                 palette.FocusBorder = 0xFF_00_7A_CC;
                 palette.Selection = 0x33_00_7A_CC;
@@ -366,7 +382,10 @@ public sealed class ThemePalette
                 palette.TitleBarBorder = 0xFF_80_80_80;
                 palette.SurfaceBackground = 0xFF_F0_F0_F0;
                 palette.SurfaceBorder = 0xFF_A0_A0_A0;
+                palette.ControlBackground = 0xFF_FF_FF_FF;
                 palette.ControlBorder = 0xFF_80_80_80;
+                palette.ControlHoverBackground = 0xFF_E3_E3_E3;
+                palette.ControlPressedBackground = 0xFF_D4_D4_D4;
                 palette.Accent = 0xFF_0A_24_6A;
                 palette.FocusBorder = 0xFF_0A_24_6A;
                 palette.Selection = 0x33_0A_24_6A;
@@ -428,17 +447,18 @@ public sealed class ThemePalette
         switch (visualStyleKind)
         {
             case VisualStyleKind.Mica:
+                // Window (#202020) → Surface (#2C, +12) → Control (#3A, +14) — clear distinct layers
                 palette.WindowBackground = 0xFF_20_20_20;
                 palette.WindowBorder = 0xFF_32_32_32;
                 palette.TitleBarBackground = 0xD9_20_20_20;
                 palette.TitleBarBorder = 0xFF_36_36_36;
-                palette.SurfaceBackground = 0xFF_2B_2B_2B;
-                palette.SurfaceBorder = 0xFF_3A_3A_3A;
-                palette.ControlBackground = 0xFF_2D_2D_2D;
-                palette.ControlBorder = 0xFF_47_47_47;
-                palette.ControlHoverBackground = 0xFF_35_35_35;
-                palette.ControlPressedBackground = 0xFF_3E_3E_3E;
-                palette.ControlDisabledBackground = 0xFF_26_26_26;
+                palette.SurfaceBackground = 0xFF_2C_2C_2C;
+                palette.SurfaceBorder = 0xFF_3C_3C_3C;
+                palette.ControlBackground = 0xFF_3A_3A_3A;
+                palette.ControlBorder = 0xFF_55_55_55;
+                palette.ControlHoverBackground = 0xFF_44_44_44;
+                palette.ControlPressedBackground = 0xFF_4C_4C_4C;
+                palette.ControlDisabledBackground = 0xFF_28_28_28;
                 palette.Accent = 0xFF_60_CD_FF;
                 palette.AccentForeground = 0xFF_08_08_08;
                 palette.Selection = 0x44_60_CD_FF;
@@ -448,42 +468,58 @@ public sealed class ThemePalette
                 break;
 
             case VisualStyleKind.AeroGlass:
+                // Window (#1D2631) → Surface (#222E3C, blue-tinted) → Control (#2D3C4E, lighter blue-tinted)
                 palette.WindowBackground = 0xFF_1D_26_31;
                 palette.WindowBorder = 0xFF_4F_67_7E;
                 palette.TitleBarBackground = 0xCC_26_31_40;
                 palette.TitleBarBorder = 0xFF_4F_67_7E;
+                palette.SurfaceBackground = 0xFF_22_2E_3C;
                 palette.SurfaceBorder = 0xFF_4A_5C_6F;
+                palette.ControlBackground = 0xFF_2D_3C_4E;
                 palette.ControlBorder = 0xFF_5A_70_88;
+                palette.ControlHoverBackground = 0xFF_36_47_5A;
+                palette.ControlPressedBackground = 0xFF_3F_51_66;
                 palette.Accent = 0xFF_7B_AE_E8;
                 palette.FocusBorder = 0xFF_7B_AE_E8;
                 palette.Selection = 0x44_7B_AE_E8;
                 break;
 
             case VisualStyleKind.Modern:
+                // Window (#1F1F1F) → Surface (#272727, +8) → Control (#353535, +14) — visible dark steps
                 palette.WindowBackground = 0xFF_1F_1F_1F;
                 palette.WindowBorder = 0xFF_3A_3A_3A;
                 palette.TitleBarBackground = 0xFF_27_27_27;
                 palette.TitleBarBorder = 0xFF_3A_3A_3A;
+                palette.SurfaceBackground = 0xFF_27_27_27;
                 palette.SurfaceBorder = 0xFF_3D_3D_3D;
+                palette.ControlBackground = 0xFF_35_35_35;
                 palette.ControlBorder = 0xFF_57_57_57;
+                palette.ControlHoverBackground = 0xFF_3D_3D_3D;
+                palette.ControlPressedBackground = 0xFF_46_46_46;
                 palette.Accent = 0xFF_00_99_BC;
                 palette.FocusBorder = 0xFF_00_99_BC;
                 palette.Selection = 0x44_00_99_BC;
                 break;
 
             case VisualStyleKind.Fluent:
+                // Window (#1E1E24) → Surface (#262630, blue-tinted) → Control (#34343E, +14)
                 palette.WindowBackground = 0xFF_1E_1E_24;
                 palette.WindowBorder = 0xFF_38_38_40;
                 palette.TitleBarBackground = 0xD9_1E_1E_24;
                 palette.TitleBarBorder = 0xFF_38_38_40;
+                palette.SurfaceBackground = 0xFF_26_26_30;
                 palette.SurfaceBorder = 0xFF_40_40_49;
+                palette.ControlBackground = 0xFF_34_34_3E;
                 palette.ControlBorder = 0xFF_52_52_5C;
+                palette.ControlHoverBackground = 0xFF_3C_3C_48;
+                palette.ControlPressedBackground = 0xFF_44_44_52;
                 palette.Accent = 0xFF_4C_C2_F1;
                 palette.FocusBorder = 0xFF_4C_C2_F1;
                 palette.Selection = 0x55_4C_C2_F1;
                 break;
 
             case VisualStyleKind.Classic:
+                // Window (#404040) → Surface (#343434) → Control (#4A4A4A) — Hover/Press go lighter in dark
                 palette.WindowBackground = 0xFF_40_40_40;
                 palette.WindowBorder = 0xFF_70_70_70;
                 palette.TitleBarBackground = 0xFF_0A_24_6A;
@@ -495,6 +531,8 @@ public sealed class ThemePalette
                 palette.ControlBackground = 0xFF_4A_4A_4A;
                 palette.ControlForeground = 0xFF_F0_F0_F0;
                 palette.ControlBorder = 0xFF_70_70_70;
+                palette.ControlHoverBackground = 0xFF_58_58_58;
+                palette.ControlPressedBackground = 0xFF_62_62_62;
                 palette.Accent = 0xFF_86_AE_FF;
                 palette.FocusBorder = 0xFF_86_AE_FF;
                 palette.Selection = 0x44_86_AE_FF;
