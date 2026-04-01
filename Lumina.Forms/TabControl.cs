@@ -12,6 +12,15 @@ public class TabControl : ContainerControlBase
     private int _selectedIndex;
 
     /// <summary>
+    /// Initializes a tab control with more spacious default layout metrics.
+    /// </summary>
+    public TabControl()
+    {
+        Margin = new Padding(6);
+        Padding = new Padding(8);
+    }
+
+    /// <summary>
     /// Gets or sets the selected page index.
     /// </summary>
     public int SelectedIndex
@@ -50,6 +59,7 @@ public class TabControl : ContainerControlBase
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyTabHeaderMetrics();
         SynchronizeTextHandlers();
         SynchronizeNativeTabs();
         ApplySelectedIndex();
@@ -216,10 +226,10 @@ public class TabControl : ContainerControlBase
         }
 
         return new Rectangle(
-            4,
-            26,
-            Math.Max(1, Width - 8),
-            Math.Max(1, Height - 30));
+            8,
+            34,
+            Math.Max(1, Width - 16),
+            Math.Max(1, Height - 42));
     }
 
     private List<TabPage> GetTabPages()
@@ -246,5 +256,15 @@ public class TabControl : ContainerControlBase
         return string.IsNullOrWhiteSpace(page.Name)
             ? nameof(TabPage)
             : page.Name;
+    }
+
+    private void ApplyTabHeaderMetrics()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        _ = Win32.SendMessageW(Handle, Win32.TCM_SETPADDING, 0, Win32.MakeLParam(18, 6));
     }
 }

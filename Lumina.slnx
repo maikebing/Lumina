@@ -13,10 +13,12 @@
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="Lumina.Ext.WinForms/Lumina.Ext.WinForms.csproj">
-    <Platform Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Release|Any CPU" Project="x64" />
   </Project>
   <Project Path="Lumina.Ext.Wpf/Lumina.Ext.Wpf.csproj">
-    <Platform Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Release|Any CPU" Project="x64" />
   </Project>
   <Project Path="Lumina.Ext/Lumina.Ext.csproj">
     <Platform Solution="*|x64" Project="x64" />
@@ -25,7 +27,8 @@
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="Lumina.Forms/Lumina.Forms.csproj">
-    <Platform Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Release|Any CPU" Project="x64" />
   </Project>
   <Project Path="Lumina.Tests/Lumina.Tests.csproj">
     <Platform Solution="*|x64" Project="x64" />

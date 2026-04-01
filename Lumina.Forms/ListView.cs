@@ -5,6 +5,19 @@ namespace Lumina.Forms;
 /// </summary>
 public class ListView : Control
 {
+    private const uint ModernExtendedStyles =
+        Win32.LVS_EX_DOUBLEBUFFER |
+        Win32.LVS_EX_LABELTIP |
+        Win32.LVS_EX_FULLROWSELECT;
+
+    /// <summary>
+    /// Initializes a list view with more spacious default layout metrics.
+    /// </summary>
+    public ListView()
+    {
+        Margin = new Padding(6);
+    }
+
     /// <summary>
     /// Gets or sets a value indicating whether the control should preserve legacy image behavior.
     /// </summary>
@@ -26,8 +39,33 @@ public class ListView : Control
     }
 
     /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyExtendedStyles();
+    }
+
+    /// <inheritdoc />
     protected override string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
         => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
             ? "DarkMode_Explorer"
             : "ItemsView";
+
+    /// <inheritdoc />
+    protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
+        => "Explorer";
+
+    private void ApplyExtendedStyles()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        _ = Win32.SendMessageW(
+            Handle,
+            Win32.LVM_SETEXTENDEDLISTVIEWSTYLE,
+            (nint)ModernExtendedStyles,
+            (nint)ModernExtendedStyles);
+    }
 }

@@ -9,9 +9,9 @@ public static class ApplicationConfiguration
     /// Initializes LuminaForms application defaults in a WinForms-compatible way.
     /// </summary>
     /// <remarks>
-    /// This method currently enables LuminaForms visual styles and applies the default
-    /// text-rendering compatibility setting so older WinForms startup code can migrate
-    /// with minimal changes.
+    /// This method enables LuminaForms visual styles, activates themed common controls,
+    /// and applies the default text-rendering compatibility setting so older WinForms
+    /// startup code can migrate with minimal changes.
     /// </remarks>
     public static void Initialize()
     {

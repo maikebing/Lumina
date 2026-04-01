@@ -116,6 +116,7 @@ internal static class Win32
     public const int TCM_GETCURSEL = TCM_FIRST + 11;
     public const int TCM_SETCURSEL = TCM_FIRST + 12;
     public const int TCM_ADJUSTRECT = TCM_FIRST + 40;
+    public const int TCM_SETPADDING = TCM_FIRST + 43;
     public const int TCM_SETITEMW = TCM_FIRST + 61;
     public const int TCM_INSERTITEMW = TCM_FIRST + 62;
 
@@ -123,6 +124,18 @@ internal static class Win32
     public const int TCN_SELCHANGE = TCN_FIRST - 1;
 
     public const uint TCIF_TEXT = 0x0001;
+
+    public const int LVM_FIRST = 0x1000;
+    public const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
+    public const uint LVS_EX_FULLROWSELECT = 0x00000020;
+    public const uint LVS_EX_LABELTIP = 0x00004000;
+    public const uint LVS_EX_DOUBLEBUFFER = 0x00010000;
+
+    public const int TV_FIRST = 0x1100;
+    public const int TVM_SETEXTENDEDSTYLE = TV_FIRST + 44;
+    public const uint TVS_EX_DOUBLEBUFFER = 0x0004;
+    public const uint TVS_EX_AUTOHSCROLL = 0x0020;
+    public const uint TVS_EX_FADEINOUTEXPANDOS = 0x0040;
 
     public const uint IMAGE_BITMAP = 0;
     public const uint IMAGE_ICON = 1;
@@ -325,6 +338,20 @@ internal static class Win32
         public uint dwICC;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct ACTCTXW
+    {
+        public uint cbSize;
+        public uint dwFlags;
+        public string? lpSource;
+        public ushort wProcessorArchitecture;
+        public ushort wLangId;
+        public string? lpAssemblyDirectory;
+        public string? lpResourceName;
+        public string? lpApplicationName;
+        public nint hModule;
+    }
+
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     internal delegate nint WindowProc(nint hwnd, uint msg, nint wParam, nint lParam);
 
@@ -514,6 +541,20 @@ internal static class Win32
     [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern nint GetModuleHandleW(string? lpModuleName);
 
+    [DllImport("kernel32.dll", EntryPoint = "CreateActCtxW", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern nint CreateActCtxW(ref ACTCTXW activationContext);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ActivateActCtx(nint hActCtx, out nuint activationCookie);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool DeactivateActCtx(uint flags, nuint activationCookie);
+
+    [DllImport("kernel32.dll")]
+    internal static extern void ReleaseActCtx(nint hActCtx);
+
     [DllImport("gdi32.dll", SetLastError = true)]
     internal static extern nint GetStockObject(int i);
 
@@ -596,6 +637,9 @@ internal static class Win32
     internal static int LowWord(nint value) => unchecked((ushort)(nuint)value);
 
     internal static int HighWord(nint value) => unchecked((ushort)(((nuint)value >> 16) & 0xFFFF));
+
+    internal static nint MakeLParam(int lowWord, int highWord)
+        => unchecked((nint)(uint)(((highWord & 0xFFFF) << 16) | (lowWord & 0xFFFF)));
 
     internal static unsafe string GetText(nint hwnd)
     {

@@ -6,6 +6,14 @@ namespace Lumina.Forms;
 public class Button : Control
 {
     /// <summary>
+    /// Initializes a button with Windows-style default spacing.
+    /// </summary>
+    public Button()
+    {
+        Margin = new Padding(6);
+    }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the control should use system visual styles for its background.
     /// </summary>
     public bool UseVisualStyleBackColor { get; set; } = true;
@@ -34,7 +42,7 @@ public class Button : Control
 
     /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
-        => Math.Max(30, requestedHeight);
+        => Math.Max(32, requestedHeight);
 
     /// <inheritdoc />
     protected override bool OnCommand(int notificationCode)

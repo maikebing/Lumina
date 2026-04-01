@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using Lumina;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Lumina.Forms;
 
@@ -10,9 +11,32 @@ namespace Lumina.Forms;
 public static class Application
 {
     private const string PersonalizeRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+    private const string VisualStylesManifestFileName = "Lumina.Forms.CommonControls.manifest";
+    private static readonly string s_visualStylesManifestPath = Path.Combine(Path.GetTempPath(), "Lumina.Forms", VisualStylesManifestFileName);
+    private static readonly string s_visualStylesManifestContents =
+        """
+        <?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+          <assemblyIdentity version="1.0.0.0" name="Lumina.Forms.VisualStyles" processorArchitecture="*" type="win32" />
+          <description>Lumina.Forms common controls v6 activation context</description>
+          <dependency>
+            <dependentAssembly>
+              <assemblyIdentity
+                type="win32"
+                name="Microsoft.Windows.Common-Controls"
+                version="6.0.0.0"
+                processorArchitecture="*"
+                publicKeyToken="6595b64144ccf1df"
+                language="*" />
+            </dependentAssembly>
+          </dependency>
+        </assembly>
+        """;
     private static readonly Lock s_syncRoot = new();
     private static readonly HashSet<Form> s_openForms = [];
     private static bool s_commonControlsInitialized;
+    private static nint s_visualStylesActivationContext;
+    private static nuint s_visualStylesActivationCookie;
     private static bool s_visualStylesEnabled;
     private static bool s_compatibleTextRenderingDefault;
 
@@ -27,11 +51,12 @@ public static class Application
     public static ResolvedVisualStyle CurrentVisualStyle => GetResolvedVisualStyle();
 
     /// <summary>
-    /// Enables LuminaForms visual styling and resolves the default backdrop/theme from the current operating system.
+    /// Enables LuminaForms visual styling, activates themed common controls, and resolves the default backdrop/theme from the current operating system.
     /// </summary>
     public static void EnableVisualStyles()
     {
         EnsureCommonControlsInitialized();
+        EnsureThemedCommonControlsActivated();
         s_visualStylesEnabled = true;
         NotifyVisualStylesChanged();
     }
@@ -50,6 +75,7 @@ public static class Application
     /// </summary>
     public static void ExitThread()
     {
+        DisposeThemedCommonControlsActivation();
         Win32.PostQuitMessage(0);
     }
 
@@ -263,19 +289,97 @@ public static class Application
 
     private static void EnsureCommonControlsInitialized()
     {
-        if (s_commonControlsInitialized)
+        lock (s_syncRoot)
+        {
+            if (s_commonControlsInitialized)
+            {
+                return;
+            }
+
+            var initCommonControls = new Win32.INITCOMMONCONTROLSEX
+            {
+                dwSize = (uint)Marshal.SizeOf<Win32.INITCOMMONCONTROLSEX>(),
+                dwICC = Win32.ICC_WIN95_CLASSES | Win32.ICC_DATE_CLASSES | Win32.ICC_STANDARD_CLASSES | Win32.ICC_USEREX_CLASSES,
+            };
+
+            _ = Win32.InitCommonControlsEx(ref initCommonControls);
+            s_commonControlsInitialized = true;
+        }
+    }
+
+    private static void EnsureThemedCommonControlsActivated()
+    {
+        if (!OperatingSystem.IsWindows())
         {
             return;
         }
 
-        var initCommonControls = new Win32.INITCOMMONCONTROLSEX
+        lock (s_syncRoot)
         {
-            dwSize = (uint)Marshal.SizeOf<Win32.INITCOMMONCONTROLSEX>(),
-            dwICC = Win32.ICC_WIN95_CLASSES | Win32.ICC_DATE_CLASSES | Win32.ICC_STANDARD_CLASSES | Win32.ICC_USEREX_CLASSES,
-        };
+            if (s_visualStylesActivationCookie != 0)
+            {
+                return;
+            }
 
-        _ = Win32.InitCommonControlsEx(ref initCommonControls);
-        s_commonControlsInitialized = true;
+            try
+            {
+                EnsureVisualStylesManifestFile();
+
+                var activationContext = new Win32.ACTCTXW
+                {
+                    cbSize = (uint)Marshal.SizeOf<Win32.ACTCTXW>(),
+                    lpSource = s_visualStylesManifestPath,
+                };
+
+                nint handle = Win32.CreateActCtxW(ref activationContext);
+                if (handle == new nint(-1) || handle == 0)
+                {
+                    return;
+                }
+
+                if (!Win32.ActivateActCtx(handle, out nuint activationCookie))
+                {
+                    Win32.ReleaseActCtx(handle);
+                    return;
+                }
+
+                s_visualStylesActivationContext = handle;
+                s_visualStylesActivationCookie = activationCookie;
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private static void EnsureVisualStylesManifestFile()
+    {
+        string? directory = Path.GetDirectoryName(s_visualStylesManifestPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        byte[] manifestBytes = Encoding.UTF8.GetBytes(s_visualStylesManifestContents);
+        File.WriteAllBytes(s_visualStylesManifestPath, manifestBytes);
+    }
+
+    private static void DisposeThemedCommonControlsActivation()
+    {
+        lock (s_syncRoot)
+        {
+            if (s_visualStylesActivationCookie != 0)
+            {
+                _ = Win32.DeactivateActCtx(0, s_visualStylesActivationCookie);
+                s_visualStylesActivationCookie = 0;
+            }
+
+            if (s_visualStylesActivationContext != 0 && s_visualStylesActivationContext != new nint(-1))
+            {
+                Win32.ReleaseActCtx(s_visualStylesActivationContext);
+                s_visualStylesActivationContext = 0;
+            }
+        }
     }
 
     private static EffectKind ResolveEffectKind(

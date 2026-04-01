@@ -5,11 +5,17 @@ namespace Lumina.Forms;
 /// </summary>
 public class TreeView : Control
 {
+    private const uint ModernExtendedStyles =
+        Win32.TVS_EX_DOUBLEBUFFER |
+        Win32.TVS_EX_AUTOHSCROLL |
+        Win32.TVS_EX_FADEINOUTEXPANDOS;
+
     /// <summary>
     /// Initializes a tree view.
     /// </summary>
     public TreeView()
     {
+        Margin = new Padding(6);
         Nodes = new TreeNodeCollection();
     }
 
@@ -31,5 +37,26 @@ public class TreeView : Control
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
+    }
+
+    /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyExtendedStyles();
+    }
+
+    private void ApplyExtendedStyles()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        _ = Win32.SendMessageW(
+            Handle,
+            Win32.TVM_SETEXTENDEDSTYLE,
+            (nint)ModernExtendedStyles,
+            (nint)ModernExtendedStyles);
     }
 }

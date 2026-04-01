@@ -23,7 +23,7 @@ internal static class LuminaFormsDiagnosticDescriptors
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "LuminaForms resolves system-aligned effects and theme defaults through ApplicationConfiguration.Initialize() or Application.EnableVisualStyles().");
+        description: "LuminaForms activates themed common controls and resolves system-aligned defaults through ApplicationConfiguration.Initialize() or Application.EnableVisualStyles().");
 
     public static readonly DiagnosticDescriptor LuminaFormsFormShouldBePartial = new(
         id: "LNF003",
