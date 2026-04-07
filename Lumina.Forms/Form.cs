@@ -21,6 +21,7 @@ public class Form : IDisposable
     private int _nextControlId = 1000;
     private bool _effectExplicitlySet;
     private bool _refreshingMainMenuStrip;
+    private bool _suppressMainMenuRefresh;
     private bool _themeExplicitlySet;
     private EffectKind _pendingEffectKind = EffectKind.None;
     private EffectOptions? _pendingEffectOptions;
@@ -750,7 +751,7 @@ public class Form : IDisposable
 
     private void RefreshMainMenuStrip(MenuStrip? previous)
     {
-        if (_refreshingMainMenuStrip)
+        if (_refreshingMainMenuStrip || _suppressMainMenuRefresh)
         {
             return;
         }
@@ -930,11 +931,18 @@ public class Form : IDisposable
 
         ThemeMode resolvedThemeMode = Application.ResolveThemeMode(_requestedThemeMode ?? ThemeMode.System);
         int useDarkMode = resolvedThemeMode == ThemeMode.Dark ? 1 : 0;
-        _ = Win32.DwmSetWindowAttribute(Handle, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
-        _ = DarkModeNative.AllowWindowDarkMode(Handle, useDarkMode != 0);
-        DarkModeNative.RefreshImmersiveState();
-        DarkModeNative.RefreshTitleBarTheme(Handle);
-        RefreshMainMenuStrip();
+        _suppressMainMenuRefresh = true;
+        try
+        {
+            _ = Win32.DwmSetWindowAttribute(Handle, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
+            _ = DarkModeNative.AllowWindowDarkMode(Handle, useDarkMode != 0);
+            DarkModeNative.RefreshImmersiveState();
+            DarkModeNative.RefreshTitleBarTheme(Handle);
+        }
+        finally
+        {
+            _suppressMainMenuRefresh = false;
+        }
     }
 
     private void ApplyResolvedPalette(ThemePalette palette)
@@ -963,8 +971,7 @@ public class Form : IDisposable
             RefreshMainMenuStrip();
         }
 
-        _ = Win32.InvalidateRect(Handle, 0, true);
-        _ = Win32.UpdateWindow(Handle);
+        _ = Win32.InvalidateRect(Handle, 0, false);
 
         foreach (Control control in CollectionsMarshal.AsSpan(_controlList))
         {
