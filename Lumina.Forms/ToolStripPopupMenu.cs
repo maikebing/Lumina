@@ -102,6 +102,11 @@ internal static class ToolStripPopupMenu
     {
         LogMenuDecision(requestedMode, MenuRenderingMode.Classic, immersiveAttempted: false, immersiveEnabled: false);
 
+        return ExecuteMenuBarPopup(items, ownerHandle, screenLocation);
+    }
+
+    private static int ExecuteMenuBarPopup(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    {
         if (ownerHandle == 0)
         {
             return 0;
@@ -156,7 +161,7 @@ internal static class ToolStripPopupMenu
 
     private static int ShowForMenuBarImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        bool enabled = Win32DarkModeApi.TryEnableImmersivePopupMenus();
+        bool enabled = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();
         LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
 
         if (!enabled)
@@ -171,6 +176,11 @@ internal static class ToolStripPopupMenu
     {
         LogMenuDecision(requestedMode, MenuRenderingMode.Classic, immersiveAttempted: false, immersiveEnabled: false);
 
+        ExecutePopup(items, ownerHandle, screenLocation);
+    }
+
+    private static void ExecutePopup(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    {
         if (ownerHandle == 0)
         {
             return;
@@ -203,7 +213,7 @@ internal static class ToolStripPopupMenu
 
     private static void ShowImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        bool enabled = Win32DarkModeApi.TryEnableImmersivePopupMenus();
+        bool enabled = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();
         LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
 
         if (!enabled)
@@ -217,12 +227,12 @@ internal static class ToolStripPopupMenu
 
     private static int ShowForMenuBarImmersiveCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
     {
-        return ShowForMenuBarClassic(items, ownerHandle, screenLocation, MenuRenderingMode.ImmersivePopup);
+        return ExecuteMenuBarPopup(items, ownerHandle, screenLocation);
     }
 
     private static void ShowImmersiveCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
     {
-        ShowClassic(items, ownerHandle, screenLocation, MenuRenderingMode.ImmersivePopup);
+        ExecutePopup(items, ownerHandle, screenLocation);
     }
 
     private static void LogMenuDecision(MenuRenderingMode requestedMode, MenuRenderingMode effectiveMode, bool immersiveAttempted, bool immersiveEnabled)

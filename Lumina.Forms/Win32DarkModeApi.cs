@@ -36,6 +36,11 @@ internal static class Win32DarkModeApi
         }
     }
 
+    internal static bool TryPrepareImmersiveMenuPresentation()
+    {
+        return TryEnableImmersivePopupMenus();
+    }
+
     private static State Initialize()
     {
         DarkModeCapabilities.Snapshot capabilities = DarkModeCapabilities.Current;
