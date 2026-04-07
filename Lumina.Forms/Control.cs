@@ -1036,7 +1036,11 @@ public abstract class Control : IDisposable
             int nativeLeft = _left;
             int nativeTop = _top;
 
-            if (Parent is null && Owner is not null)
+            if (Parent is null
+                && Owner is not null
+                && this is not MenuStrip
+                && this is not ToolStrip
+                && this is not StatusStrip)
             {
                 nativeTop += Owner.GetClientContentTopInset();
             }
