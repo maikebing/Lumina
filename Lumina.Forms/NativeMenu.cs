@@ -14,7 +14,6 @@ internal sealed class NativeMenu : IDisposable
 
     private readonly Dictionary<uint, ToolStripItem> _commands = [];
     private readonly List<nint> _imageHandles = [];
-
     private NativeMenu(nint handle)
     {
         Handle = handle;

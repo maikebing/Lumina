@@ -81,6 +81,8 @@ internal static class Win32
     public const int WM_NCDESTROY = 0x0082;
     public const int WM_SETFONT = 0x0030;
     public const int WM_THEMECHANGED = 0x031A;
+    public const int WM_DRAWITEM = 0x002B;
+    public const int WM_MEASUREITEM = 0x002C;
 
     public const int BN_CLICKED = 0;
     public const int STN_CLICKED = 0;
@@ -201,13 +203,31 @@ internal static class Win32
     public const uint MIIM_STRING = 0x00000040;
     public const uint MIIM_BITMAP = 0x00000080;
     public const uint MIIM_FTYPE = 0x00000100;
+    public const uint MIIM_DATA = 0x00000020;
 
     public const uint MFT_STRING = 0x00000000;
+    public const uint MFT_OWNERDRAW = 0x00000100;
     public const uint MFT_SEPARATOR = 0x00000800;
     public const uint MFT_RADIOCHECK = 0x00000200;
 
     public const uint MFS_DISABLED = 0x00000003;
     public const uint MFS_CHECKED = 0x00000008;
+
+    public const uint ODT_MENU = 1;
+
+    public const uint MIM_BACKGROUND = 0x00000002;
+    public const uint MIM_APPLYTOSUBMENUS = 0x80000000;
+
+    public const int MENU_POPUPBACKGROUND = 9;
+    public const int MENU_POPUPITEM = 14;
+    public const int MENU_POPUPCHECK = 11;
+    public const int MENU_POPUPCHECKBACKGROUND = 12;
+    public const int MENU_POPUPSUBMENU = 16;
+    public const int MPI_NORMAL = 1;
+    public const int MPI_HOT = 2;
+    public const int MPI_DISABLED = 3;
+    public const int MPI_DISABLEDHOT = 4;
+    public const int TMT_FILLCOLOR = 3802;
 
     public const uint ICC_WIN95_CLASSES = 0x000000FF;
     public const uint ICC_DATE_CLASSES = 0x00000100;
@@ -303,6 +323,43 @@ internal static class Win32
         public string? dwTypeData;
         public uint cch;
         public nint hbmpItem;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MENUINFO
+    {
+        public uint cbSize;
+        public uint fMask;
+        public uint dwStyle;
+        public uint cyMax;
+        public nint hbrBack;
+        public uint dwContextHelpID;
+        public nuint dwMenuData;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MEASUREITEMSTRUCT
+    {
+        public uint CtlType;
+        public uint CtlID;
+        public uint itemID;
+        public uint itemWidth;
+        public uint itemHeight;
+        public nuint itemData;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct DRAWITEMSTRUCT
+    {
+        public uint CtlType;
+        public uint CtlID;
+        public uint itemID;
+        public uint itemAction;
+        public uint itemState;
+        public nint hwndItem;
+        public nint hDC;
+        public RECT rcItem;
+        public nuint itemData;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -542,6 +599,22 @@ internal static class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool InsertMenuItemW(nint hMenu, uint item, bool fByPosition, ref MENUITEMINFOW menuItemInfo);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetMenuItemInfoW(nint hMenu, uint item, bool fByPosition, ref MENUITEMINFOW menuItemInfo);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetMenuItemInfoW(nint hMenu, uint item, bool fByPosition, ref MENUITEMINFOW menuItemInfo);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetMenuInfo(nint hMenu, ref MENUINFO menuInfo);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetMenuInfo(nint hMenu, ref MENUINFO menuInfo);
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool DestroyMenu(nint hMenu);
@@ -626,6 +699,21 @@ internal static class Win32
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
+
+    [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern nint OpenThemeData(nint hwnd, string pszClassList);
+
+    [DllImport("uxtheme.dll", SetLastError = true)]
+    internal static extern int CloseThemeData(nint hTheme);
+
+    [DllImport("uxtheme.dll", SetLastError = true)]
+    internal static extern int DrawThemeBackground(nint hTheme, nint hdc, int iPartId, int iStateId, ref RECT pRect, nint pClipRect);
+
+    [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int DrawThemeText(nint hTheme, nint hdc, int iPartId, int iStateId, string text, int charCount, uint textFlags, uint textFlags2, ref RECT pRect);
+
+    [DllImport("uxtheme.dll", SetLastError = true)]
+    internal static extern int GetThemeColor(nint hTheme, int iPartId, int iStateId, int iPropId, out uint color);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
     internal static extern nint GetProcAddress(nint hModule, string procName);

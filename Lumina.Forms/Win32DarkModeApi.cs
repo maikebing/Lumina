@@ -65,18 +65,67 @@ internal static class Win32DarkModeApi
             return State.Unsupported("Failed to load uxtheme.dll from the system directory.");
         }
 
-        var setPreferredAppMode = GetDelegate<SetPreferredAppModeDelegate>(uxTheme, (nint)135);
+        int? setPreferredAppModeOrdinal;
+        int? allowDarkModeForAppOrdinal = null;
+        int? flushMenuThemesOrdinal;
+
+        var setPreferredAppMode = FindDelegate<SetPreferredAppModeDelegate>(uxTheme, [135, 136, 137, 138], out setPreferredAppModeOrdinal);
         var allowDarkModeForApp = capabilities.Build < 18362
-            ? GetDelegate<AllowDarkModeForAppDelegate>(uxTheme, (nint)135)
+            ? FindDelegate<AllowDarkModeForAppDelegate>(uxTheme, [135, 136, 137], out allowDarkModeForAppOrdinal)
             : null;
-        var flushMenuThemes = GetDelegate<FlushMenuThemesDelegate>(uxTheme, (nint)136);
+        var flushMenuThemes = FindDelegate<FlushMenuThemesDelegate>(uxTheme, [136, 137, 138, 139], out flushMenuThemesOrdinal);
 
         bool isSupported = setPreferredAppMode is not null || allowDarkModeForApp is not null;
         return isSupported
-            ? new State(true, setPreferredAppMode, allowDarkModeForApp, flushMenuThemes, "SetPreferredAppMode/AllowDarkModeForApp available.")
+            ? new State(
+                true,
+                setPreferredAppMode,
+                allowDarkModeForApp,
+                flushMenuThemes,
+                BuildSupportedStatus(setPreferredAppModeOrdinal, allowDarkModeForAppOrdinal, flushMenuThemesOrdinal))
             : State.Unsupported(capabilities.Build < 18362
-                ? "Missing uxtheme ordinal #135 for AllowDarkModeForApp."
-                : "Missing uxtheme ordinal #135 for SetPreferredAppMode.");
+                ? "Missing candidate uxtheme ordinals for AllowDarkModeForApp."
+                : "Missing candidate uxtheme ordinals for SetPreferredAppMode.");
+    }
+
+    private static TDelegate? FindDelegate<TDelegate>(nint moduleHandle, int[] ordinals, out int? matchedOrdinal) where TDelegate : Delegate
+    {
+        for (int index = 0; index < ordinals.Length; index++)
+        {
+            int ordinal = ordinals[index];
+            TDelegate? candidate = GetDelegate<TDelegate>(moduleHandle, (nint)ordinal);
+            if (candidate is not null)
+            {
+                matchedOrdinal = ordinal;
+                return candidate;
+            }
+        }
+
+        matchedOrdinal = null;
+        return null;
+    }
+
+    private static string BuildSupportedStatus(int? setPreferredAppModeOrdinal, int? allowDarkModeForAppOrdinal, int? flushMenuThemesOrdinal)
+    {
+        List<string> parts = [];
+        if (setPreferredAppModeOrdinal is int setPreferred)
+        {
+            parts.Add($"SetPreferredAppMode=#{setPreferred}");
+        }
+
+        if (allowDarkModeForAppOrdinal is int allowDark)
+        {
+            parts.Add($"AllowDarkModeForApp=#{allowDark}");
+        }
+
+        if (flushMenuThemesOrdinal is int flushMenu)
+        {
+            parts.Add($"FlushMenuThemes=#{flushMenu}");
+        }
+
+        return parts.Count > 0
+            ? string.Join(", ", parts)
+            : "Win32 dark mode delegates available.";
     }
 
     private static TDelegate? GetDelegate<TDelegate>(nint moduleHandle, nint ordinal) where TDelegate : Delegate
