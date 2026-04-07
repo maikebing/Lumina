@@ -1033,7 +1033,15 @@ public abstract class Control : IDisposable
     {
         if (Handle != 0)
         {
-            _ = Win32.MoveWindow(Handle, _left, _top, _width, GetNativeHeight(_height), true);
+            int nativeLeft = _left;
+            int nativeTop = _top;
+
+            if (Parent is null && Owner is not null)
+            {
+                nativeTop += Owner.GetClientContentTopInset();
+            }
+
+            _ = Win32.MoveWindow(Handle, nativeLeft, nativeTop, _width, GetNativeHeight(_height), true);
         }
     }
 

@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -15,6 +17,7 @@ public class MenuStrip : ToolStrip
     /// <inheritdoc />
     public override void PerformLayout()
     {
+        DockToTop();
         base.PerformLayout();
     }
 
@@ -43,10 +46,10 @@ public class MenuStrip : ToolStrip
     }
 
     /// <inheritdoc />
-    private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Window;
+    private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
 
     /// <inheritdoc />
-    private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Window;
+    private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
 
     internal void SynchronizeNativeMenu()
     {
@@ -81,6 +84,30 @@ public class MenuStrip : ToolStrip
         _nativeMenu = null;
     }
 
+    private void DockToTop()
+    {
+        if (Owner is null)
+        {
+            return;
+        }
+
+        int clientWidth = Owner.ClientSize.Width;
+        if (Owner.Handle != 0 && Win32.GetClientRect(Owner.Handle, out var clientRect))
+        {
+            clientWidth = clientRect.Width;
+        }
+
+        int height = Math.Max(28, Height);
+        int width = Math.Max(1, clientWidth);
+
+        if (Left == 0 && Top == 0 && Width == width && Height == height)
+        {
+            return;
+        }
+
+        SetBounds(0, 0, width, height);
+    }
+
     /// <inheritdoc />
     protected override void OnDisposing()
     {
@@ -91,6 +118,8 @@ public class MenuStrip : ToolStrip
     private sealed class TopLevelMenuItemHost : Label
     {
         public event EventHandler? Click;
+
+        private bool _hovered;
 
         private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
 
@@ -105,15 +134,36 @@ public class MenuStrip : ToolStrip
 
         protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
         {
-            if (message != Win32.WM_LBUTTONUP)
+            switch (message)
             {
-                result = 0;
-                return false;
+                case Win32.WM_MOUSEMOVE:
+                    if (!_hovered)
+                    {
+                        _hovered = true;
+                        BackColor = Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.ControlHoverBackground));
+                    }
+
+                    result = 0;
+                    return false;
+
+                case Win32.WM_MOUSELEAVE:
+                    if (_hovered)
+                    {
+                        _hovered = false;
+                        BackColor = Color.Empty;
+                    }
+
+                    result = 0;
+                    return false;
+
+                case Win32.WM_LBUTTONUP:
+                    Click?.Invoke(this, EventArgs.Empty);
+                    result = 0;
+                    return true;
             }
 
-            Click?.Invoke(this, EventArgs.Empty);
             result = 0;
-            return true;
+            return false;
         }
     }
 }

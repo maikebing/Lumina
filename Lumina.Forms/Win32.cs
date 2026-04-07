@@ -68,6 +68,7 @@ internal static class Win32
     public const int WM_CHANGEUISTATE = 0x0127;
     public const int WM_KEYDOWN = 0x0100;
     public const int WM_MOUSEMOVE = 0x0200;
+    public const int WM_MOUSELEAVE = 0x02A3;
     public const int WM_LBUTTONDOWN = 0x0201;
     public const int WM_LBUTTONUP = 0x0202;
     public const int WM_RBUTTONDOWN = 0x0204;

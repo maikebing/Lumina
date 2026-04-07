@@ -70,9 +70,56 @@ public class ToolStrip : ContainerControlBase
     /// <inheritdoc />
     public override void PerformLayout()
     {
+        DockToTopStripBand();
         EnsureItemHosts();
         LayoutItemHosts();
         base.PerformLayout();
+    }
+
+    private void DockToTopStripBand()
+    {
+        if (Owner is null || this is StatusStrip || this is MenuStrip)
+        {
+            return;
+        }
+
+        int clientWidth = Owner.ClientSize.Width;
+        if (Owner.Handle != 0 && Win32.GetClientRect(Owner.Handle, out var clientRect))
+        {
+            clientWidth = clientRect.Width;
+        }
+
+        int top = 0;
+        if (Owner.MainMenuStrip is { Handle: not 0, Visible: true } menuStrip)
+        {
+            top += Math.Max(0, menuStrip.Height);
+        }
+
+        foreach (Control control in Owner.Controls)
+        {
+            if (ReferenceEquals(control, this))
+            {
+                continue;
+            }
+
+            if (control is ToolStrip toolStrip && control is not MenuStrip && control is not StatusStrip && control.Visible)
+            {
+                if (toolStrip.Top <= top)
+                {
+                    top += Math.Max(0, toolStrip.Height);
+                }
+            }
+        }
+
+        int height = Math.Max(28, Height);
+        int width = Math.Max(1, clientWidth);
+
+        if (Left == 0 && Top == top && Width == width && Height == height)
+        {
+            return;
+        }
+
+        SetBounds(0, top, width, height);
     }
 
     private void OnItemsChanged()
@@ -467,7 +514,7 @@ public class ToolStrip : ContainerControlBase
     {
         if (host.Handle != 0 && Win32.GetWindowRect(host.Handle, out var rect))
         {
-            return new Point(rect.Left, rect.Bottom);
+            return new Point(rect.Left, Math.Max(rect.Top, rect.Bottom - 1));
         }
 
         return new Point(host.Left, host.Bottom);

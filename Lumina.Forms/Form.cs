@@ -794,6 +794,26 @@ public class Form : IDisposable
             && Handle != 0
             && _mainMenuStrip is not null;
 
+    internal int GetClientContentTopInset()
+    {
+        int inset = 0;
+
+        if (_mainMenuStrip is not null && _mainMenuStrip.Handle != 0 && _mainMenuStrip.Visible)
+        {
+            inset += Math.Max(0, _mainMenuStrip.Height);
+        }
+
+        foreach (Control control in CollectionsMarshal.AsSpan(_controlList))
+        {
+            if (control is ToolStrip toolStrip && control is not MenuStrip && control is not StatusStrip && control.Visible)
+            {
+                inset += Math.Max(0, toolStrip.Height);
+            }
+        }
+
+        return inset;
+    }
+
     private void ReleaseMainMenuStrip()
     {
         if (Handle != 0 && OperatingSystem.IsWindows())
