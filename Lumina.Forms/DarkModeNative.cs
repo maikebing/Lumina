@@ -17,6 +17,7 @@ internal static class DarkModeNative
     private static readonly object s_sync = new();
 
     private static bool s_initialized;
+    private static bool s_initializing;
     private static bool s_supported;
     private static int s_buildNumber;
 
@@ -132,7 +133,11 @@ internal static class DarkModeNative
 
     internal static void RefreshImmersiveState()
     {
-        EnsureInitialized();
+        if (!s_initialized)
+        {
+            EnsureInitialized();
+        }
+
         if (!s_supported)
         {
             return;
@@ -146,7 +151,7 @@ internal static class DarkModeNative
     internal static void ApplyThemeToWindow(nint hwnd, bool useDarkMode)
     {
         EnsureInitialized();
-        if (!s_supported || hwnd == 0)
+        if (!s_supported || s_initializing || hwnd == 0)
         {
             return;
         }
@@ -157,7 +162,7 @@ internal static class DarkModeNative
 
     private static void EnsureInitialized()
     {
-        if (s_initialized)
+        if (s_initialized || s_initializing)
         {
             return;
         }
@@ -169,8 +174,16 @@ internal static class DarkModeNative
                 return;
             }
 
-            InitializeCore();
-            s_initialized = true;
+            s_initializing = true;
+            try
+            {
+                InitializeCore();
+                s_initialized = true;
+            }
+            finally
+            {
+                s_initializing = false;
+            }
         }
     }
 
@@ -245,7 +258,9 @@ internal static class DarkModeNative
             _ = s_setPreferredAppMode(PreferredAppMode.AllowDark);
         }
 
-        RefreshImmersiveState();
+        s_refreshImmersiveColorPolicyState?.Invoke();
+        _ = s_getIsImmersiveColorUsingHighContrast?.Invoke(ImmersiveHighContrastCacheMode.Refresh);
+        s_flushMenuThemes?.Invoke();
     }
 
     private static bool IsHighContrast()

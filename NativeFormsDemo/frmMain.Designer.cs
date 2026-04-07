@@ -123,6 +123,8 @@
             tabPage2 = new TabPage();
             comboBox2 = new ComboBox();
             tableLayoutPanel1 = new TableLayoutPanel();
+            splitPanelListLabel = new Label();
+            splitPanelStatusLabel = new Label();
             radioButton3 = new RadioButton();
             radioButton4 = new RadioButton();
             textBox2 = new TextBox();
@@ -131,6 +133,7 @@
             navigationSectionLabel = new Label();
             containerSectionLabel = new Label();
             styleSectionLabel = new Label();
+            darkModeVerificationLabel = new Label();
             toolStripButton1 = new ToolStripButton();
             toolStripLabel1 = new ToolStripLabel();
             toolStripSeparator5 = new ToolStripSeparator();
@@ -268,7 +271,7 @@
             // 
             listView1.Location = new Point(436, 286);
             listView1.Name = "listView1";
-            listView1.Size = new Size(236, 174);
+            listView1.Size = new Size(280, 196);
             listView1.TabIndex = 7;
             listView1.UseCompatibleStateImageBehavior = false;
             // 
@@ -302,9 +305,9 @@
             // 
             pictureBox1.ContextMenuStrip = contextMenuStrip1;
             pictureBox1.Image = Properties.Resources.SplashScreen;
-            pictureBox1.Location = new Point(1040, 270);
+            pictureBox1.Location = new Point(1030, 332);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(396, 236);
+            pictureBox1.Size = new Size(406, 222);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 11;
             pictureBox1.TabStop = false;
@@ -351,7 +354,7 @@
             // treeView1
             // 
             treeView1.ContextMenuStrip = contextMenuStrip1;
-            treeView1.Location = new Point(688, 286);
+            treeView1.Location = new Point(730, 286);
             treeView1.Name = "treeView1";
             treeNode1.Name = "节点4";
             treeNode1.Text = "节点4";
@@ -380,7 +383,7 @@
             treeNode13.Name = "节点3";
             treeNode13.Text = "节点3";
             treeView1.Nodes.AddRange(new TreeNode[] { treeNode4, treeNode6, treeNode9, treeNode13 });
-            treeView1.Size = new Size(312, 174);
+            treeView1.Size = new Size(270, 196);
             treeView1.TabIndex = 16;
             // 
             // menuStrip1
@@ -571,7 +574,7 @@
             // 
             toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             toolStripStatusLabel1.Size = new Size(44, 17);
-            toolStripStatusLabel1.Text = "Ready";
+            toolStripStatusLabel1.Text = "Ready | Deep dark-mode verification layout";
             // 
             // toolStripProgressBar1
             // 
@@ -725,17 +728,37 @@
             // splitContainer1.Panel1
             // 
             splitContainer1.Panel1.Controls.Add(button5);
+            splitContainer1.Panel1.Controls.Add(splitPanelListLabel);
             // 
             // splitContainer1.Panel2
             // 
             splitContainer1.Panel2.Controls.Add(checkBox3);
-            splitContainer1.Size = new Size(952, 98);
-            splitContainer1.SplitterDistance = 476;
+            splitContainer1.Panel2.Controls.Add(splitPanelStatusLabel);
+            splitContainer1.Size = new Size(976, 118);
+            splitContainer1.SplitterDistance = 488;
             splitContainer1.TabIndex = 24;
+            // 
+            // splitPanelListLabel
+            // 
+            splitPanelListLabel.AutoSize = true;
+            splitPanelListLabel.Location = new Point(18, 12);
+            splitPanelListLabel.Name = "splitPanelListLabel";
+            splitPanelListLabel.Size = new Size(278, 17);
+            splitPanelListLabel.TabIndex = 1;
+            splitPanelListLabel.Text = "左侧面板验证 SplitContainer + Button 的深色联动";
+            // 
+            // splitPanelStatusLabel
+            // 
+            splitPanelStatusLabel.AutoSize = true;
+            splitPanelStatusLabel.Location = new Point(22, 12);
+            splitPanelStatusLabel.Name = "splitPanelStatusLabel";
+            splitPanelStatusLabel.Size = new Size(279, 17);
+            splitPanelStatusLabel.TabIndex = 1;
+            splitPanelStatusLabel.Text = "右侧面板验证 SplitContainer + CheckBox 的深色联动";
             // 
             // button5
             // 
-            button5.Location = new Point(18, 29);
+            button5.Location = new Point(18, 46);
             button5.Name = "button5";
             button5.Size = new Size(112, 30);
             button5.TabIndex = 0;
@@ -745,7 +768,7 @@
             // checkBox3
             // 
             checkBox3.AutoSize = true;
-            checkBox3.Location = new Point(22, 29);
+            checkBox3.Location = new Point(22, 46);
             checkBox3.Name = "checkBox3";
             checkBox3.Size = new Size(66, 21);
             checkBox3.TabIndex = 0;
@@ -862,12 +885,12 @@
             // 
             // richTextBox1
             // 
-            richTextBox1.Location = new Point(1040, 166);
+            richTextBox1.Location = new Point(1030, 198);
             richTextBox1.Name = "richTextBox1";
             richTextBox1.ReadOnly = true;
-            richTextBox1.Size = new Size(396, 86);
+            richTextBox1.Size = new Size(406, 120);
             richTextBox1.TabIndex = 27;
-            richTextBox1.Text = "默认主题会跟随系统，并优先采用当前操作系统最适合的配色。你可以在“视图”菜单里切换浅色、深色、系统配色、自定义主题，以及系统推荐或指定的窗口风格。";
+            richTextBox1.Text = "这个区域专门用于验证深色模式的组合效果。\n\n请直接观察：\n1. 顶部主菜单与下拉菜单\n2. 左侧 MonthCalendar\n3. 中部 ListView / TreeView\n4. 下方 StatusStrip\n5. SplitContainer 两侧 panel 与子控件\n\n在“视图”菜单中切换浅色、深色、系统配色、自定义主题和窗口风格，检查整组控件是否同步变化。";
             // 
             // navigationSectionLabel
             // 
@@ -890,11 +913,20 @@
             // styleSectionLabel
             // 
             styleSectionLabel.AutoSize = true;
-            styleSectionLabel.Location = new Point(1040, 138);
+            styleSectionLabel.Location = new Point(1030, 138);
             styleSectionLabel.Name = "styleSectionLabel";
             styleSectionLabel.Size = new Size(56, 17);
             styleSectionLabel.TabIndex = 30;
             styleSectionLabel.Text = "风格演示";
+            // 
+            // darkModeVerificationLabel
+            // 
+            darkModeVerificationLabel.AutoSize = true;
+            darkModeVerificationLabel.Location = new Point(24, 746);
+            darkModeVerificationLabel.Name = "darkModeVerificationLabel";
+            darkModeVerificationLabel.Size = new Size(415, 17);
+            darkModeVerificationLabel.TabIndex = 32;
+            darkModeVerificationLabel.Text = "深色验证重点：主菜单 + 右键菜单 + MonthCalendar + ListView + StatusStrip + SplitContainer";
             // 
             // toolStripButton1
             // 
@@ -927,6 +959,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1460, 900);
             Controls.Add(styleSectionLabel);
+            Controls.Add(darkModeVerificationLabel);
             Controls.Add(containerSectionLabel);
             Controls.Add(navigationSectionLabel);
             Controls.Add(basicSectionLabel);
@@ -1078,6 +1111,9 @@
         private Label navigationSectionLabel;
         private Label containerSectionLabel;
         private Label styleSectionLabel;
+        private Label darkModeVerificationLabel;
+        private Label splitPanelListLabel;
+        private Label splitPanelStatusLabel;
         private ToolStripButton toolStripButton1;
         private ToolStripLabel toolStripLabel1;
         private ToolStripSeparator toolStripSeparator5;

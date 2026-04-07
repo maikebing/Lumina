@@ -104,7 +104,14 @@ public class PictureBox : Control, ISupportInitialize
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         ApplyImage();
+    }
+
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        ApplyNativeThemeState();
     }
 
     /// <inheritdoc />
@@ -164,6 +171,16 @@ public class PictureBox : Control, ISupportInitialize
     protected virtual void OnClick(EventArgs e)
     {
         Click?.Invoke(this, e);
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     private void ApplyImage()

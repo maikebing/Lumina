@@ -19,4 +19,27 @@ public class Label : Control
 
     /// <inheritdoc />
     protected override bool UseParentBackgroundForTheming => true;
+
+    /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyNativeThemeState();
+    }
+
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        ApplyNativeThemeState();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
+    }
 }

@@ -16,4 +16,27 @@ public class Panel : ContainerControlBase
 
     /// <inheritdoc />
     private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
+
+    /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyNativeThemeState();
+    }
+
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        ApplyNativeThemeState();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
+    }
 }
