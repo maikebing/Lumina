@@ -907,6 +907,8 @@ public class Form : IDisposable
         ThemeMode resolvedThemeMode = Application.ResolveThemeMode(_requestedThemeMode ?? ThemeMode.System);
         int useDarkMode = resolvedThemeMode == ThemeMode.Dark ? 1 : 0;
         _ = Win32.DwmSetWindowAttribute(Handle, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int));
+        _ = DarkModeNative.AllowWindowDarkMode(Handle, useDarkMode != 0);
+        DarkModeNative.RefreshTitleBarTheme(Handle);
     }
 
     private void ApplyResolvedPalette(ThemePalette palette)
@@ -929,6 +931,12 @@ public class Form : IDisposable
 
     private void RefreshHandles()
     {
+        if (Handle != 0)
+        {
+            DarkModeNative.RefreshTitleBarTheme(Handle);
+            RefreshMainMenuStrip();
+        }
+
         _ = Win32.InvalidateRect(Handle, 0, true);
         _ = Win32.UpdateWindow(Handle);
 
@@ -1097,7 +1105,16 @@ public class Form : IDisposable
                 break;
 
             case Win32.WM_SETTINGCHANGE:
+                if (DarkModeNative.IsColorSchemeChangeMessage(lParam))
+                {
+                    DarkModeNative.RefreshImmersiveState();
+                }
+
+                RefreshVisualStyles();
+                break;
+
             case Win32.WM_THEMECHANGED:
+                DarkModeNative.RefreshImmersiveState();
                 RefreshVisualStyles();
                 break;
 

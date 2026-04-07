@@ -92,6 +92,7 @@ internal static class ToolStripPopupMenu
         }
 
         s_menuCloseDirection = 0;
+        DarkModeNative.RefreshImmersiveState();
 
         unsafe
         {
@@ -145,6 +146,7 @@ internal static class ToolStripPopupMenu
             return;
         }
 
+        DarkModeNative.RefreshImmersiveState();
         _ = Win32.SetForegroundWindow(ownerHandle);
 
         uint command = Win32.TrackPopupMenu(

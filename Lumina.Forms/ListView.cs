@@ -5,10 +5,13 @@ namespace Lumina.Forms;
 /// </summary>
 public class ListView : Control
 {
+    private static readonly Win32.SubclassProc s_listViewSubclassProc = ListViewSubclassProc;
+
     private const uint ModernExtendedStyles =
         Win32.LVS_EX_DOUBLEBUFFER |
         Win32.LVS_EX_LABELTIP |
-        Win32.LVS_EX_FULLROWSELECT;
+        Win32.LVS_EX_FULLROWSELECT |
+        Win32.LVS_EX_HEADERDRAGDROP;
 
     /// <summary>
     /// Initializes a list view with more spacious default layout metrics.
@@ -44,6 +47,8 @@ public class ListView : Control
     {
         base.OnHandleCreated();
         ApplyExtendedStyles();
+        InstallDarkModeSubclass();
+        ApplyNativeThemeState();
         ApplyNativeColors();
     }
 
@@ -71,6 +76,38 @@ public class ListView : Control
             (nint)ModernExtendedStyles);
     }
 
+    private void InstallDarkModeSubclass()
+    {
+        if (Handle == 0 || !DarkModeNative.IsSupported)
+        {
+            return;
+        }
+
+        _ = Win32.SetWindowSubclass(Handle, s_listViewSubclassProc, 0, 0);
+        _ = Win32.SendMessageW(Handle, Win32.WM_CHANGEUISTATE, Win32.MakeLParam(Win32.UIS_SET, Win32.UISF_HIDEFOCUS), 0);
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        nint headerHandle = Win32.SendMessageW(Handle, Win32.LVM_GETHEADER, 0, 0);
+        bool useDarkMode = CurrentVisualStyle.IsDarkMode;
+
+        _ = DarkModeNative.AllowWindowDarkMode(Handle, useDarkMode);
+        if (headerHandle != 0)
+        {
+            _ = DarkModeNative.AllowWindowDarkMode(headerHandle, useDarkMode);
+            _ = Win32.SetWindowTheme(headerHandle, "ItemsView", null);
+            _ = Win32.SendMessageW(headerHandle, Win32.WM_THEMECHANGED, 0, 0);
+        }
+
+        ApplyExplorerTheme();
+    }
+
     private void ApplyNativeColors()
     {
         if (Handle == 0)
@@ -85,5 +122,116 @@ public class ListView : Control
         _ = Win32.SendMessageW(Handle, Win32.LVM_SETBKCOLOR, 0, unchecked((nint)background));
         _ = Win32.SendMessageW(Handle, Win32.LVM_SETTEXTBKCOLOR, 0, unchecked((nint)background));
         _ = Win32.SendMessageW(Handle, Win32.LVM_SETTEXTCOLOR, 0, unchecked((nint)foreground));
+    }
+
+    private static nint ListViewSubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData)
+    {
+        switch (uMsg)
+        {
+            case Win32.WM_NOTIFY:
+            {
+                unsafe
+                {
+                    Win32.NMHDR* header = (Win32.NMHDR*)lParam;
+                    if (header->code == unchecked((uint)Win32.NM_CUSTOMDRAW))
+                    {
+                        Win32.NMCUSTOMDRAW* customDraw = (Win32.NMCUSTOMDRAW*)lParam;
+                        if (customDraw->dwDrawStage == Win32.CDDS_PREPAINT)
+                        {
+                            return Win32.CDRF_NOTIFYITEMDRAW;
+                        }
+
+                        if (customDraw->dwDrawStage == Win32.CDDS_ITEMPREPAINT)
+                        {
+                            ApplyHeaderTextColor(hWnd, customDraw->hdc);
+                            return Win32.CDRF_DODEFAULT;
+                        }
+                    }
+                }
+
+                break;
+            }
+
+            case Win32.WM_THEMECHANGED:
+                ApplyThemeToHandle(hWnd);
+                break;
+
+            case Win32.WM_DESTROY:
+                break;
+        }
+
+        return Win32.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    private static void ApplyThemeToHandle(nint hWnd)
+    {
+        if (hWnd == 0)
+        {
+            return;
+        }
+
+        bool useDarkMode = DarkModeNative.IsDarkModeEnabled;
+        nint headerHandle = Win32.SendMessageW(hWnd, Win32.LVM_GETHEADER, 0, 0);
+
+        _ = DarkModeNative.AllowWindowDarkMode(hWnd, useDarkMode);
+        if (headerHandle != 0)
+        {
+            _ = DarkModeNative.AllowWindowDarkMode(headerHandle, useDarkMode);
+            _ = Win32.SetWindowTheme(headerHandle, "ItemsView", null);
+            _ = Win32.SendMessageW(headerHandle, Win32.WM_THEMECHANGED, 0, 0);
+        }
+
+        _ = Win32.SetWindowTheme(hWnd, useDarkMode ? "DarkMode_Explorer" : "ItemsView", null);
+
+        nint itemsViewTheme = Win32.OpenThemeData(0, "ItemsView");
+        if (itemsViewTheme != 0)
+        {
+            try
+            {
+                if (Win32.GetThemeColor(itemsViewTheme, 0, 0, Win32.TMT_TEXTCOLOR, out uint textColor) == 0)
+                {
+                    _ = Win32.SendMessageW(hWnd, Win32.LVM_SETTEXTCOLOR, 0, unchecked((nint)textColor));
+                }
+
+                if (Win32.GetThemeColor(itemsViewTheme, 0, 0, Win32.TMT_FILLCOLOR, out uint fillColor) == 0)
+                {
+                    _ = Win32.SendMessageW(hWnd, Win32.LVM_SETTEXTBKCOLOR, 0, unchecked((nint)fillColor));
+                    _ = Win32.SendMessageW(hWnd, Win32.LVM_SETBKCOLOR, 0, unchecked((nint)fillColor));
+                }
+            }
+            finally
+            {
+                _ = Win32.CloseThemeData(itemsViewTheme);
+            }
+        }
+
+        _ = Win32.InvalidateRect(hWnd, 0, true);
+    }
+
+    private static void ApplyHeaderTextColor(nint listViewHandle, nint hdc)
+    {
+        nint headerHandle = Win32.SendMessageW(listViewHandle, Win32.LVM_GETHEADER, 0, 0);
+        if (headerHandle == 0 || hdc == 0)
+        {
+            return;
+        }
+
+        nint headerTheme = Win32.OpenThemeData(headerHandle, "Header");
+        if (headerTheme == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            if (Win32.GetThemeColor(headerTheme, Win32.HP_HEADERITEM, 0, Win32.TMT_TEXTCOLOR, out uint textColor) == 0)
+            {
+                _ = Win32.SetTextColor(hdc, textColor);
+            }
+        }
+        finally
+        {
+            _ = Win32.CloseThemeData(headerTheme);
+        }
     }
 }

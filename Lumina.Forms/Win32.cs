@@ -65,6 +65,7 @@ internal static class Win32
     public const int WM_CTLCOLORSTATIC = 0x0138;
     public const int WM_PARENTNOTIFY = 0x0210;
     public const int WM_NOTIFY = 0x004E;
+    public const int WM_CHANGEUISTATE = 0x0127;
     public const int WM_KEYDOWN = 0x0100;
     public const int WM_MOUSEMOVE = 0x0200;
     public const int WM_LBUTTONDOWN = 0x0201;
@@ -130,6 +131,7 @@ internal static class Win32
 
     public const int LVM_FIRST = 0x1000;
     public const int LVM_SETBKCOLOR = LVM_FIRST + 1;
+    public const int LVM_GETHEADER = LVM_FIRST + 31;
     public const int LVM_SETTEXTCOLOR = LVM_FIRST + 36;
     public const int LVM_SETTEXTBKCOLOR = LVM_FIRST + 38;
     public const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
@@ -228,6 +230,26 @@ internal static class Win32
     public const int MPI_DISABLED = 3;
     public const int MPI_DISABLEDHOT = 4;
     public const int TMT_FILLCOLOR = 3802;
+    public const int TMT_TEXTCOLOR = 3803;
+
+    public const int CDDS_PREPAINT = 0x00000001;
+    public const int CDDS_ITEM = 0x00010000;
+    public const int CDDS_ITEMPREPAINT = CDDS_ITEM | CDDS_PREPAINT;
+    public const int CDRF_DODEFAULT = 0x00000000;
+    public const int CDRF_NOTIFYITEMDRAW = 0x00000020;
+    public const int NM_CUSTOMDRAW = -12;
+
+    public const int HP_HEADERITEM = 1;
+
+    public const int UIS_SET = 1;
+    public const int UISF_HIDEFOCUS = 0x1;
+
+    public const uint LVS_EX_HEADERDRAGDROP = 0x00000010;
+
+    public const uint SPI_GETHIGHCONTRAST = 0x0042;
+    public const uint HCF_HIGHCONTRASTON = 0x00000001;
+
+    public const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
 
     public const uint ICC_WIN95_CLASSES = 0x000000FF;
     public const uint ICC_DATE_CLASSES = 0x00000100;
@@ -369,6 +391,37 @@ internal static class Win32
         public nuint idFrom;
         public uint code;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NMCUSTOMDRAW
+    {
+        public NMHDR hdr;
+        public uint dwDrawStage;
+        public nint hdc;
+        public RECT rc;
+        public nuint dwItemSpec;
+        public uint uItemState;
+        public nint lItemlParam;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct HIGHCONTRASTW
+    {
+        public uint cbSize;
+        public uint dwFlags;
+        public nint lpszDefaultScheme;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WINDOWCOMPOSITIONATTRIBDATA
+    {
+        public int Attrib;
+        public nint pvData;
+        public nuint cbData;
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate nint SubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct TCITEMW
@@ -633,6 +686,9 @@ internal static class Win32
     [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern nint GetModuleHandleW(string? lpModuleName);
 
+    [DllImport("kernel32.dll", EntryPoint = "LoadLibraryExW", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern nint LoadLibraryExW(string lpFileName, nint hFile, uint dwFlags);
+
     [DllImport("kernel32.dll", EntryPoint = "CreateActCtxW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern nint CreateActCtxW(ref ACTCTXW activationContext);
 
@@ -718,6 +774,9 @@ internal static class Win32
     [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
     internal static extern nint GetProcAddress(nint hModule, string procName);
 
+    [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true)]
+    internal static extern nint GetProcAddress(nint hModule, nint ordinal);
+
     [DllImport("comctl32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool InitCommonControlsEx(ref INITCOMMONCONTROLSEX iccex);
@@ -740,6 +799,21 @@ internal static class Win32
 
     [DllImport("dwmapi.dll")]
     internal static extern int DwmGetColorizationColor(out uint colorizationColor, [MarshalAs(UnmanagedType.Bool)] out bool opaqueBlend);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetPropW(nint hWnd, string lpString, nint hData);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SystemParametersInfoW(uint uiAction, uint uiParam, ref HIGHCONTRASTW pvParam, uint fWinIni);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetWindowSubclass(nint hWnd, SubclassProc pfnSubclass, nuint uIdSubclass, nuint dwRefData);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    internal static extern nint DefSubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam);
 
     [DllImport("user32.dll")]
     internal static extern uint GetDpiForSystem();

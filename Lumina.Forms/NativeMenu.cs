@@ -67,10 +67,21 @@ internal sealed class NativeMenu : IDisposable
         var nativeMenu = new NativeMenu(menuHandle);
         if (menuHandle != 0)
         {
+            ApplyDarkMenuStyling(menuHandle);
             nativeMenu.PopulateMenu(menuHandle, items);
         }
 
         return nativeMenu;
+    }
+
+    private static void ApplyDarkMenuStyling(nint menuHandle)
+    {
+        if (menuHandle == 0 || !DarkModeNative.IsSupported)
+        {
+            return;
+        }
+
+        DarkModeNative.RefreshImmersiveState();
     }
 
     private void PopulateMenu(nint menuHandle, IEnumerable<ToolStripItem> items)
