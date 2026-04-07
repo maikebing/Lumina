@@ -167,7 +167,7 @@ internal static class ToolStripPopupMenu
 
     private static int ShowForMenuBarImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        bool enabled = EnsureImmersiveMenuPrepared();
+        bool enabled = EnsureImmersiveMenuPrepared(ownerHandle);
         LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
 
         if (!enabled)
@@ -222,7 +222,7 @@ internal static class ToolStripPopupMenu
 
     private static void ShowImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        bool enabled = EnsureImmersiveMenuPrepared();
+        bool enabled = EnsureImmersiveMenuPrepared(ownerHandle);
         LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
 
         if (!enabled)
@@ -251,11 +251,16 @@ internal static class ToolStripPopupMenu
         Debug.WriteLine($"[Lumina.Forms] PopupMenu requested={requestedMode}, effective={effectiveMode}, immersiveAttempted={immersiveAttempted}, immersiveEnabled={immersiveEnabled}, darkModeStatus={darkModeStatus}, os={capabilities.Major}.{capabilities.Minor}.{capabilities.Build}");
     }
 
-    private static bool EnsureImmersiveMenuPrepared()
+    private static bool EnsureImmersiveMenuPrepared(nint ownerHandle)
     {
         if (s_immersiveMenuPrepared)
         {
             return true;
+        }
+
+        if (ownerHandle != 0)
+        {
+            Win32DarkModeApi.TryApplyWindowDarkMode(ownerHandle);
         }
 
         s_immersiveMenuPrepared = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();

@@ -8,6 +8,10 @@ namespace Lumina.Forms;
 /// </summary>
 public class ToolStrip : ContainerControlBase
 {
+    private const int StripHorizontalPadding = 8;
+    private const int StripVerticalPadding = 6;
+    private const int StripItemSpacing = 6;
+
     private readonly ToolStripItemCollection _items;
     private readonly Dictionary<ToolStripItem, Control> _itemHosts = [];
 
@@ -19,7 +23,7 @@ public class ToolStrip : ContainerControlBase
     public ToolStrip()
     {
         _items = new ToolStripItemCollection(OnItemsChanged);
-        Height = 25;
+        Height = 36;
     }
 
     /// <summary>
@@ -169,8 +173,8 @@ public class ToolStrip : ContainerControlBase
 
     private protected virtual void LayoutItemHosts()
     {
-        int x = 3;
-        int availableHeight = Math.Max(1, Height - 6);
+        int x = StripHorizontalPadding;
+        int availableHeight = Math.Max(1, Height - (StripVerticalPadding * 2));
 
         foreach (ToolStripItem item in Items)
         {
@@ -189,7 +193,7 @@ public class ToolStrip : ContainerControlBase
             Size hostSize = ResolveHostSize(item, availableHeight);
             int y = Math.Max(0, (Height - hostSize.Height) / 2);
             host.SetBounds(x, y, hostSize.Width, hostSize.Height);
-            x += hostSize.Width + 4;
+            x += hostSize.Width + StripItemSpacing;
         }
     }
 
@@ -335,19 +339,19 @@ public class ToolStrip : ContainerControlBase
 
         return item switch
         {
-            ToolStripLabel => new Size(Math.Max(36, item.Text.Length * 8 + 4), Math.Min(availableHeight, 17)),
-            ToolStripStatusLabel => new Size(Math.Max(48, item.Text.Length * 8 + 8), Math.Min(availableHeight, 17)),
-            ToolStripProgressBar => new Size(100, Math.Min(availableHeight, 16)),
-            ToolStripComboBox => new Size(121, Math.Min(availableHeight, 25)),
-            ToolStripTextBox => new Size(100, Math.Min(availableHeight, 23)),
-            ToolStripSeparator => new Size(6, availableHeight),
+            ToolStripLabel => new Size(Math.Max(36, item.Text.Length * 8 + 6), Math.Min(availableHeight, 20)),
+            ToolStripStatusLabel => new Size(Math.Max(56, item.Text.Length * 8 + 12), Math.Min(availableHeight, 20)),
+            ToolStripProgressBar => new Size(112, Math.Min(availableHeight, 18)),
+            ToolStripComboBox => new Size(136, Math.Min(availableHeight, 28)),
+            ToolStripTextBox => new Size(120, Math.Min(availableHeight, 28)),
+            ToolStripSeparator => new Size(10, availableHeight),
             _ when OperatingSystem.IsWindowsVersionAtLeast(6, 1)
                 && item.DisplayStyle == ToolStripItemDisplayStyle.Image
                 && item.Image is not null
                 => new Size(
-                    Math.Max(20, item.Image.Width + 8),
-                    Math.Max(20, Math.Min(availableHeight, item.Image.Height + 8))),
-            _ => new Size(Math.Max(24, ResolveItemText(item).Length * 8 + 16), Math.Min(Math.Max(20, availableHeight), Math.Max(20, availableHeight))),
+                    Math.Max(28, item.Image.Width + 12),
+                    Math.Max(28, Math.Min(availableHeight, item.Image.Height + 12))),
+            _ => new Size(Math.Max(36, ResolveItemText(item).Length * 8 + 24), Math.Max(28, Math.Min(availableHeight, 32))),
         };
     }
 
@@ -464,8 +468,10 @@ public class ToolStrip : ContainerControlBase
 
         private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
 
+        protected override bool UseParentBackgroundForTheming => true;
+
         protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(20, requestedHeight);
+            => Math.Max(28, requestedHeight);
     }
 
     private sealed class ItemPictureHost : PictureBox
@@ -477,6 +483,6 @@ public class ToolStrip : ContainerControlBase
         protected override bool UseParentBackgroundForTheming => true;
 
         protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(20, requestedHeight);
+            => Math.Max(28, requestedHeight);
     }
 }

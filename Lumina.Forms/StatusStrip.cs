@@ -14,7 +14,7 @@ public class StatusStrip : ToolStrip
     /// </summary>
     public StatusStrip()
     {
-        Height = 22;
+        Height = 30;
     }
 
     /// <inheritdoc />

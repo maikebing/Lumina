@@ -11,6 +11,17 @@ internal static class Win32DarkModeApi
 
     internal static string StatusDescription => s_state.Value.StatusDescription;
 
+    internal static bool TryApplyWindowDarkMode(nint hwnd)
+    {
+        if (hwnd == 0 || !OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        int useDarkMode = 1;
+        return Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDarkMode, sizeof(int)) == 0;
+    }
+
     internal static bool TryEnableImmersivePopupMenus()
     {
         State state = s_state.Value;
