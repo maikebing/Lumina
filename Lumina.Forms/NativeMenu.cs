@@ -7,19 +7,29 @@ namespace Lumina.Forms;
 
 internal sealed class NativeMenu : IDisposable
 {
+    private const int TopLevelMenuHorizontalPadding = 12;
+    private const int TopLevelMenuVerticalPadding = 7;
+    private const nuint OwnerDrawItemDataStart = 1;
+
     private const int CommandIdStart = 0x8000;
     private const int CommandIdEnd = 0xEFFF;
 
     private static int s_nextCommandId = CommandIdStart;
+    private static nuint s_nextOwnerDrawItemData = OwnerDrawItemDataStart;
 
     private readonly Dictionary<uint, ToolStripItem> _commands = [];
+    private readonly Dictionary<nuint, ToolStripItem> _ownerDrawItems = [];
     private readonly List<nint> _imageHandles = [];
     private nint _backgroundBrush;
     private bool _ownsBackgroundBrush;
+    private readonly bool _isMenuBar;
+    private readonly ResolvedVisualStyle _visualStyle;
 
-    private NativeMenu(nint handle)
+    private NativeMenu(nint handle, bool isMenuBar, ResolvedVisualStyle visualStyle)
     {
         Handle = handle;
+        _isMenuBar = isMenuBar;
+        _visualStyle = visualStyle;
     }
 
     internal nint Handle { get; private set; }
@@ -40,6 +50,110 @@ internal sealed class NativeMenu : IDisposable
 
         item = null!;
         return false;
+    }
+
+    internal bool TryMeasureOwnerDrawItem(nuint itemData, nint fontHandle, out int width, out int height)
+    {
+        width = 0;
+        height = 0;
+
+        if (!_ownerDrawItems.TryGetValue(itemData, out ToolStripItem? item))
+        {
+            return false;
+        }
+
+        string displayText = GetTopLevelDisplayText(item);
+        if (string.IsNullOrEmpty(displayText))
+        {
+            width = TopLevelMenuHorizontalPadding * 2;
+            height = 24;
+            return true;
+        }
+
+        nint screenDc = Win32.GetDC(0);
+        if (screenDc == 0)
+        {
+            return false;
+        }
+
+        nint previousObject = 0;
+        try
+        {
+            if (fontHandle != 0)
+            {
+                previousObject = Win32.SelectObject(screenDc, fontHandle);
+            }
+
+            if (!Win32.GetTextExtentPoint32W(screenDc, displayText, displayText.Length, out Win32.SIZE size))
+            {
+                return false;
+            }
+
+            int textHeight = size.cy;
+            if (textHeight <= 0 && Win32.GetTextMetricsW(screenDc, out Win32.TEXTMETRICW metrics))
+            {
+                textHeight = metrics.tmHeight;
+            }
+
+            width = size.cx + (TopLevelMenuHorizontalPadding * 2);
+            height = Math.Max(24, textHeight + (TopLevelMenuVerticalPadding * 2));
+            return true;
+        }
+        finally
+        {
+            if (previousObject != 0)
+            {
+                _ = Win32.SelectObject(screenDc, previousObject);
+            }
+
+            _ = Win32.ReleaseDC(0, screenDc);
+        }
+    }
+
+    internal bool TryDrawOwnerDrawItem(nuint itemData, in Win32.DRAWITEMSTRUCT drawItem)
+    {
+        if (!_ownerDrawItems.TryGetValue(itemData, out ToolStripItem? item))
+        {
+            return false;
+        }
+
+        ThemePalette palette = _visualStyle.Palette;
+        bool isDarkMode = _visualStyle.IsDarkMode;
+        bool disabled = (drawItem.itemState & (Win32.ODS_DISABLED | Win32.ODS_GRAYED)) != 0 || !item.Enabled;
+
+        uint backgroundArgb = isDarkMode
+            ? palette.SurfaceBackground
+            : palette.ControlBackground;
+        uint foregroundArgb = disabled
+            ? palette.MutedForeground
+            : (isDarkMode ? palette.SurfaceForeground : palette.ControlForeground);
+
+        nint backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(backgroundArgb));
+        if (backgroundBrush == 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            Win32.RECT bounds = drawItem.rcItem;
+            _ = Win32.FillRect(drawItem.hDC, ref bounds, backgroundBrush);
+            _ = Win32.SetBkMode(drawItem.hDC, Win32.TRANSPARENT);
+            _ = Win32.SetTextColor(drawItem.hDC, Win32.ToColorRef(foregroundArgb));
+
+            Win32.RECT textBounds = bounds;
+            textBounds.Left += TopLevelMenuHorizontalPadding;
+            textBounds.Right -= TopLevelMenuHorizontalPadding;
+
+            string displayText = GetTopLevelDisplayText(item);
+            uint format = Win32.DT_SINGLELINE | Win32.DT_VCENTER | Win32.DT_CENTER;
+            _ = Win32.DrawTextW(drawItem.hDC, displayText, displayText.Length, ref textBounds, format);
+            return true;
+        }
+        finally
+        {
+            _ = Win32.DeleteObject(backgroundBrush);
+        }
     }
 
     public void Dispose()
@@ -75,7 +189,7 @@ internal sealed class NativeMenu : IDisposable
             ? Win32.CreateMenu()
             : Win32.CreatePopupMenu();
 
-        var nativeMenu = new NativeMenu(menuHandle);
+        var nativeMenu = new NativeMenu(menuHandle, isMenuBar, visualStyle);
         if (menuHandle != 0)
         {
             nativeMenu.ApplyDarkMenuStyling(menuHandle, visualStyle);
@@ -157,6 +271,17 @@ internal sealed class NativeMenu : IDisposable
                 itemInfo.fMask |= Win32.MIIM_SUBMENU;
                 itemInfo.hSubMenu = subMenuHandle;
 
+                if (_isMenuBar)
+                {
+                    itemInfo.fMask |= Win32.MIIM_DATA;
+                    itemInfo.fMask &= ~Win32.MIIM_STRING;
+                    itemInfo.fType = Win32.MFT_OWNERDRAW;
+                    itemInfo.dwTypeData = null;
+                    itemInfo.cch = 0;
+                    itemInfo.dwItemData = NextOwnerDrawItemData();
+                    _ownerDrawItems[itemInfo.dwItemData] = item;
+                }
+
                 if (!item.Enabled || IsUnsupportedMenuCommand(item))
                 {
                     itemInfo.fState |= Win32.MFS_DISABLED;
@@ -173,6 +298,17 @@ internal sealed class NativeMenu : IDisposable
             var commandItemInfo = CreateMenuItemInfo(item, menuBitmap);
             commandItemInfo.fMask |= Win32.MIIM_ID;
             commandItemInfo.wID = commandId;
+
+            if (_isMenuBar)
+            {
+                commandItemInfo.fMask |= Win32.MIIM_DATA;
+                commandItemInfo.fMask &= ~Win32.MIIM_STRING;
+                commandItemInfo.fType = Win32.MFT_OWNERDRAW;
+                commandItemInfo.dwTypeData = null;
+                commandItemInfo.cch = 0;
+                commandItemInfo.dwItemData = NextOwnerDrawItemData();
+                _ownerDrawItems[commandItemInfo.dwItemData] = item;
+            }
 
             if (!item.Enabled || IsUnsupportedMenuCommand(item))
             {
@@ -196,6 +332,20 @@ internal sealed class NativeMenu : IDisposable
             if (Interlocked.CompareExchange(ref s_nextCommandId, next, current) == current)
             {
                 return (uint)next;
+            }
+        }
+    }
+
+    private static nuint NextOwnerDrawItemData()
+    {
+        while (true)
+        {
+            nuint current = Volatile.Read(ref s_nextOwnerDrawItemData);
+            nuint next = current == nuint.MaxValue ? OwnerDrawItemDataStart : current + 1;
+
+            if (Interlocked.CompareExchange(ref s_nextOwnerDrawItemData, next, current) == current)
+            {
+                return current;
             }
         }
     }
@@ -291,6 +441,42 @@ internal sealed class NativeMenu : IDisposable
         }
 
         return baseText;
+    }
+
+    private static string GetTopLevelDisplayText(ToolStripItem item)
+    {
+        string sourceText = string.IsNullOrWhiteSpace(item.Text)
+            ? GetDisplayText(item).Split('\t')[0]
+            : item.Text;
+
+        return NormalizeTopLevelMenuText(sourceText);
+    }
+
+    private static string NormalizeTopLevelMenuText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        var builder = new System.Text.StringBuilder(text.Length);
+        for (int index = 0; index < text.Length; index++)
+        {
+            char current = text[index];
+            if (current != '&')
+            {
+                builder.Append(current);
+                continue;
+            }
+
+            if (index + 1 < text.Length && text[index + 1] == '&')
+            {
+                builder.Append('&');
+                index++;
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static nint CreateBitmapHandle(ToolStripItem item)
