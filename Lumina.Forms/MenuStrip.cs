@@ -7,9 +7,7 @@ public class MenuStrip : ToolStrip
 {
     private NativeMenu? _nativeMenu;
 
-    internal bool UsesNativeMenuBar => OperatingSystem.IsWindows()
-        && Owner is not null
-        && ReferenceEquals(Owner.MainMenuStrip, this);
+    internal bool UsesNativeMenuBar => false;
 
     /// <inheritdoc />
     protected override bool ShouldCreateNativeHandle => !UsesNativeMenuBar;
@@ -17,12 +15,6 @@ public class MenuStrip : ToolStrip
     /// <inheritdoc />
     public override void PerformLayout()
     {
-        if (UsesNativeMenuBar)
-        {
-            Owner?.RefreshMainMenuStrip();
-            return;
-        }
-
         base.PerformLayout();
     }
 
@@ -49,6 +41,12 @@ public class MenuStrip : ToolStrip
         host.Click += (_, _) => ShowDropDownWithSiblingNavigation((ToolStripDropDownItem)item, host);
         return host;
     }
+
+    /// <inheritdoc />
+    private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Window;
+
+    /// <inheritdoc />
+    private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Window;
 
     internal void SynchronizeNativeMenu()
     {
@@ -103,7 +101,7 @@ public class MenuStrip : ToolStrip
         protected override uint Style => base.Style | Win32.SS_NOTIFY;
 
         protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(20, requestedHeight);
+            => Math.Max(26, requestedHeight);
 
         protected override bool OnCommand(int notificationCode)
         {
