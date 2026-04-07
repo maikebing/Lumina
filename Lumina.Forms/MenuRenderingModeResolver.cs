@@ -12,9 +12,7 @@ internal static class MenuRenderingModeResolver
 
         if (capabilities.SupportsImmersivePopupMenus)
         {
-            return Win32DarkModeApi.IsSupported
-                ? MenuRenderingMode.ImmersivePopup
-                : MenuRenderingMode.Classic;
+            return MenuRenderingMode.ImmersivePopup;
         }
 
         return MenuRenderingMode.Classic;

@@ -21,6 +21,9 @@ internal static class ToolStripPopupMenu
     [ThreadStatic]
     private static nint s_msgHook;                // current thread hook handle
 
+    [ThreadStatic]
+    private static bool s_immersiveMenuPrepared;  // current popup session has already prepared immersive theming
+
     /// <summary>
     /// Called from Form.WindowProc for WM_INITMENUPOPUP / WM_UNINITMENUPOPUP so that
     /// the hook proc knows the current nesting depth.
@@ -119,6 +122,7 @@ internal static class ToolStripPopupMenu
         }
 
         s_menuCloseDirection = 0;
+        s_immersiveMenuPrepared = false;
 
         unsafe
         {
@@ -151,6 +155,8 @@ internal static class ToolStripPopupMenu
         }
         finally
         {
+            s_immersiveMenuPrepared = false;
+
             if (s_msgHook != 0)
             {
                 Win32.UnhookWindowsHookEx(s_msgHook);
@@ -161,12 +167,12 @@ internal static class ToolStripPopupMenu
 
     private static int ShowForMenuBarImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        bool enabled = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();
+        bool enabled = EnsureImmersiveMenuPrepared();
         LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
 
         if (!enabled)
         {
-            return ShowForMenuBarClassic(items, ownerHandle, screenLocation, requestedMode);
+            return ExecuteMenuBarPopup(items, ownerHandle, screenLocation);
         }
 
         return ShowForMenuBarImmersiveCore(items, ownerHandle, screenLocation);
@@ -192,6 +198,8 @@ internal static class ToolStripPopupMenu
             return;
         }
 
+        s_immersiveMenuPrepared = false;
+
         _ = Win32.SetForegroundWindow(ownerHandle);
 
         uint command = Win32.TrackPopupMenu(
@@ -208,17 +216,18 @@ internal static class ToolStripPopupMenu
             item.PerformClick();
         }
 
+        s_immersiveMenuPrepared = false;
         _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
     }
 
     private static void ShowImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        bool enabled = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();
+        bool enabled = EnsureImmersiveMenuPrepared();
         LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
 
         if (!enabled)
         {
-            ShowClassic(items, ownerHandle, screenLocation, requestedMode);
+            ExecutePopup(items, ownerHandle, screenLocation);
             return;
         }
 
@@ -238,7 +247,19 @@ internal static class ToolStripPopupMenu
     private static void LogMenuDecision(MenuRenderingMode requestedMode, MenuRenderingMode effectiveMode, bool immersiveAttempted, bool immersiveEnabled)
     {
         DarkModeCapabilities.Snapshot capabilities = DarkModeCapabilities.Current;
-        Debug.WriteLine($"[Lumina.Forms] PopupMenu requested={requestedMode}, effective={effectiveMode}, immersiveAttempted={immersiveAttempted}, immersiveEnabled={immersiveEnabled}, os={capabilities.Major}.{capabilities.Minor}.{capabilities.Build}");
+        string darkModeStatus = immersiveAttempted ? Win32DarkModeApi.StatusDescription : "not-requested";
+        Debug.WriteLine($"[Lumina.Forms] PopupMenu requested={requestedMode}, effective={effectiveMode}, immersiveAttempted={immersiveAttempted}, immersiveEnabled={immersiveEnabled}, darkModeStatus={darkModeStatus}, os={capabilities.Major}.{capabilities.Minor}.{capabilities.Build}");
+    }
+
+    private static bool EnsureImmersiveMenuPrepared()
+    {
+        if (s_immersiveMenuPrepared)
+        {
+            return true;
+        }
+
+        s_immersiveMenuPrepared = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();
+        return s_immersiveMenuPrepared;
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]

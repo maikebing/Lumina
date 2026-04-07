@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
@@ -8,11 +9,14 @@ internal static class Win32DarkModeApi
 
     internal static bool IsSupported => s_state.Value.IsSupported;
 
+    internal static string StatusDescription => s_state.Value.StatusDescription;
+
     internal static bool TryEnableImmersivePopupMenus()
     {
         State state = s_state.Value;
         if (!state.IsSupported)
         {
+            Debug.WriteLine($"[Lumina.Forms] Win32DarkModeApi unavailable: {state.StatusDescription}");
             return false;
         }
 
@@ -30,8 +34,9 @@ internal static class Win32DarkModeApi
             state.FlushMenuThemes?.Invoke();
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[Lumina.Forms] Win32DarkModeApi invocation failed: {ex.GetType().Name}: {ex.Message}");
             return false;
         }
     }
@@ -46,7 +51,7 @@ internal static class Win32DarkModeApi
         DarkModeCapabilities.Snapshot capabilities = DarkModeCapabilities.Current;
         if (!capabilities.SupportsWin32DarkModeApis)
         {
-            return State.Unsupported;
+            return State.Unsupported("OS does not expose Win32 dark mode APIs for popup menus.");
         }
 
         nint uxTheme = Win32.GetModuleHandleW("uxtheme.dll");
@@ -57,7 +62,7 @@ internal static class Win32DarkModeApi
 
         if (uxTheme == 0)
         {
-            return State.Unsupported;
+            return State.Unsupported("Failed to load uxtheme.dll from the system directory.");
         }
 
         var setPreferredAppMode = GetDelegate<SetPreferredAppModeDelegate>(uxTheme, (nint)135);
@@ -68,8 +73,10 @@ internal static class Win32DarkModeApi
 
         bool isSupported = setPreferredAppMode is not null || allowDarkModeForApp is not null;
         return isSupported
-            ? new State(true, setPreferredAppMode, allowDarkModeForApp, flushMenuThemes)
-            : State.Unsupported;
+            ? new State(true, setPreferredAppMode, allowDarkModeForApp, flushMenuThemes, "SetPreferredAppMode/AllowDarkModeForApp available.")
+            : State.Unsupported(capabilities.Build < 18362
+                ? "Missing uxtheme ordinal #135 for AllowDarkModeForApp."
+                : "Missing uxtheme ordinal #135 for SetPreferredAppMode.");
     }
 
     private static TDelegate? GetDelegate<TDelegate>(nint moduleHandle, nint ordinal) where TDelegate : Delegate
@@ -123,8 +130,9 @@ internal static class Win32DarkModeApi
         bool IsSupported,
         SetPreferredAppModeDelegate? SetPreferredAppMode,
         AllowDarkModeForAppDelegate? AllowDarkModeForApp,
-        FlushMenuThemesDelegate? FlushMenuThemes)
+        FlushMenuThemesDelegate? FlushMenuThemes,
+        string StatusDescription)
     {
-        internal static State Unsupported => new(false, null, null, null);
+        internal static State Unsupported(string statusDescription) => new(false, null, null, null, statusDescription);
     }
 }
