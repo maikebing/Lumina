@@ -59,6 +59,7 @@ public class MenuStrip : ToolStrip
         }
 
         _nativeMenu?.Dispose();
+        DarkModeNative.RefreshImmersiveState();
         _nativeMenu = NativeMenu.CreateMenuBar(Items, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
     }
 
@@ -96,6 +97,8 @@ public class MenuStrip : ToolStrip
         private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
 
         private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
+
+        protected override bool UseParentBackgroundForTheming => false;
 
         protected override uint Style => base.Style | Win32.SS_NOTIFY;
 

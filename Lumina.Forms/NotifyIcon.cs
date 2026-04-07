@@ -97,6 +97,8 @@ public class NotifyIcon : Component
         }
     }
 
+    // Tray tooltip rendering is owned by the shell; dark/light presentation follows the system tray host.
+
     /// <summary>
     /// Gets or sets the icon shown in the notification area.
     /// </summary>

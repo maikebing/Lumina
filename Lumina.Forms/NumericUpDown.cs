@@ -43,4 +43,6 @@ public class NumericUpDown : TextBox, ISupportInitialize
     {
         Value = Math.Clamp(Value, Minimum, Maximum);
     }
+
+    // NumericUpDown currently relies on TextBox for native dark mode application.
 }

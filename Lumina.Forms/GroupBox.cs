@@ -18,7 +18,7 @@ public class GroupBox : ContainerControlBase
     private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
 
     /// <inheritdoc />
-    protected override bool UseParentBackgroundForTheming => true;
+    protected override bool UseParentBackgroundForTheming => false;
 
     /// <inheritdoc />
     protected override void OnHandleCreated()

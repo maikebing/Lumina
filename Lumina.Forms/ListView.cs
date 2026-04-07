@@ -7,6 +7,9 @@ public class ListView : Control
 {
     private static readonly Win32.SubclassProc s_listViewSubclassProc = ListViewSubclassProc;
 
+    [ThreadStatic]
+    private static bool s_applyingTheme;
+
     private const uint ModernExtendedStyles =
         Win32.LVS_EX_DOUBLEBUFFER |
         Win32.LVS_EX_LABELTIP |
@@ -94,18 +97,30 @@ public class ListView : Control
             return;
         }
 
+        if (s_applyingTheme)
+        {
+            return;
+        }
+
         nint headerHandle = Win32.SendMessageW(Handle, Win32.LVM_GETHEADER, 0, 0);
         bool useDarkMode = CurrentVisualStyle.IsDarkMode;
 
-        _ = DarkModeNative.AllowWindowDarkMode(Handle, useDarkMode);
-        if (headerHandle != 0)
+        s_applyingTheme = true;
+        try
         {
-            _ = DarkModeNative.AllowWindowDarkMode(headerHandle, useDarkMode);
-            _ = Win32.SetWindowTheme(headerHandle, "ItemsView", null);
-            _ = Win32.SendMessageW(headerHandle, Win32.WM_THEMECHANGED, 0, 0);
-        }
+            _ = DarkModeNative.AllowWindowDarkMode(Handle, useDarkMode);
+            if (headerHandle != 0)
+            {
+                _ = DarkModeNative.AllowWindowDarkMode(headerHandle, useDarkMode);
+                _ = Win32.SetWindowTheme(headerHandle, "ItemsView", null);
+            }
 
-        ApplyExplorerTheme();
+            ApplyExplorerTheme();
+        }
+        finally
+        {
+            s_applyingTheme = false;
+        }
     }
 
     private void ApplyNativeColors()
@@ -170,39 +185,51 @@ public class ListView : Control
             return;
         }
 
+        if (s_applyingTheme)
+        {
+            return;
+        }
+
         bool useDarkMode = DarkModeNative.IsDarkModeEnabled;
         nint headerHandle = Win32.SendMessageW(hWnd, Win32.LVM_GETHEADER, 0, 0);
 
-        _ = DarkModeNative.AllowWindowDarkMode(hWnd, useDarkMode);
-        if (headerHandle != 0)
+        s_applyingTheme = true;
+        try
         {
-            _ = DarkModeNative.AllowWindowDarkMode(headerHandle, useDarkMode);
-            _ = Win32.SetWindowTheme(headerHandle, "ItemsView", null);
-            _ = Win32.SendMessageW(headerHandle, Win32.WM_THEMECHANGED, 0, 0);
+            _ = DarkModeNative.AllowWindowDarkMode(hWnd, useDarkMode);
+            if (headerHandle != 0)
+            {
+                _ = DarkModeNative.AllowWindowDarkMode(headerHandle, useDarkMode);
+                _ = Win32.SetWindowTheme(headerHandle, "ItemsView", null);
+            }
+
+            _ = Win32.SetWindowTheme(hWnd, useDarkMode ? "DarkMode_Explorer" : "ItemsView", null);
+
+            nint itemsViewTheme = Win32.OpenThemeData(0, "ItemsView");
+            if (itemsViewTheme != 0)
+            {
+                try
+                {
+                    if (Win32.GetThemeColor(itemsViewTheme, 0, 0, Win32.TMT_TEXTCOLOR, out uint textColor) == 0)
+                    {
+                        _ = Win32.SendMessageW(hWnd, Win32.LVM_SETTEXTCOLOR, 0, unchecked((nint)textColor));
+                    }
+
+                    if (Win32.GetThemeColor(itemsViewTheme, 0, 0, Win32.TMT_FILLCOLOR, out uint fillColor) == 0)
+                    {
+                        _ = Win32.SendMessageW(hWnd, Win32.LVM_SETTEXTBKCOLOR, 0, unchecked((nint)fillColor));
+                        _ = Win32.SendMessageW(hWnd, Win32.LVM_SETBKCOLOR, 0, unchecked((nint)fillColor));
+                    }
+                }
+                finally
+                {
+                    _ = Win32.CloseThemeData(itemsViewTheme);
+                }
+            }
         }
-
-        _ = Win32.SetWindowTheme(hWnd, useDarkMode ? "DarkMode_Explorer" : "ItemsView", null);
-
-        nint itemsViewTheme = Win32.OpenThemeData(0, "ItemsView");
-        if (itemsViewTheme != 0)
+        finally
         {
-            try
-            {
-                if (Win32.GetThemeColor(itemsViewTheme, 0, 0, Win32.TMT_TEXTCOLOR, out uint textColor) == 0)
-                {
-                    _ = Win32.SendMessageW(hWnd, Win32.LVM_SETTEXTCOLOR, 0, unchecked((nint)textColor));
-                }
-
-                if (Win32.GetThemeColor(itemsViewTheme, 0, 0, Win32.TMT_FILLCOLOR, out uint fillColor) == 0)
-                {
-                    _ = Win32.SendMessageW(hWnd, Win32.LVM_SETTEXTBKCOLOR, 0, unchecked((nint)fillColor));
-                    _ = Win32.SendMessageW(hWnd, Win32.LVM_SETBKCOLOR, 0, unchecked((nint)fillColor));
-                }
-            }
-            finally
-            {
-                _ = Win32.CloseThemeData(itemsViewTheme);
-            }
+            s_applyingTheme = false;
         }
 
         _ = Win32.InvalidateRect(hWnd, 0, true);

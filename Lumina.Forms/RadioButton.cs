@@ -63,7 +63,7 @@ public class RadioButton : Control
     private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
 
     /// <inheritdoc />
-    protected override bool UseParentBackgroundForTheming => UseVisualStyleBackColor;
+    protected override bool UseParentBackgroundForTheming => false;
 
     /// <inheritdoc />
     protected override void OnHandleCreated()

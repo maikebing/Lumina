@@ -42,4 +42,18 @@ public class ToolTip : Component
 
         _toolTips[control] = caption;
     }
+
+    /// <summary>
+    /// Gets the tooltip text associated with the specified control, if any.
+    /// </summary>
+    /// <param name="control">The target control.</param>
+    /// <returns>The tooltip text, or an empty string when none is registered.</returns>
+    public string GetToolTip(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+
+        return _toolTips.TryGetValue(control, out string? caption)
+            ? caption
+            : string.Empty;
+    }
 }

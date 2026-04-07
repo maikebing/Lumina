@@ -55,7 +55,7 @@ public class DateTimePicker : Control
     /// <inheritdoc />
     protected override string GetPreferredThemeClass(ResolvedVisualStyle visualStyle)
         => visualStyle.IsDarkMode && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763)
-            ? "DarkMode_CFD"
+            ? "Explorer"
             : "CFD";
 
     /// <inheritdoc />

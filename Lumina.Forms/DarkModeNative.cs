@@ -31,6 +31,12 @@ internal static class DarkModeNative
     private static GetIsImmersiveColorUsingHighContrastDelegate? s_getIsImmersiveColorUsingHighContrast;
     private static SetWindowCompositionAttributeDelegate? s_setWindowCompositionAttribute;
 
+    internal static bool TryEnableDarkScrollBar()
+    {
+        EnsureInitialized();
+        return s_supported;
+    }
+
     internal static bool IsSupported
     {
         get

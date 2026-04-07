@@ -11,6 +11,7 @@ public class RichTextBox : TextBox
     public RichTextBox()
         : base(multiline: true)
     {
+        _ = DarkModeNative.TryEnableDarkScrollBar();
     }
 
     /// <inheritdoc />

@@ -11,6 +11,9 @@ public class TabControl : ContainerControlBase
     private readonly Dictionary<TabPage, EventHandler> _textChangedHandlers = [];
     private int _selectedIndex;
 
+    [ThreadStatic]
+    private static bool s_applyingTabTheme;
+
     /// <summary>
     /// Initializes a tab control with more spacious default layout metrics.
     /// </summary>
@@ -109,7 +112,21 @@ public class TabControl : ContainerControlBase
             return;
         }
 
-        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
+        if (s_applyingTabTheme)
+        {
+            return;
+        }
+
+        s_applyingTabTheme = true;
+        try
+        {
+            DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
+            _ = Win32.SetWindowTheme(Handle, CurrentVisualStyle.IsDarkMode ? "DarkMode_Explorer" : "Explorer", null);
+        }
+        finally
+        {
+            s_applyingTabTheme = false;
+        }
     }
 
     /// <inheritdoc />

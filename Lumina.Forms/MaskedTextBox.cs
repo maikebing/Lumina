@@ -9,4 +9,6 @@ public class MaskedTextBox : TextBox
     /// Gets or sets the mask pattern.
     /// </summary>
     public string Mask { get; set; } = string.Empty;
+
+    // MaskedTextBox currently relies on TextBox for native dark mode application.
 }

@@ -244,7 +244,7 @@ public class Form : IDisposable
             Win32.WS_EX_APPWINDOW,
             WindowClassName,
             Text,
-            Win32.WS_OVERLAPPEDWINDOW | Win32.WS_VISIBLE | Win32.WS_CLIPCHILDREN,
+            Win32.WS_OVERLAPPEDWINDOW | Win32.WS_CLIPCHILDREN,
             Win32.CW_USEDEFAULT,
             Win32.CW_USEDEFAULT,
             Width,
@@ -1390,7 +1390,7 @@ public class Form : IDisposable
                 _ = Win32.SetBkColor(wParam, _surfaceBackgroundColorRef);
                 _ = Win32.SetTextColor(
                     wParam,
-                    control is TabPage or Panel or ToolStrip or StatusStrip
+                    control is TabPage or Panel or ToolStrip or StatusStrip or GroupBox or CheckBox or RadioButton or Label or LinkLabel
                         ? _surfaceForegroundColorRef
                         : _windowForegroundColorRef);
                 brush = _surfaceBackgroundBrush;
@@ -1404,7 +1404,11 @@ public class Form : IDisposable
                 }
 
                 _ = Win32.SetBkColor(wParam, _surfaceBackgroundColorRef);
-                _ = Win32.SetTextColor(wParam, _surfaceForegroundColorRef);
+                _ = Win32.SetTextColor(
+                    wParam,
+                    control is GroupBox or CheckBox or RadioButton or Button
+                        ? _surfaceForegroundColorRef
+                        : _windowForegroundColorRef);
                 brush = _surfaceBackgroundBrush;
                 return true;
 
