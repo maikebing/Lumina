@@ -121,7 +121,7 @@ public class TabControl : ContainerControlBase
         try
         {
             DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
-            _ = Win32.SetWindowTheme(Handle, CurrentVisualStyle.IsDarkMode ? "DarkMode_Explorer" : "Explorer", null);
+            _ = Win32.SetWindowTheme(Handle, CurrentVisualStyle.IsDarkMode ? "Explorer" : "Tab", null);
         }
         finally
         {

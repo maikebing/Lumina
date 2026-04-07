@@ -11,5 +11,11 @@ public class TabPage : Panel
     public bool UseVisualStyleBackColor { get; set; } = true;
 
     /// <inheritdoc />
-    protected override bool UseParentBackgroundForTheming => UseVisualStyleBackColor;
+    protected override bool UseParentBackgroundForTheming => false;
+
+    /// <inheritdoc />
+    private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
+
+    /// <inheritdoc />
+    private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
 }

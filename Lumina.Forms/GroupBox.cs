@@ -6,10 +6,10 @@ namespace Lumina.Forms;
 public class GroupBox : ContainerControlBase
 {
     /// <inheritdoc />
-    protected override string ClassName => "BUTTON";
+    protected override string ClassName => "STATIC";
 
     /// <inheritdoc />
-    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.BS_GROUPBOX;
+    protected override uint Style => Win32.WS_CHILD | Win32.WS_VISIBLE;
 
     /// <inheritdoc />
     private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
