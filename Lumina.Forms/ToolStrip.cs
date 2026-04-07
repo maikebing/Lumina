@@ -90,7 +90,7 @@ public class ToolStrip : ContainerControlBase
         }
 
         int top = 0;
-        if (Owner.MainMenuStrip is { Handle: not 0, Visible: true } menuStrip)
+        if (Owner.MainMenuStrip is { Visible: true } menuStrip)
         {
             top += Math.Max(0, menuStrip.Height);
         }

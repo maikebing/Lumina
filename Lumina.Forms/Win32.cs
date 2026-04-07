@@ -218,6 +218,24 @@ internal static class Win32
 
     public const uint ODT_MENU = 1;
 
+    public const uint ODA_DRAWENTIRE = 0x0001;
+    public const uint ODA_SELECT = 0x0002;
+    public const uint ODA_FOCUS = 0x0004;
+
+    public const uint ODS_SELECTED = 0x0001;
+    public const uint ODS_GRAYED = 0x0002;
+    public const uint ODS_DISABLED = 0x0004;
+    public const uint ODS_CHECKED = 0x0008;
+    public const uint ODS_FOCUS = 0x0010;
+    public const uint ODS_HOTLIGHT = 0x0040;
+
+    public const uint DT_LEFT = 0x00000000;
+    public const uint DT_CENTER = 0x00000001;
+    public const uint DT_VCENTER = 0x00000004;
+    public const uint DT_SINGLELINE = 0x00000020;
+    public const uint DT_HIDEPREFIX = 0x00100000;
+    public const uint DT_NOPREFIX = 0x00000800;
+
     public const uint MIM_BACKGROUND = 0x00000002;
     public const uint MIM_APPLYTOSUBMENUS = 0x80000000;
 
@@ -329,6 +347,13 @@ internal static class Win32
         public int Width => Right - Left;
 
         public int Height => Bottom - Top;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct SIZE
+    {
+        public int cx;
+        public int cy;
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -743,6 +768,10 @@ internal static class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetTextMetricsW(nint hdc, out TEXTMETRICW lptm);
 
+    [DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetTextExtentPoint32W(nint hdc, string lpString, int c, out SIZE pSize);
+
     [DllImport("gdi32.dll", SetLastError = true)]
     internal static extern int GetDeviceCaps(nint hdc, int index);
 
@@ -768,6 +797,9 @@ internal static class Win32
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int DrawThemeText(nint hTheme, nint hdc, int iPartId, int iStateId, string text, int charCount, uint textFlags, uint textFlags2, ref RECT pRect);
+
+    [DllImport("user32.dll", EntryPoint = "DrawTextW", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int DrawTextW(nint hdc, string lpchText, int cchText, ref RECT lprc, uint format);
 
     [DllImport("uxtheme.dll", SetLastError = true)]
     internal static extern int GetThemeColor(nint hTheme, int iPartId, int iStateId, int iPropId, out uint color);

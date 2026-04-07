@@ -9,7 +9,7 @@ public class MenuStrip : ToolStrip
 {
     private NativeMenu? _nativeMenu;
 
-    internal bool UsesNativeMenuBar => false;
+    internal bool UsesNativeMenuBar => OperatingSystem.IsWindows();
 
     /// <inheritdoc />
     protected override bool ShouldCreateNativeHandle => !UsesNativeMenuBar;
@@ -17,9 +17,17 @@ public class MenuStrip : ToolStrip
     /// <inheritdoc />
     public override void PerformLayout()
     {
-        DockToTop();
+        if (!UsesNativeMenuBar)
+        {
+            DockToTop();
+        }
+
         base.PerformLayout();
     }
+
+    /// <inheritdoc />
+    private protected override bool ShouldCreateHostControl(ToolStripItem item)
+        => !UsesNativeMenuBar && base.ShouldCreateHostControl(item);
 
     /// <summary>
     /// Creates a menu-style top-level host for a direct command item.
