@@ -27,9 +27,17 @@ public class DateTimePicker : Control
         => Math.Max(30, requestedHeight);
 
     /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyNativeColors();
+    }
+
+    /// <inheritdoc />
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
+        ApplyNativeColors();
     }
 
     /// <inheritdoc />
@@ -41,4 +49,25 @@ public class DateTimePicker : Control
     /// <inheritdoc />
     protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
         => base.GetPreferredThemeClass(visualStyle);
+
+    private void ApplyNativeColors()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        ThemePalette palette = CurrentVisualStyle.Palette;
+        _ = SetCalendarColor(Win32.MCSC_BACKGROUND, palette.SurfaceBackground);
+        _ = SetCalendarColor(Win32.MCSC_MONTHBK, palette.ControlBackground);
+        _ = SetCalendarColor(Win32.MCSC_TEXT, palette.ControlForeground);
+        _ = SetCalendarColor(Win32.MCSC_TITLEBK, palette.SurfaceBackground);
+        _ = SetCalendarColor(Win32.MCSC_TITLETEXT, palette.ControlForeground);
+        _ = SetCalendarColor(Win32.MCSC_TRAILINGTEXT, palette.MutedForeground);
+    }
+
+    private nint SetCalendarColor(int colorIndex, uint argb)
+    {
+        return Win32.SendMessageW(Handle, Win32.DTM_SETMCCOLOR, (nint)colorIndex, unchecked((nint)Win32.ToColorRef(argb)));
+    }
 }

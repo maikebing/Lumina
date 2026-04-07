@@ -99,6 +99,72 @@ public abstract class ContainerControlBase : Control
     {
     }
 
+    /// <inheritdoc />
+    protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
+    {
+        switch (message)
+        {
+            case Win32.WM_CTLCOLORBTN:
+            case Win32.WM_CTLCOLORDLG:
+            case Win32.WM_CTLCOLOREDIT:
+            case Win32.WM_CTLCOLORLISTBOX:
+            case Win32.WM_CTLCOLORSTATIC:
+                if (TryHandleChildControlColor(message, wParam, lParam, out result))
+                {
+                    return true;
+                }
+
+                break;
+        }
+
+        return base.HandleWindowMessage(message, wParam, lParam, out result);
+    }
+
+    private bool TryHandleChildControlColor(uint message, nint wParam, nint lParam, out nint brush)
+    {
+        brush = 0;
+        if (wParam == 0)
+        {
+            return false;
+        }
+
+        _ = Control.TryGetControlByHandle(lParam, out Control? childControl);
+        if (childControl is not null
+            && childControl.TryGetThemeColors(out nint childBrush, out uint childBackgroundColorRef, out uint childForegroundColorRef, out bool transparentBackground))
+        {
+            if (transparentBackground)
+            {
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+            }
+            else
+            {
+                _ = Win32.SetBkColor(wParam, childBackgroundColorRef);
+            }
+
+            _ = Win32.SetTextColor(wParam, childForegroundColorRef);
+            brush = childBrush;
+            return true;
+        }
+
+        if (TryGetThemeColors(out nint ownerBrush, out uint ownerBackgroundColorRef, out uint ownerForegroundColorRef, out _))
+        {
+            if (message == Win32.WM_CTLCOLORSTATIC)
+            {
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+            }
+            else
+            {
+                _ = Win32.SetBkColor(wParam, ownerBackgroundColorRef);
+            }
+
+            _ = Win32.SetTextColor(wParam, ownerForegroundColorRef);
+            brush = ownerBrush;
+            return true;
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Represents a child-control collection for a LuminaForms container control.
     /// </summary>

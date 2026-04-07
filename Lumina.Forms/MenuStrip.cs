@@ -93,6 +93,10 @@ public class MenuStrip : ToolStrip
     {
         public event EventHandler? Click;
 
+        private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
+
+        private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
+
         protected override uint Style => base.Style | Win32.SS_NOTIFY;
 
         protected override int GetNativeHeight(int requestedHeight)

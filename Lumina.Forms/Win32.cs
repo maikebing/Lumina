@@ -117,6 +117,7 @@ internal static class Win32
     public const int TCM_SETCURSEL = TCM_FIRST + 12;
     public const int TCM_ADJUSTRECT = TCM_FIRST + 40;
     public const int TCM_SETPADDING = TCM_FIRST + 43;
+    public const int TCM_SETMINTABWIDTH = TCM_FIRST + 49;
     public const int TCM_SETITEMW = TCM_FIRST + 61;
     public const int TCM_INSERTITEMW = TCM_FIRST + 62;
 
@@ -126,16 +127,34 @@ internal static class Win32
     public const uint TCIF_TEXT = 0x0001;
 
     public const int LVM_FIRST = 0x1000;
+    public const int LVM_SETBKCOLOR = LVM_FIRST + 1;
+    public const int LVM_SETTEXTCOLOR = LVM_FIRST + 36;
+    public const int LVM_SETTEXTBKCOLOR = LVM_FIRST + 38;
     public const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
     public const uint LVS_EX_FULLROWSELECT = 0x00000020;
     public const uint LVS_EX_LABELTIP = 0x00004000;
     public const uint LVS_EX_DOUBLEBUFFER = 0x00010000;
 
     public const int TV_FIRST = 0x1100;
+    public const int TVM_SETBKCOLOR = TV_FIRST + 29;
+    public const int TVM_SETTEXTCOLOR = TV_FIRST + 30;
     public const int TVM_SETEXTENDEDSTYLE = TV_FIRST + 44;
     public const uint TVS_EX_DOUBLEBUFFER = 0x0004;
     public const uint TVS_EX_AUTOHSCROLL = 0x0020;
     public const uint TVS_EX_FADEINOUTEXPANDOS = 0x0040;
+
+    public const int MCM_FIRST = 0x1000;
+    public const int MCM_SETCOLOR = MCM_FIRST + 10;
+    public const int DTM_FIRST = 0x1000;
+    public const int DTM_SETMCCOLOR = DTM_FIRST + 6;
+    public const int MCSC_BACKGROUND = 0;
+    public const int MCSC_TEXT = 1;
+    public const int MCSC_TITLEBK = 2;
+    public const int MCSC_TITLETEXT = 3;
+    public const int MCSC_MONTHBK = 4;
+    public const int MCSC_TRAILINGTEXT = 5;
+
+    public const int EM_SETBKGNDCOLOR = 0x0443;
 
     public const uint IMAGE_BITMAP = 0;
     public const uint IMAGE_ICON = 1;
@@ -607,6 +626,9 @@ internal static class Win32
 
     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int SetWindowTheme(nint hwnd, string? pszSubAppName, string? pszSubIdList);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
+    internal static extern nint GetProcAddress(nint hModule, string procName);
 
     [DllImport("comctl32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

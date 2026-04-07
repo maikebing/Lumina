@@ -37,6 +37,7 @@ public class TreeView : Control
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
+        ApplyNativeColors();
     }
 
     /// <inheritdoc />
@@ -44,6 +45,7 @@ public class TreeView : Control
     {
         base.OnHandleCreated();
         ApplyExtendedStyles();
+        ApplyNativeColors();
     }
 
     private void ApplyExtendedStyles()
@@ -58,5 +60,20 @@ public class TreeView : Control
             Win32.TVM_SETEXTENDEDSTYLE,
             (nint)ModernExtendedStyles,
             (nint)ModernExtendedStyles);
+    }
+
+    private void ApplyNativeColors()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        ThemePalette palette = CurrentVisualStyle.Palette;
+        uint background = Win32.ToColorRef(palette.ControlBackground);
+        uint foreground = Win32.ToColorRef(palette.ControlForeground);
+
+        _ = Win32.SendMessageW(Handle, Win32.TVM_SETBKCOLOR, 0, unchecked((nint)background));
+        _ = Win32.SendMessageW(Handle, Win32.TVM_SETTEXTCOLOR, 0, unchecked((nint)foreground));
     }
 }

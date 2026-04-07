@@ -9,4 +9,7 @@ public class TabPage : Panel
     /// Gets or sets a value indicating whether visual styles are used for the page background.
     /// </summary>
     public bool UseVisualStyleBackColor { get; set; } = true;
+
+    /// <inheritdoc />
+    protected override bool UseParentBackgroundForTheming => UseVisualStyleBackColor;
 }

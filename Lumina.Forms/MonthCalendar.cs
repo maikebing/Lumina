@@ -19,6 +19,14 @@ public class MonthCalendar : Control
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
+        ApplyNativeColors();
+    }
+
+    /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyNativeColors();
     }
 
     /// <inheritdoc />
@@ -30,4 +38,30 @@ public class MonthCalendar : Control
     /// <inheritdoc />
     protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
         => base.GetPreferredThemeClass(visualStyle);
+
+    private void ApplyNativeColors()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        ThemePalette palette = CurrentVisualStyle.Palette;
+        uint controlBackground = Win32.ToColorRef(palette.ControlBackground);
+        uint controlForeground = Win32.ToColorRef(palette.ControlForeground);
+        uint surfaceBackground = Win32.ToColorRef(palette.SurfaceBackground);
+        uint mutedForeground = Win32.ToColorRef(palette.MutedForeground);
+
+        _ = SetCalendarColor(Win32.MCSC_BACKGROUND, surfaceBackground);
+        _ = SetCalendarColor(Win32.MCSC_MONTHBK, controlBackground);
+        _ = SetCalendarColor(Win32.MCSC_TEXT, controlForeground);
+        _ = SetCalendarColor(Win32.MCSC_TITLEBK, surfaceBackground);
+        _ = SetCalendarColor(Win32.MCSC_TITLETEXT, controlForeground);
+        _ = SetCalendarColor(Win32.MCSC_TRAILINGTEXT, mutedForeground);
+    }
+
+    private nint SetCalendarColor(int colorIndex, uint colorRef)
+    {
+        return Win32.SendMessageW(Handle, Win32.MCM_SETCOLOR, (nint)colorIndex, unchecked((nint)colorRef));
+    }
 }

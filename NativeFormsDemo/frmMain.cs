@@ -8,8 +8,6 @@ namespace NativeFormsDemo
         public frmMain()
         {
             InitializeComponent();
-            InitializeViewMenu();
-            Shown += frmMain_Shown;
         }
 
         private void InitializeViewMenu()
@@ -28,6 +26,7 @@ namespace NativeFormsDemo
             }
 
             _themeInitialized = true;
+            InitializeViewMenu();
             ApplyThemeSelection(followSystemThemeToolStripMenuItem, systemColorsToolStripMenuItem);
             ApplyRecommendedWindowStyle();
         }

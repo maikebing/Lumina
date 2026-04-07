@@ -122,12 +122,14 @@ public class ToolStrip : ContainerControlBase
 
         return item switch
         {
+            ToolStripLabel => host is Label,
             ToolStripStatusLabel => host is Label,
             ToolStripProgressBar => host is ProgressBar,
             ToolStripComboBox => host is ComboBox,
             ToolStripTextBox => host is TextBox,
             ToolStripSeparator => host is Panel,
             ToolStripDropDownItem => host is Button,
+            ToolStripButton => host is Button,
             _ => host is Button,
         };
     }
@@ -209,6 +211,7 @@ public class ToolStrip : ContainerControlBase
 
         return item switch
         {
+            ToolStripLabel => new Label(),
             ToolStripStatusLabel => new Label(),
             ToolStripProgressBar => new ProgressBar(),
             ToolStripComboBox => new ComboBox(),
@@ -332,6 +335,7 @@ public class ToolStrip : ContainerControlBase
 
         return item switch
         {
+            ToolStripLabel => new Size(Math.Max(36, item.Text.Length * 8 + 4), Math.Min(availableHeight, 17)),
             ToolStripStatusLabel => new Size(Math.Max(48, item.Text.Length * 8 + 8), Math.Min(availableHeight, 17)),
             ToolStripProgressBar => new Size(100, Math.Min(availableHeight, 16)),
             ToolStripComboBox => new Size(121, Math.Min(availableHeight, 25)),
@@ -456,12 +460,22 @@ public class ToolStrip : ContainerControlBase
 
     private sealed class ItemButtonHost : Button
     {
+        private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
+
+        private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
+
         protected override int GetNativeHeight(int requestedHeight)
             => Math.Max(20, requestedHeight);
     }
 
     private sealed class ItemPictureHost : PictureBox
     {
+        private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
+
+        private protected override ThemeColorSlot DefaultForegroundSlot => ThemeColorSlot.Surface;
+
+        protected override bool UseParentBackgroundForTheming => true;
+
         protected override int GetNativeHeight(int requestedHeight)
             => Math.Max(20, requestedHeight);
     }

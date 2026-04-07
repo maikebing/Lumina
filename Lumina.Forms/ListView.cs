@@ -36,6 +36,7 @@ public class ListView : Control
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
+        ApplyNativeColors();
     }
 
     /// <inheritdoc />
@@ -43,6 +44,7 @@ public class ListView : Control
     {
         base.OnHandleCreated();
         ApplyExtendedStyles();
+        ApplyNativeColors();
     }
 
     /// <inheritdoc />
@@ -67,5 +69,21 @@ public class ListView : Control
             Win32.LVM_SETEXTENDEDLISTVIEWSTYLE,
             (nint)ModernExtendedStyles,
             (nint)ModernExtendedStyles);
+    }
+
+    private void ApplyNativeColors()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        ThemePalette palette = CurrentVisualStyle.Palette;
+        uint background = Win32.ToColorRef(palette.ControlBackground);
+        uint foreground = Win32.ToColorRef(palette.ControlForeground);
+
+        _ = Win32.SendMessageW(Handle, Win32.LVM_SETBKCOLOR, 0, unchecked((nint)background));
+        _ = Win32.SendMessageW(Handle, Win32.LVM_SETTEXTBKCOLOR, 0, unchecked((nint)background));
+        _ = Win32.SendMessageW(Handle, Win32.LVM_SETTEXTCOLOR, 0, unchecked((nint)foreground));
     }
 }

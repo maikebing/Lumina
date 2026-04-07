@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -42,6 +43,65 @@ internal static class ToolStripPopupMenu
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     internal static int ShowForMenuBar(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
     {
+        MenuRenderingMode requestedMode = MenuRenderingModeResolver.ResolveForPopupMenus();
+        return requestedMode switch
+        {
+            MenuRenderingMode.ImmersivePopup => ShowForMenuBarImmersive(items, ownerHandle, screenLocation, requestedMode),
+            _ => ShowForMenuBarClassic(items, ownerHandle, screenLocation, requestedMode),
+        };
+    }
+
+    // The hook proc is an unmanaged static function pointer and AOT-safe.
+    // lParam points to a MSG struct when nCode == MSGF_MENU.
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint MsgFilterHookProc(int code, nint wParam, nint lParam)
+    {
+        if (code == Win32.MSGF_MENU)
+        {
+            unsafe
+            {
+                Win32.MSG* msg = (Win32.MSG*)lParam;
+                if (msg->message == (uint)Win32.WM_KEYDOWN)
+                {
+                    nuint vk = msg->wParam;
+                    if (vk == (nuint)Win32.VK_LEFT && s_menuDepth <= 1)
+                    {
+                        // At root level: turn Left into Escape and record direction.
+                        s_menuCloseDirection = -1;
+                        msg->wParam = (nuint)Win32.VK_ESCAPE;
+                    }
+                    else if (vk == (nuint)Win32.VK_RIGHT && !s_currentItemHasSubMenu)
+                    {
+                        // Right on a leaf item: turn it into Escape and record direction.
+                        s_menuCloseDirection = 1;
+                        msg->wParam = (nuint)Win32.VK_ESCAPE;
+                    }
+                }
+            }
+        }
+
+        return Win32.CallNextHookEx(s_msgHook, code, wParam, lParam);
+    }
+
+    internal static void Show(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    {
+        MenuRenderingMode requestedMode = MenuRenderingModeResolver.ResolveForPopupMenus();
+        switch (requestedMode)
+        {
+            case MenuRenderingMode.ImmersivePopup:
+                ShowImmersive(items, ownerHandle, screenLocation, requestedMode);
+                break;
+
+            default:
+                ShowClassic(items, ownerHandle, screenLocation, requestedMode);
+                break;
+        }
+    }
+
+    private static int ShowForMenuBarClassic(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
+    {
+        LogMenuDecision(requestedMode, MenuRenderingMode.Classic, immersiveAttempted: false, immersiveEnabled: false);
+
         if (ownerHandle == 0)
         {
             return 0;
@@ -94,40 +154,23 @@ internal static class ToolStripPopupMenu
         }
     }
 
-    // The hook proc is an unmanaged static function pointer and AOT-safe.
-    // lParam points to a MSG struct when nCode == MSGF_MENU.
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    private static nint MsgFilterHookProc(int code, nint wParam, nint lParam)
+    private static int ShowForMenuBarImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
-        if (code == Win32.MSGF_MENU)
+        bool enabled = Win32DarkModeApi.TryEnableImmersivePopupMenus();
+        LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
+
+        if (!enabled)
         {
-            unsafe
-            {
-                Win32.MSG* msg = (Win32.MSG*)lParam;
-                if (msg->message == (uint)Win32.WM_KEYDOWN)
-                {
-                    nuint vk = msg->wParam;
-                    if (vk == (nuint)Win32.VK_LEFT && s_menuDepth <= 1)
-                    {
-                        // At root level: turn Left into Escape and record direction.
-                        s_menuCloseDirection = -1;
-                        msg->wParam = (nuint)Win32.VK_ESCAPE;
-                    }
-                    else if (vk == (nuint)Win32.VK_RIGHT && !s_currentItemHasSubMenu)
-                    {
-                        // Right on a leaf item: turn it into Escape and record direction.
-                        s_menuCloseDirection = 1;
-                        msg->wParam = (nuint)Win32.VK_ESCAPE;
-                    }
-                }
-            }
+            return ShowForMenuBarClassic(items, ownerHandle, screenLocation, requestedMode);
         }
 
-        return Win32.CallNextHookEx(s_msgHook, code, wParam, lParam);
+        return ShowForMenuBarImmersiveCore(items, ownerHandle, screenLocation);
     }
 
-    internal static void Show(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    private static void ShowClassic(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
     {
+        LogMenuDecision(requestedMode, MenuRenderingMode.Classic, immersiveAttempted: false, immersiveEnabled: false);
+
         if (ownerHandle == 0)
         {
             return;
@@ -156,6 +199,36 @@ internal static class ToolStripPopupMenu
         }
 
         _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
+    }
+
+    private static void ShowImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
+    {
+        bool enabled = Win32DarkModeApi.TryEnableImmersivePopupMenus();
+        LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
+
+        if (!enabled)
+        {
+            ShowClassic(items, ownerHandle, screenLocation, requestedMode);
+            return;
+        }
+
+        ShowImmersiveCore(items, ownerHandle, screenLocation);
+    }
+
+    private static int ShowForMenuBarImmersiveCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    {
+        return ShowForMenuBarClassic(items, ownerHandle, screenLocation, MenuRenderingMode.ImmersivePopup);
+    }
+
+    private static void ShowImmersiveCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    {
+        ShowClassic(items, ownerHandle, screenLocation, MenuRenderingMode.ImmersivePopup);
+    }
+
+    private static void LogMenuDecision(MenuRenderingMode requestedMode, MenuRenderingMode effectiveMode, bool immersiveAttempted, bool immersiveEnabled)
+    {
+        DarkModeCapabilities.Snapshot capabilities = DarkModeCapabilities.Current;
+        Debug.WriteLine($"[Lumina.Forms] PopupMenu requested={requestedMode}, effective={effectiveMode}, immersiveAttempted={immersiveAttempted}, immersiveEnabled={immersiveEnabled}, os={capabilities.Major}.{capabilities.Minor}.{capabilities.Build}");
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]

@@ -60,6 +60,7 @@ public class TabControl : ContainerControlBase
     {
         base.OnHandleCreated();
         ApplyTabHeaderMetrics();
+        ApplyNativeColors();
         SynchronizeTextHandlers();
         SynchronizeNativeTabs();
         ApplySelectedIndex();
@@ -96,6 +97,7 @@ public class TabControl : ContainerControlBase
     protected override void ApplyTheme()
     {
         ApplyExplorerTheme();
+        ApplyNativeColors();
     }
 
     /// <inheritdoc />
@@ -266,5 +268,31 @@ public class TabControl : ContainerControlBase
         }
 
         _ = Win32.SendMessageW(Handle, Win32.TCM_SETPADDING, 0, Win32.MakeLParam(18, 6));
+        _ = Win32.SendMessageW(Handle, Win32.TCM_SETMINTABWIDTH, 0, (nint)72);
+    }
+
+    private void ApplyNativeColors()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        ThemePalette palette = CurrentVisualStyle.Palette;
+        BackColor = Color.FromArgb(unchecked((int)palette.SurfaceBackground));
+        ForeColor = Color.FromArgb(unchecked((int)palette.SurfaceForeground));
+
+        foreach (TabPage page in GetTabPages())
+        {
+            if (page.UseVisualStyleBackColor)
+            {
+                page.BackColor = Color.Empty;
+            }
+
+            if (page.ForeColor.IsEmpty)
+            {
+                page.ForeColor = Color.Empty;
+            }
+        }
     }
 }
