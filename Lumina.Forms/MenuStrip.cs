@@ -7,6 +7,8 @@ namespace Lumina.Forms;
 /// </summary>
 public class MenuStrip : ToolStrip
 {
+    private const int MenuItemHorizontalPadding = 16;
+
     private NativeMenu? _nativeMenu;
 
     internal bool UsesNativeMenuBar => false;
@@ -23,6 +25,19 @@ public class MenuStrip : ToolStrip
         }
 
         base.PerformLayout();
+    }
+
+    private protected override void LayoutItemHosts()
+    {
+        int availableHeight = Math.Max(1, Height);
+        LayoutItemHosts(0, 0, 0, availableHeight, Height);
+    }
+
+    private protected override Size ResolveHostSize(ToolStripItem item, int availableHeight)
+    {
+        string text = ResolveItemText(item);
+        int width = Math.Max(48, text.Length * 8 + (MenuItemHorizontalPadding * 2));
+        return new Size(width, Math.Max(1, availableHeight));
     }
 
     /// <inheritdoc />
@@ -149,6 +164,18 @@ public class MenuStrip : ToolStrip
                     {
                         _hovered = true;
                         BackColor = Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.ControlHoverBackground));
+
+                        if (Handle != 0)
+                        {
+                            var track = new Win32.TRACKMOUSEEVENT
+                            {
+                                cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.TRACKMOUSEEVENT>(),
+                                dwFlags = Win32.TME_LEAVE,
+                                hwndTrack = Handle,
+                            };
+
+                            _ = Win32.TrackMouseEvent(ref track);
+                        }
                     }
 
                     result = 0;

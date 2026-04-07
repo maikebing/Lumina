@@ -279,6 +279,7 @@ internal static class Win32
     public const int WH_MSGFILTER = -1;
     public const int MSGF_MENU = 2;
     public const int TRANSPARENT = 1;
+    public const uint TME_LEAVE = 0x00000002;
 
     public const int WM_INITMENUPOPUP = 0x0117;
     public const int WM_UNINITMENUPOPUP = 0x0125;
@@ -447,6 +448,15 @@ internal static class Win32
         public nuint cbData;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct TRACKMOUSEEVENT
+    {
+        public uint cbSize;
+        public uint dwFlags;
+        public nint hwndTrack;
+        public uint dwHoverTime;
+    }
+
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     internal delegate nint SubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData);
 
@@ -553,6 +563,10 @@ internal static class Win32
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool TranslateMessage(in MSG lpMsg);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
 
     [DllImport("user32.dll", EntryPoint = "DispatchMessageW")]
     internal static extern nint DispatchMessage(in MSG lpMsg);

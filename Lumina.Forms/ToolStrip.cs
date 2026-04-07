@@ -261,6 +261,29 @@ public class ToolStrip : ContainerControlBase
         }
     }
 
+    private protected void LayoutItemHosts(int x, int y, int itemSpacing, int availableHeight, int explicitItemHeight)
+    {
+        foreach (ToolStripItem item in Items)
+        {
+            if (!_itemHosts.TryGetValue(item, out Control? host))
+            {
+                continue;
+            }
+
+            ApplyItemState(host, item);
+            host.Visible = item.Visible;
+            if (!item.Visible)
+            {
+                continue;
+            }
+
+            Size hostSize = ResolveHostSize(item, availableHeight);
+            int height = explicitItemHeight > 0 ? explicitItemHeight : hostSize.Height;
+            host.SetBounds(x, y, hostSize.Width, height);
+            x += hostSize.Width + itemSpacing;
+        }
+    }
+
     /// <summary>
     /// Creates the native host control used to represent a logical strip item on the surface.
     /// </summary>
