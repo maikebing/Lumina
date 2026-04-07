@@ -86,21 +86,6 @@ public class MenuStrip : ToolStrip
         return true;
     }
 
-    internal bool TryMeasureOwnerDrawItem(nuint itemData, nint fontHandle, out int width, out int height)
-    {
-        if (_nativeMenu is null)
-        {
-            width = 0;
-            height = 0;
-            return false;
-        }
-
-        return _nativeMenu.TryMeasureOwnerDrawItem(itemData, fontHandle, out width, out height);
-    }
-
-    internal bool TryDrawOwnerDrawItem(in Win32.DRAWITEMSTRUCT drawItem)
-        => _nativeMenu is not null && _nativeMenu.TryDrawOwnerDrawItem(drawItem.itemData, drawItem);
-
     internal void ReleaseNativeMenu()
     {
         _nativeMenu?.Dispose();

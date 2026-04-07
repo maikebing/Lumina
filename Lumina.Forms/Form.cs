@@ -1179,22 +1179,6 @@ public class Form : IDisposable
 
                 return 0;
 
-            case Win32.WM_MEASUREITEM:
-                if (HandleMeasureItem(lParam))
-                {
-                    return (nint)1;
-                }
-
-                break;
-
-            case Win32.WM_DRAWITEM:
-                if (HandleDrawItem(lParam))
-                {
-                    return (nint)1;
-                }
-
-                break;
-
             case Win32.WM_COMMAND:
                 if (HandleCommand(wParam, lParam))
                 {
@@ -1272,41 +1256,6 @@ public class Form : IDisposable
 
         return _controlsById.TryGetValue(controlId, out var control)
             && control.HandleNotify(notificationCode, lParam);
-    }
-
-    private bool HandleMeasureItem(nint lParam)
-    {
-        if (lParam == 0 || _mainMenuStrip is null)
-        {
-            return false;
-        }
-
-        Win32.MEASUREITEMSTRUCT measureItem = Marshal.PtrToStructure<Win32.MEASUREITEMSTRUCT>(lParam);
-        if (measureItem.CtlType != Win32.ODT_MENU)
-        {
-            return false;
-        }
-
-        if (!_mainMenuStrip.TryMeasureOwnerDrawItem(measureItem.itemData, UiFontHandle, out int width, out int height))
-        {
-            return false;
-        }
-
-        measureItem.itemWidth = (uint)Math.Max(1, width);
-        measureItem.itemHeight = (uint)Math.Max(1, height);
-        Marshal.StructureToPtr(measureItem, lParam, false);
-        return true;
-    }
-
-    private bool HandleDrawItem(nint lParam)
-    {
-        if (lParam == 0 || _mainMenuStrip is null)
-        {
-            return false;
-        }
-
-        Win32.DRAWITEMSTRUCT drawItem = Marshal.PtrToStructure<Win32.DRAWITEMSTRUCT>(lParam);
-        return drawItem.CtlType == Win32.ODT_MENU && _mainMenuStrip.TryDrawOwnerDrawItem(drawItem);
     }
 
     private bool HandleContextMenu(nint wParam, nint lParam)
