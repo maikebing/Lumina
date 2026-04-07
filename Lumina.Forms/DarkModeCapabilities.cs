@@ -12,9 +12,7 @@ internal static class DarkModeCapabilities
         bool IsWindows,
         int Major,
         int Minor,
-        int Build,
-        bool SupportsWin32DarkModeApis,
-        bool SupportsImmersivePopupMenus)
+        int Build)
     {
         internal bool IsWindows7Like => IsWindows && Major == 6 && Minor <= 1;
         internal bool IsLegacyWindows => IsWindows && Major < 10;
@@ -25,14 +23,11 @@ internal static class DarkModeCapabilities
     {
         if (!OperatingSystem.IsWindows())
         {
-            return new Snapshot(false, 0, 0, 0, false, false);
+            return new Snapshot(false, 0, 0, 0);
         }
 
         (int major, int minor, int build) = GetWindowsVersion();
-        bool supportsWin32DarkModeApis = major >= 10 && build >= 17763;
-        bool supportsImmersivePopupMenus = supportsWin32DarkModeApis;
-
-        return new Snapshot(true, major, minor, build, supportsWin32DarkModeApis, supportsImmersivePopupMenus);
+        return new Snapshot(true, major, minor, build);
     }
 
     private static (int Major, int Minor, int Build) GetWindowsVersion()

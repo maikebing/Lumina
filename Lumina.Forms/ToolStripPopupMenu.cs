@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -20,9 +19,6 @@ internal static class ToolStripPopupMenu
 
     [ThreadStatic]
     private static nint s_msgHook;                // current thread hook handle
-
-    [ThreadStatic]
-    private static bool s_immersiveMenuPrepared;  // current popup session has already prepared immersive theming
 
     /// <summary>
     /// Called from Form.WindowProc for WM_INITMENUPOPUP / WM_UNINITMENUPOPUP so that
@@ -45,14 +41,7 @@ internal static class ToolStripPopupMenu
     /// </summary>
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     internal static int ShowForMenuBar(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
-    {
-        MenuRenderingMode requestedMode = MenuRenderingModeResolver.ResolveForPopupMenus();
-        return requestedMode switch
-        {
-            MenuRenderingMode.ImmersivePopup => ShowForMenuBarImmersive(items, ownerHandle, screenLocation, requestedMode),
-            _ => ShowForMenuBarClassic(items, ownerHandle, screenLocation, requestedMode),
-        };
-    }
+        => ShowForMenuBarCore(items, ownerHandle, screenLocation);
 
     // The hook proc is an unmanaged static function pointer and AOT-safe.
     // lParam points to a MSG struct when nCode == MSGF_MENU.
@@ -87,28 +76,9 @@ internal static class ToolStripPopupMenu
     }
 
     internal static void Show(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
-    {
-        MenuRenderingMode requestedMode = MenuRenderingModeResolver.ResolveForPopupMenus();
-        switch (requestedMode)
-        {
-            case MenuRenderingMode.ImmersivePopup:
-                ShowImmersive(items, ownerHandle, screenLocation, requestedMode);
-                break;
+        => ShowCore(items, ownerHandle, screenLocation);
 
-            default:
-                ShowClassic(items, ownerHandle, screenLocation, requestedMode);
-                break;
-        }
-    }
-
-    private static int ShowForMenuBarClassic(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
-    {
-        LogMenuDecision(requestedMode, MenuRenderingMode.Classic, immersiveAttempted: false, immersiveEnabled: false);
-
-        return ExecuteMenuBarPopup(items, ownerHandle, screenLocation);
-    }
-
-    private static int ExecuteMenuBarPopup(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    private static int ShowForMenuBarCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
     {
         if (ownerHandle == 0)
         {
@@ -122,7 +92,6 @@ internal static class ToolStripPopupMenu
         }
 
         s_menuCloseDirection = 0;
-        s_immersiveMenuPrepared = false;
 
         unsafe
         {
@@ -155,8 +124,6 @@ internal static class ToolStripPopupMenu
         }
         finally
         {
-            s_immersiveMenuPrepared = false;
-
             if (s_msgHook != 0)
             {
                 Win32.UnhookWindowsHookEx(s_msgHook);
@@ -165,27 +132,7 @@ internal static class ToolStripPopupMenu
         }
     }
 
-    private static int ShowForMenuBarImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
-    {
-        bool enabled = EnsureImmersiveMenuPrepared(ownerHandle);
-        LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
-
-        if (!enabled)
-        {
-            return ExecuteMenuBarPopup(items, ownerHandle, screenLocation);
-        }
-
-        return ShowForMenuBarImmersiveCore(items, ownerHandle, screenLocation);
-    }
-
-    private static void ShowClassic(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
-    {
-        LogMenuDecision(requestedMode, MenuRenderingMode.Classic, immersiveAttempted: false, immersiveEnabled: false);
-
-        ExecutePopup(items, ownerHandle, screenLocation);
-    }
-
-    private static void ExecutePopup(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    private static void ShowCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
     {
         if (ownerHandle == 0)
         {
@@ -197,8 +144,6 @@ internal static class ToolStripPopupMenu
         {
             return;
         }
-
-        s_immersiveMenuPrepared = false;
 
         _ = Win32.SetForegroundWindow(ownerHandle);
 
@@ -216,55 +161,7 @@ internal static class ToolStripPopupMenu
             item.PerformClick();
         }
 
-        s_immersiveMenuPrepared = false;
         _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
-    }
-
-    private static void ShowImmersive(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, MenuRenderingMode requestedMode)
-    {
-        bool enabled = EnsureImmersiveMenuPrepared(ownerHandle);
-        LogMenuDecision(requestedMode, enabled ? MenuRenderingMode.ImmersivePopup : MenuRenderingMode.Classic, immersiveAttempted: true, immersiveEnabled: enabled);
-
-        if (!enabled)
-        {
-            ExecutePopup(items, ownerHandle, screenLocation);
-            return;
-        }
-
-        ShowImmersiveCore(items, ownerHandle, screenLocation);
-    }
-
-    private static int ShowForMenuBarImmersiveCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
-    {
-        return ExecuteMenuBarPopup(items, ownerHandle, screenLocation);
-    }
-
-    private static void ShowImmersiveCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
-    {
-        ExecutePopup(items, ownerHandle, screenLocation);
-    }
-
-    private static void LogMenuDecision(MenuRenderingMode requestedMode, MenuRenderingMode effectiveMode, bool immersiveAttempted, bool immersiveEnabled)
-    {
-        DarkModeCapabilities.Snapshot capabilities = DarkModeCapabilities.Current;
-        string darkModeStatus = immersiveAttempted ? Win32DarkModeApi.StatusDescription : "not-requested";
-        Debug.WriteLine($"[Lumina.Forms] PopupMenu requested={requestedMode}, effective={effectiveMode}, immersiveAttempted={immersiveAttempted}, immersiveEnabled={immersiveEnabled}, darkModeStatus={darkModeStatus}, os={capabilities.Major}.{capabilities.Minor}.{capabilities.Build}");
-    }
-
-    private static bool EnsureImmersiveMenuPrepared(nint ownerHandle)
-    {
-        if (s_immersiveMenuPrepared)
-        {
-            return true;
-        }
-
-        if (ownerHandle != 0)
-        {
-            Win32DarkModeApi.TryApplyWindowDarkMode(ownerHandle);
-        }
-
-        s_immersiveMenuPrepared = Win32DarkModeApi.TryPrepareImmersiveMenuPresentation();
-        return s_immersiveMenuPrepared;
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
