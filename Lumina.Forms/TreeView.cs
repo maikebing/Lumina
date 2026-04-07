@@ -36,6 +36,7 @@ public class TreeView : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
         ApplyNativeColors();
     }
@@ -45,7 +46,18 @@ public class TreeView : Control
     {
         base.OnHandleCreated();
         ApplyExtendedStyles();
+        ApplyNativeThemeState();
         ApplyNativeColors();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     private void ApplyExtendedStyles()

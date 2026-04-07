@@ -14,6 +14,9 @@ internal sealed class NativeMenu : IDisposable
 
     private readonly Dictionary<uint, ToolStripItem> _commands = [];
     private readonly List<nint> _imageHandles = [];
+    private nint _backgroundBrush;
+    private bool _ownsBackgroundBrush;
+
     private NativeMenu(nint handle)
     {
         Handle = handle;
@@ -21,11 +24,11 @@ internal sealed class NativeMenu : IDisposable
 
     internal nint Handle { get; private set; }
 
-    internal static NativeMenu CreateMenuBar(IEnumerable<ToolStripItem> items)
-        => Create(items, isMenuBar: true);
+    internal static NativeMenu CreateMenuBar(IEnumerable<ToolStripItem> items, ResolvedVisualStyle visualStyle)
+        => Create(items, isMenuBar: true, visualStyle);
 
-    internal static NativeMenu CreatePopup(IEnumerable<ToolStripItem> items)
-        => Create(items, isMenuBar: false);
+    internal static NativeMenu CreatePopup(IEnumerable<ToolStripItem> items, ResolvedVisualStyle visualStyle)
+        => Create(items, isMenuBar: false, visualStyle);
 
     internal bool TryGetCommand(uint commandId, out ToolStripItem item)
     {
@@ -51,6 +54,14 @@ internal sealed class NativeMenu : IDisposable
 
         _imageHandles.Clear();
 
+        if (_backgroundBrush != 0 && _ownsBackgroundBrush)
+        {
+            _ = Win32.DeleteObject(_backgroundBrush);
+        }
+
+        _backgroundBrush = 0;
+        _ownsBackgroundBrush = false;
+
         if (Handle != 0)
         {
             _ = Win32.DestroyMenu(Handle);
@@ -58,7 +69,7 @@ internal sealed class NativeMenu : IDisposable
         }
     }
 
-    private static NativeMenu Create(IEnumerable<ToolStripItem> items, bool isMenuBar)
+    private static NativeMenu Create(IEnumerable<ToolStripItem> items, bool isMenuBar, ResolvedVisualStyle visualStyle)
     {
         nint menuHandle = isMenuBar
             ? Win32.CreateMenu()
@@ -67,14 +78,14 @@ internal sealed class NativeMenu : IDisposable
         var nativeMenu = new NativeMenu(menuHandle);
         if (menuHandle != 0)
         {
-            ApplyDarkMenuStyling(menuHandle);
+            nativeMenu.ApplyDarkMenuStyling(menuHandle, visualStyle);
             nativeMenu.PopulateMenu(menuHandle, items);
         }
 
         return nativeMenu;
     }
 
-    private static void ApplyDarkMenuStyling(nint menuHandle)
+    private void ApplyDarkMenuStyling(nint menuHandle, ResolvedVisualStyle visualStyle)
     {
         if (menuHandle == 0 || !DarkModeNative.IsSupported)
         {
@@ -82,6 +93,26 @@ internal sealed class NativeMenu : IDisposable
         }
 
         DarkModeNative.RefreshImmersiveState();
+
+        uint menuArgb = visualStyle.IsDarkMode
+            ? visualStyle.Palette.SurfaceBackground
+            : visualStyle.Palette.ControlBackground;
+
+        _backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(menuArgb));
+        _ownsBackgroundBrush = _backgroundBrush != 0;
+        if (_backgroundBrush == 0)
+        {
+            return;
+        }
+
+        var menuInfo = new Win32.MENUINFO
+        {
+            cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.MENUINFO>(),
+            fMask = Win32.MIM_BACKGROUND | Win32.MIM_APPLYTOSUBMENUS,
+            hbrBack = _backgroundBrush,
+        };
+
+        _ = Win32.SetMenuInfo(menuHandle, ref menuInfo);
     }
 
     private void PopulateMenu(nint menuHandle, IEnumerable<ToolStripItem> items)

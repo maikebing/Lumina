@@ -40,8 +40,8 @@ internal static class ToolStripPopupMenu
     /// are captured and converted to Escape, then reported as a direction.
     /// </summary>
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-    internal static int ShowForMenuBar(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
-        => ShowForMenuBarCore(items, ownerHandle, screenLocation);
+    internal static int ShowForMenuBar(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
+        => ShowForMenuBarCore(items, ownerHandle, screenLocation, visualStyle);
 
     // The hook proc is an unmanaged static function pointer and AOT-safe.
     // lParam points to a MSG struct when nCode == MSGF_MENU.
@@ -75,17 +75,17 @@ internal static class ToolStripPopupMenu
         return Win32.CallNextHookEx(s_msgHook, code, wParam, lParam);
     }
 
-    internal static void Show(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
-        => ShowCore(items, ownerHandle, screenLocation);
+    internal static void Show(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
+        => ShowCore(items, ownerHandle, screenLocation, visualStyle);
 
-    private static int ShowForMenuBarCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    private static int ShowForMenuBarCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
     {
         if (ownerHandle == 0)
         {
             return 0;
         }
 
-        using NativeMenu nativeMenu = NativeMenu.CreatePopup(items);
+        using NativeMenu nativeMenu = NativeMenu.CreatePopup(items, visualStyle);
         if (nativeMenu.Handle == 0)
         {
             return 0;
@@ -133,14 +133,14 @@ internal static class ToolStripPopupMenu
         }
     }
 
-    private static void ShowCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation)
+    private static void ShowCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
     {
         if (ownerHandle == 0)
         {
             return;
         }
 
-        using NativeMenu nativeMenu = NativeMenu.CreatePopup(items);
+        using NativeMenu nativeMenu = NativeMenu.CreatePopup(items, visualStyle);
         if (nativeMenu.Handle == 0)
         {
             return;

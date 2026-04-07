@@ -33,12 +33,24 @@ public class ProgressBar : Control
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         Value = _value;
     }
 
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 }

@@ -59,7 +59,7 @@ public class MenuStrip : ToolStrip
         }
 
         _nativeMenu?.Dispose();
-        _nativeMenu = NativeMenu.CreateMenuBar(Items);
+        _nativeMenu = NativeMenu.CreateMenuBar(Items, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
     }
 
     internal nint GetNativeMenuHandle()

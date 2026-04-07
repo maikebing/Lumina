@@ -143,6 +143,18 @@ internal static class DarkModeNative
         s_flushMenuThemes?.Invoke();
     }
 
+    internal static void ApplyThemeToWindow(nint hwnd, bool useDarkMode)
+    {
+        EnsureInitialized();
+        if (!s_supported || hwnd == 0)
+        {
+            return;
+        }
+
+        _ = AllowWindowDarkMode(hwnd, useDarkMode);
+        _ = Win32.SendMessageW(hwnd, Win32.WM_THEMECHANGED, 0, 0);
+    }
+
     private static void EnsureInitialized()
     {
         if (s_initialized)

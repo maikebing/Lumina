@@ -149,6 +149,7 @@ public class ListBox : Control
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
 
         foreach (object? item in CollectionsMarshal.AsSpan(_items))
         {
@@ -182,7 +183,18 @@ public class ListBox : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <inheritdoc />

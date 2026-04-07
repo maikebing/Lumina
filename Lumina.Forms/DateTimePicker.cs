@@ -30,14 +30,26 @@ public class DateTimePicker : Control
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         ApplyNativeColors();
     }
 
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
         ApplyNativeColors();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <inheritdoc />

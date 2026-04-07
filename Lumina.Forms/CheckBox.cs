@@ -69,6 +69,7 @@ public class CheckBox : Control
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         Checked = _checked;
     }
 
@@ -93,7 +94,18 @@ public class CheckBox : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <summary>

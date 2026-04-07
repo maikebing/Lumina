@@ -18,6 +18,7 @@ public class MonthCalendar : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
         ApplyNativeColors();
     }
@@ -26,7 +27,18 @@ public class MonthCalendar : Control
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         ApplyNativeColors();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <inheritdoc />

@@ -35,6 +35,27 @@ public class StatusStrip : ToolStrip
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
+    }
+
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        base.ApplyTheme();
+        ApplyNativeThemeState();
+    }
+
+    /// <inheritdoc />
+    private protected override void ApplyNativeThemeState()
+    {
+        base.ApplyNativeThemeState();
+
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <inheritdoc />

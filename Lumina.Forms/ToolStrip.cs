@@ -41,7 +41,24 @@ public class ToolStrip : ContainerControlBase
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         PerformLayout();
+    }
+
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        ApplyNativeThemeState();
+    }
+
+    private protected virtual void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <inheritdoc />
@@ -423,7 +440,7 @@ public class ToolStrip : ContainerControlBase
             Point screenLocation = GetDropDownScreenLocation(host);
             nint ownerHandle = Owner?.Handle ?? Handle;
 
-            int direction = ToolStripPopupMenu.ShowForMenuBar(item.DropDownItems, ownerHandle, screenLocation);
+            int direction = ToolStripPopupMenu.ShowForMenuBar(item.DropDownItems, ownerHandle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
 
             if (direction == 0)
             {
@@ -443,7 +460,7 @@ public class ToolStrip : ContainerControlBase
         }
 
         Point screenLocation = GetDropDownScreenLocation(host);
-        ToolStripPopupMenu.Show(item.DropDownItems, Owner?.Handle ?? Handle, screenLocation);
+        ToolStripPopupMenu.Show(item.DropDownItems, Owner?.Handle ?? Handle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
     }
 
     private static Point GetDropDownScreenLocation(Control host)

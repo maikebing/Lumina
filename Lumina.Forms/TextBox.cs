@@ -123,7 +123,25 @@ public class TextBox : Control
     /// <inheritdoc />
     protected override void ApplyTheme()
     {
+        ApplyNativeThemeState();
         ApplyExplorerTheme();
+    }
+
+    /// <inheritdoc />
+    protected override void OnHandleCreated()
+    {
+        base.OnHandleCreated();
+        ApplyNativeThemeState();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
     }
 
     /// <inheritdoc />

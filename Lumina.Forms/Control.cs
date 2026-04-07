@@ -968,7 +968,7 @@ public abstract class Control : IDisposable
         _lastContextMenuScreenLocation = screenLocation;
 
         nint ownerHandle = Owner?.Handle ?? Parent?.Handle ?? hwnd;
-        contextMenuStrip.ShowAtScreenPoint(ownerHandle, screenLocation);
+        contextMenuStrip.ShowAtScreenPoint(ownerHandle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
         return true;
     }
 

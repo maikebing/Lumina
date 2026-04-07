@@ -456,7 +456,7 @@ public class NotifyIcon : Component
             ownerHandle = _windowHandle;
         }
 
-        ContextMenuStrip.ShowAtScreenPoint(ownerHandle, new System.Drawing.Point(cursorPoint.x, cursorPoint.y));
+        ContextMenuStrip.ShowAtScreenPoint(ownerHandle, new System.Drawing.Point(cursorPoint.x, cursorPoint.y), Application.CurrentVisualStyle);
     }
 
     /// <summary>

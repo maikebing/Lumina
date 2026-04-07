@@ -211,6 +211,7 @@ public class SplitContainer : ContainerControlBase, ISupportInitialize
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ApplyNativeThemeState();
         LayoutPanels();
     }
 
@@ -232,6 +233,31 @@ public class SplitContainer : ContainerControlBase, ISupportInitialize
     {
         LayoutPanels();
         base.PerformLayout();
+    }
+
+    /// <inheritdoc />
+    protected override void ApplyTheme()
+    {
+        ApplyNativeThemeState();
+    }
+
+    private void ApplyNativeThemeState()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
+        if (Panel1.Handle != 0)
+        {
+            DarkModeNative.ApplyThemeToWindow(Panel1.Handle, CurrentVisualStyle.IsDarkMode);
+        }
+
+        if (Panel2.Handle != 0)
+        {
+            DarkModeNative.ApplyThemeToWindow(Panel2.Handle, CurrentVisualStyle.IsDarkMode);
+        }
     }
 
     private bool IsVerticalLayout => Orientation == Orientation.Vertical;

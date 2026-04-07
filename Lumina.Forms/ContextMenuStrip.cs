@@ -76,15 +76,15 @@ public class ContextMenuStrip : Component
 
         if (control.Handle != 0 && Win32.GetWindowRect(control.Handle, out var rect))
         {
-            ShowAtScreenPoint(control.Owner?.Handle ?? control.Handle, new Point(rect.Left + position.X, rect.Top + position.Y));
+            ShowAtScreenPoint(control.Owner?.Handle ?? control.Handle, new Point(rect.Left + position.X, rect.Top + position.Y), control.Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
             return;
         }
 
-        ShowAtScreenPoint(control.Owner?.Handle ?? 0, new Point(control.Left + position.X, control.Top + position.Y));
+        ShowAtScreenPoint(control.Owner?.Handle ?? 0, new Point(control.Left + position.X, control.Top + position.Y), control.Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
     }
 
-    internal void ShowAtScreenPoint(nint ownerHandle, Point screenLocation)
+    internal void ShowAtScreenPoint(nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
     {
-        ToolStripPopupMenu.Show(Items, ownerHandle, screenLocation);
+        ToolStripPopupMenu.Show(Items, ownerHandle, screenLocation, visualStyle);
     }
 }
