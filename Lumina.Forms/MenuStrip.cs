@@ -9,7 +9,7 @@ public class MenuStrip : ToolStrip
 {
     private NativeMenu? _nativeMenu;
 
-    internal bool UsesNativeMenuBar => OperatingSystem.IsWindows();
+    internal bool UsesNativeMenuBar => false;
 
     /// <inheritdoc />
     protected override bool ShouldCreateNativeHandle => !UsesNativeMenuBar;

@@ -29,6 +29,7 @@ internal static class Win32
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 
     public const uint WS_EX_APPWINDOW = 0x00040000;
+    public const uint WS_EX_COMPOSITED = 0x02000000;
     public const uint WS_EX_CLIENTEDGE = 0x00000200;
 
     public const uint ES_LEFT = 0x0000;

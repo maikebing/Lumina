@@ -242,7 +242,7 @@ public class Form : IDisposable
         _selfHandle = GCHandle.Alloc(this);
 
         nint hwnd = Win32.CreateWindowExW(
-            Win32.WS_EX_APPWINDOW,
+            Win32.WS_EX_APPWINDOW | Win32.WS_EX_COMPOSITED,
             WindowClassName,
             Text,
             Win32.WS_OVERLAPPEDWINDOW | Win32.WS_CLIPCHILDREN,
