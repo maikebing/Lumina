@@ -103,14 +103,16 @@ public class MenuStrip : ToolStrip
         protected override int GetNativeHeight(int requestedHeight)
             => Math.Max(26, requestedHeight);
 
-        protected override bool OnCommand(int notificationCode)
+        protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
         {
-            if (notificationCode != Win32.STN_CLICKED)
+            if (message != Win32.WM_LBUTTONUP)
             {
+                result = 0;
                 return false;
             }
 
             Click?.Invoke(this, EventArgs.Empty);
+            result = 0;
             return true;
         }
     }
