@@ -10,11 +10,12 @@ internal static class NativeMenuRenderer
 {
     private const int HorizontalPadding = 12;
     private const int VerticalPadding = 6;
+    private const int GlyphTextSpacing = 4;
     private const int SelectionInsetHorizontal = 4;
     private const int SelectionInsetVertical = 2;
     private const int SelectionCornerRadius = 6;
-    private const int GlyphColumnWidth = 24;
     private const int GlyphSize = 16;
+    private const int GlyphColumnWidth = GlyphSize + GlyphTextSpacing;
     private const int TextShortcutSpacing = 24;
     private const int ArrowColumnWidth = 16;
     private const int SubMenuArrowWidth = 4;

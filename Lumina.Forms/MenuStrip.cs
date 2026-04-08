@@ -12,7 +12,7 @@ public class MenuStrip : ToolStrip
     private const int TopLevelContentHorizontalPadding = 6;
     private const int TopLevelContentVerticalPadding = 1;
     private const int MenuItemImageSize = 16;
-    private const int MenuItemImageSpacing = 6;
+    private const int MenuItemImageSpacing = 4;
     private const int TopLevelItemSpacing = 6;
 
     private NativeMenu? _nativeMenu;
