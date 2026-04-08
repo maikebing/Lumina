@@ -2,6 +2,21 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "run-glassmorphdemo",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				".\\Lumina.GlassMorphDemo\\Lumina.GlassMorphDemo.csproj"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		},
+		{
 			"label": "publish-notepad-aot",
 			"type": "shell",
 			"command": "dotnet",

@@ -429,3 +429,4 @@ msix/GenAssets/obj/
 msix/dist/
 msix/dist-verify/
 .dotnet-home/
+/.codex-temp
