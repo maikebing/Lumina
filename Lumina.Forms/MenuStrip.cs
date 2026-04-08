@@ -9,7 +9,7 @@ namespace Lumina.Forms;
 /// </summary>
 public class MenuStrip : ToolStrip
 {
-    private const int TopLevelContentHorizontalPadding = 8;
+    private const int TopLevelContentHorizontalPadding = 6;
     private const int TopLevelContentVerticalPadding = 1;
     private const int MenuItemImageSize = 16;
     private const int MenuItemImageSpacing = 6;
@@ -29,7 +29,7 @@ public class MenuStrip : ToolStrip
         GripStyle = ToolStripGripStyle.Hidden;
         Stretch = true;
         ShowItemToolTips = false;
-        Padding = new Padding(6, 2, 6, 2);
+        Padding = new Padding(6, 2, 0, 2);
     }
 
     /// <inheritdoc />
