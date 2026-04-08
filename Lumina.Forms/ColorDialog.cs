@@ -42,6 +42,9 @@ public sealed class ColorDialog : IDisposable
     [ThreadStatic]
     private static bool s_pendingDarkMode;
 
+    [ThreadStatic]
+    private static ThemePalette? s_pendingPalette;
+
     public DialogResult ShowDialog(Form? owner)
     {
         nint customColorsPtr = 0;
@@ -52,6 +55,7 @@ public sealed class ColorDialog : IDisposable
             Marshal.Copy(CustomColors, 0, customColorsPtr, CustomColorCount);
 
             s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
+            s_pendingPalette = (owner?.CurrentVisualStyle.Palette ?? Application.CurrentVisualStyle.Palette).Clone();
 
             uint flags = Win32.CC_RGBINIT | Win32.CC_ENABLEHOOK;
             if (AnyColor)
@@ -103,7 +107,7 @@ public sealed class ColorDialog : IDisposable
         {
             if (message == Win32.WM_INITDIALOG)
             {
-                CommonDialogThemeHelper.Apply(hWnd, s_pendingDarkMode);
+                CommonDialogThemeHelper.Apply(hWnd, s_pendingDarkMode, s_pendingPalette);
             }
         }
         catch

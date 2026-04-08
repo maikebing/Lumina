@@ -39,7 +39,14 @@ internal static class CommonDialogThemeHelper
         }
 
         s_states[hWnd] = newState;
-        _ = Win32.SetWindowSubclass(hWnd, s_dialogSubclassProc, DialogSubclassId, 0);
+        if (!Win32.SetWindowSubclass(hWnd, s_dialogSubclassProc, DialogSubclassId, 0))
+        {
+            if (s_states.TryRemove(hWnd, out DialogThemeState? failed))
+            {
+                failed.Dispose();
+            }
+            return;
+        }
 
         // Title bar — requires DWM attribute separate from uxtheme
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))

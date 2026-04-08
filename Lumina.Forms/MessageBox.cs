@@ -14,6 +14,9 @@ public static class MessageBox
     [ThreadStatic]
     private static bool s_pendingDarkMode;
 
+    [ThreadStatic]
+    private static ThemePalette? s_pendingPalette;
+
     /// <summary>
     /// Displays a message box with specified text.
     /// </summary>
@@ -41,6 +44,7 @@ public static class MessageBox
 
         DarkModeNative.RefreshImmersiveState();
         s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
+        s_pendingPalette = (owner?.CurrentVisualStyle.Palette ?? Application.CurrentVisualStyle.Palette).Clone();
 
         unsafe
         {
@@ -70,7 +74,7 @@ public static class MessageBox
 
         if (nCode == Win32.HCBT_ACTIVATE && wParam != 0)
         {
-            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode);
+            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode, s_pendingPalette);
             if (hook != 0)
             {
                 _ = Win32.UnhookWindowsHookEx(hook);

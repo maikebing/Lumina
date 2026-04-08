@@ -35,6 +35,9 @@ public sealed class FontDialog : IDisposable
     [ThreadStatic]
     private static bool s_pendingDarkMode;
 
+    [ThreadStatic]
+    private static ThemePalette? s_pendingPalette;
+
     public DialogResult ShowDialog(Form? owner)
     {
         nint logFontPtr = 0;
@@ -46,6 +49,7 @@ public sealed class FontDialog : IDisposable
             Marshal.StructureToPtr(logFont, logFontPtr, false);
 
             s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
+            s_pendingPalette = (owner?.CurrentVisualStyle.Palette ?? Application.CurrentVisualStyle.Palette).Clone();
 
             var chooseFont = new Win32.CHOOSEFONTW
             {
@@ -96,7 +100,7 @@ public sealed class FontDialog : IDisposable
         {
             if (message == Win32.WM_INITDIALOG)
             {
-                CommonDialogThemeHelper.Apply(hWnd, s_pendingDarkMode);
+                CommonDialogThemeHelper.Apply(hWnd, s_pendingDarkMode, s_pendingPalette);
             }
         }
         catch
