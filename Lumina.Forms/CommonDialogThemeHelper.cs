@@ -25,6 +25,9 @@ internal static class CommonDialogThemeHelper
         => Apply(hWnd, useDarkMode, null);
 
     internal static void Apply(nint hWnd, bool useDarkMode, ThemePalette? palette)
+        => Apply(hWnd, useDarkMode, palette, false);
+
+    internal static void Apply(nint hWnd, bool useDarkMode, ThemePalette? palette, bool uniformBackground)
     {
         if (hWnd == 0)
         {
@@ -32,7 +35,7 @@ internal static class CommonDialogThemeHelper
         }
 
         ThemePalette resolvedPalette = CoercePaletteForTheme((palette ?? Application.CurrentVisualStyle.Palette).Clone(), useDarkMode);
-        DialogThemeState newState = DialogThemeState.Create(resolvedPalette);
+        DialogThemeState newState = DialogThemeState.Create(resolvedPalette, uniformBackground);
         if (s_states.TryRemove(hWnd, out DialogThemeState? existing))
         {
             existing.Dispose();
@@ -202,12 +205,16 @@ internal static class CommonDialogThemeHelper
             ControlTextColorRef = controlTextColorRef;
         }
 
-        public static DialogThemeState Create(ThemePalette palette)
+        public static DialogThemeState Create(ThemePalette palette, bool uniformBackground)
         {
             uint backgroundColorRef = Win32.ToColorRef(palette.WindowBackground);
-            uint controlBackgroundColorRef = Win32.ToColorRef(palette.SurfaceBackground);
+            uint controlBackgroundColorRef = uniformBackground
+                ? backgroundColorRef
+                : Win32.ToColorRef(palette.SurfaceBackground);
             uint textColorRef = Win32.ToColorRef(palette.WindowForeground);
-            uint controlTextColorRef = Win32.ToColorRef(palette.SurfaceForeground);
+            uint controlTextColorRef = uniformBackground
+                ? textColorRef
+                : Win32.ToColorRef(palette.SurfaceForeground);
 
             nint backgroundBrush = Win32.CreateSolidBrush(backgroundColorRef);
             nint controlBackgroundBrush = Win32.CreateSolidBrush(controlBackgroundColorRef);

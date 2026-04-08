@@ -73,7 +73,7 @@ public static class SystemAboutDialog
 
         if (nCode == Win32.HCBT_ACTIVATE && wParam != 0)
         {
-            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode, s_pendingPalette);
+            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode, s_pendingPalette, uniformBackground: true);
             if (hook != 0)
             {
                 _ = Win32.UnhookWindowsHookEx(hook);

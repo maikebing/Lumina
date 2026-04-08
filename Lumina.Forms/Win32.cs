@@ -325,6 +325,15 @@ internal static class Win32
     public const uint MB_ICONWARNING = 0x00000030;
     public const uint MB_ICONINFORMATION = 0x00000040;
 
+    public const uint TDCBF_OK_BUTTON = 0x0001;
+    public const uint TDCBF_YES_BUTTON = 0x0002;
+    public const uint TDCBF_NO_BUTTON = 0x0004;
+    public const uint TDCBF_CANCEL_BUTTON = 0x0008;
+
+    public static readonly nint TD_WARNING_ICON = (nint)(-1);
+    public static readonly nint TD_ERROR_ICON = (nint)(-2);
+    public static readonly nint TD_INFORMATION_ICON = (nint)(-3);
+
     public const uint CF_SCREENFONTS = 0x00000001;
     public const uint CF_EFFECTS = 0x00000100;
     public const uint CF_INITTOLOGFONTSTRUCT = 0x00000040;
@@ -1003,6 +1012,17 @@ internal static class Win32
 
     [DllImport("user32.dll", EntryPoint = "MessageBoxW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int MessageBoxW(nint hWnd, string lpText, string lpCaption, uint uType);
+
+    [DllImport("comctl32.dll", EntryPoint = "TaskDialog", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int TaskDialog(
+        nint hwndOwner,
+        nint hInstance,
+        string? pszWindowTitle,
+        string? pszMainInstruction,
+        string? pszContent,
+        uint dwCommonButtons,
+        nint pszIcon,
+        out int pnButton);
 
     [DllImport("uxtheme.dll", SetLastError = true)]
     internal static extern int GetThemeColor(nint hTheme, int iPartId, int iStateId, int iPropId, out uint color);

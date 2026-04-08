@@ -34,7 +34,7 @@ public static class MessageBox
     /// </summary>
     public static DialogResult Show(Form? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
     {
-        uint type = MapButtons(buttons) | MapIcon(icon);
+        uint type = MapButtonsForMessageBox(buttons) | MapIconForMessageBox(icon);
 
         if (!OperatingSystem.IsWindows())
         {
@@ -74,7 +74,7 @@ public static class MessageBox
 
         if (nCode == Win32.HCBT_ACTIVATE && wParam != 0)
         {
-            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode, s_pendingPalette);
+            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode, s_pendingPalette, uniformBackground: true);
             if (hook != 0)
             {
                 _ = Win32.UnhookWindowsHookEx(hook);
@@ -85,7 +85,7 @@ public static class MessageBox
         return Win32.CallNextHookEx(hook, nCode, wParam, lParam);
     }
 
-    private static uint MapButtons(MessageBoxButtons buttons)
+    private static uint MapButtonsForMessageBox(MessageBoxButtons buttons)
     {
         return buttons switch
         {
@@ -96,7 +96,7 @@ public static class MessageBox
         };
     }
 
-    private static uint MapIcon(MessageBoxIcon icon)
+    private static uint MapIconForMessageBox(MessageBoxIcon icon)
     {
         return icon switch
         {
