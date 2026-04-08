@@ -631,6 +631,7 @@ public class ToolStrip : ContainerControlBase
             return;
         }
 
+        int armedIndex = -1;
         while (true)
         {
             ToolStripDropDownItem item = navigable[currentIndex];
@@ -639,27 +640,35 @@ public class ToolStrip : ContainerControlBase
             nint ownerHandle = Owner?.Handle ?? Handle;
 
             int nextIndex;
-            OnDropDownStateChanged(item, host, isOpen: true);
-            try
+            bool keepCurrentArmed = armedIndex == currentIndex;
+            if (!keepCurrentArmed)
             {
-                nextIndex = ToolStripPopupMenu.ShowForMenuBar(
-                    item.DropDownItems,
-                    ownerHandle,
-                    screenLocation,
-                    Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle,
-                    currentIndex,
-                    [.. navigableBounds]);
+                OnDropDownStateChanged(item, host, isOpen: true);
             }
-            finally
-            {
-                OnDropDownStateChanged(item, host, isOpen: false);
-            }
+
+            nextIndex = ToolStripPopupMenu.ShowForMenuBar(
+                item.DropDownItems,
+                ownerHandle,
+                screenLocation,
+                Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle,
+                currentIndex,
+                [.. navigableBounds]);
 
             if (nextIndex < 0)
             {
+                OnDropDownStateChanged(item, host, isOpen: false);
                 break;
             }
 
+            if (nextIndex != currentIndex)
+            {
+                ToolStripDropDownItem nextItem = navigable[nextIndex];
+                Control nextHost = _itemHosts.TryGetValue(nextItem, out Control? nextHostControl) ? nextHostControl : initialHost;
+                OnDropDownStateChanged(nextItem, nextHost, isOpen: true);
+                OnDropDownStateChanged(item, host, isOpen: false);
+            }
+
+            armedIndex = nextIndex;
             currentIndex = nextIndex;
         }
     }

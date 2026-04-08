@@ -17,8 +17,8 @@ internal static class NativeMenuRenderer
     private const int GlyphSize = 16;
     private const int TextShortcutSpacing = 24;
     private const int ArrowColumnWidth = 16;
-    private const int SubMenuArrowWidth = 5;
-    private const int SubMenuArrowHeight = 9;
+    private const int SubMenuArrowWidth = 4;
+    private const int SubMenuArrowHeight = 8;
     private const int MinItemWidth = 120;
     private const int MinItemHeight = 28;
     private const int SeparatorHeight = 9;
@@ -347,6 +347,7 @@ internal static class NativeMenuRenderer
                 : selected
                     ? (_palette.ControlHoverForeground != 0 ? _palette.ControlHoverForeground : _palette.SurfaceForeground)
                     : _palette.SurfaceForeground;
+            uint accessoryForegroundArgb = ResolveAccessoryForeground(foregroundArgb, selected, disabled);
 
             using var graphics = Graphics.FromHdc(drawItem.hDC);
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -408,11 +409,8 @@ internal static class NativeMenuRenderer
 
             if (_shortcutSize.Width > 0)
             {
-                uint shortcutColorArgb = disabled
-                    ? _palette.DisabledForeground
-                    : (_palette.MutedForeground != 0 ? _palette.MutedForeground : foregroundArgb);
                 Rectangle alignedShortcutBounds = new(shortcutBounds.Left, textTop, shortcutBounds.Width, Math.Max(1, textHeight));
-                DrawText(drawItem.hDC, _shortcutText, alignedShortcutBounds, shortcutColorArgb, Win32.DT_RIGHT | Win32.DT_SINGLELINE | Win32.DT_NOPREFIX);
+                DrawText(drawItem.hDC, _shortcutText, alignedShortcutBounds, accessoryForegroundArgb, Win32.DT_RIGHT | Win32.DT_SINGLELINE | Win32.DT_NOPREFIX);
             }
 
             if (_hasSubMenu)
@@ -422,7 +420,7 @@ internal static class NativeMenuRenderer
                     contentTop + Math.Max(0, (contentHeight - SubMenuArrowHeight) / 2),
                     SubMenuArrowWidth,
                     SubMenuArrowHeight);
-                DrawSubMenuArrow(graphics, arrowBounds, foregroundArgb);
+                DrawSubMenuArrow(graphics, arrowBounds, accessoryForegroundArgb);
             }
 
         }
@@ -452,18 +450,26 @@ internal static class NativeMenuRenderer
                 return;
             }
 
-            uint indicatorBackgroundArgb = BlendOpaque(_palette.SurfaceBackground, _palette.Accent, selected ? 0.32f : 0.20f);
+            (uint selectionBackgroundArgb, uint selectionBorderArgb) = ResolveSelectionColors();
+            uint indicatorBackgroundArgb = selected
+                ? BlendOpaque(selectionBackgroundArgb, _palette.Accent, IsDarkColor(_palette.SurfaceBackground) ? 0.34f : 0.28f)
+                : BlendOpaque(_palette.SurfaceBackground, _palette.Accent, IsDarkColor(_palette.SurfaceBackground) ? 0.24f : 0.18f);
+            uint indicatorBorderArgb = selected
+                ? BlendOpaque(selectionBorderArgb, _palette.Accent != 0 ? _palette.Accent : _palette.ControlBorder, IsDarkColor(_palette.SurfaceBackground) ? 0.28f : 0.24f)
+                : BlendOpaque(_palette.SurfaceBorder, _palette.ControlBorder != 0 ? _palette.ControlBorder : _palette.Accent, IsDarkColor(_palette.SurfaceBackground) ? 0.18f : 0.22f);
             uint indicatorForegroundArgb = disabled
                 ? _palette.DisabledForeground
                 : (_palette.SelectionForeground != 0 ? _palette.SelectionForeground : foregroundArgb);
 
             using (GraphicsPath path = CreateRoundedRectanglePath(indicatorBounds, IndicatorCornerRadius))
             using (var fillBrush = new SolidBrush(Color.FromArgb(unchecked((int)indicatorBackgroundArgb))))
+            using (var borderPen = new Pen(Color.FromArgb(unchecked((int)indicatorBorderArgb))))
             {
                 graphics.FillPath(fillBrush, path);
+                graphics.DrawPath(borderPen, path);
             }
 
-            using var pen = new Pen(Color.FromArgb(unchecked((int)indicatorForegroundArgb)), 2f)
+            using var pen = new Pen(Color.FromArgb(unchecked((int)indicatorForegroundArgb)), 1.8f)
             {
                 StartCap = LineCap.Round,
                 EndCap = LineCap.Round,
@@ -496,17 +502,36 @@ internal static class NativeMenuRenderer
                 return;
             }
 
-            bool darkSurface = IsDarkColor(_palette.SurfaceBackground);
-            uint hoverBase = _palette.ControlHoverBackground != 0 ? _palette.ControlHoverBackground : _palette.Accent;
-            uint borderBase = _palette.Accent != 0 ? _palette.Accent : (_palette.ControlBorder != 0 ? _palette.ControlBorder : hoverBase);
-            uint selectionBackgroundArgb = BlendOpaque(_palette.SurfaceBackground, hoverBase, darkSurface ? 0.34f : 0.52f);
-            uint selectionBorderArgb = BlendOpaque(_palette.SurfaceBorder, borderBase, darkSurface ? 0.18f : 0.24f);
+            (uint selectionBackgroundArgb, uint selectionBorderArgb) = ResolveSelectionColors();
 
             using GraphicsPath path = CreateRoundedRectanglePath(selectionBounds, SelectionCornerRadius);
             using var backgroundBrush = new SolidBrush(Color.FromArgb(unchecked((int)selectionBackgroundArgb)));
             using var borderPen = new Pen(Color.FromArgb(unchecked((int)selectionBorderArgb)));
             graphics.FillPath(backgroundBrush, path);
             graphics.DrawPath(borderPen, path);
+        }
+
+        private (uint BackgroundArgb, uint BorderArgb) ResolveSelectionColors()
+        {
+            bool darkSurface = IsDarkColor(_palette.SurfaceBackground);
+            uint hoverBase = _palette.ControlHoverBackground != 0 ? _palette.ControlHoverBackground : _palette.Accent;
+            uint borderBase = _palette.Accent != 0 ? _palette.Accent : (_palette.ControlBorder != 0 ? _palette.ControlBorder : hoverBase);
+            uint selectionBackgroundArgb = BlendOpaque(_palette.SurfaceBackground, hoverBase, darkSurface ? 0.30f : 0.46f);
+            uint selectionBorderArgb = BlendOpaque(_palette.SurfaceBorder, borderBase, darkSurface ? 0.14f : 0.18f);
+            return (selectionBackgroundArgb, selectionBorderArgb);
+        }
+
+        private uint ResolveAccessoryForeground(uint foregroundArgb, bool selected, bool disabled)
+        {
+            if (disabled)
+            {
+                return _palette.DisabledForeground;
+            }
+
+            uint mutedArgb = _palette.MutedForeground != 0 ? _palette.MutedForeground : foregroundArgb;
+            return selected
+                ? BlendOpaque(foregroundArgb, mutedArgb, 0.34f)
+                : BlendOpaque(foregroundArgb, mutedArgb, 0.72f);
         }
 
         private int ResolveTextLayoutHeight(Win32.TEXTMETRICW? metrics)
@@ -569,7 +594,7 @@ internal static class NativeMenuRenderer
                 return;
             }
 
-            using var pen = new Pen(Color.FromArgb(unchecked((int)colorArgb)), 1.8f)
+            using var pen = new Pen(Color.FromArgb(unchecked((int)colorArgb)), 1.55f)
             {
                 StartCap = LineCap.Round,
                 EndCap = LineCap.Round,
