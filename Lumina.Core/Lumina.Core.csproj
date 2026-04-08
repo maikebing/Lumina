@@ -8,7 +8,7 @@
 
     <!-- NuGet 包元数据 -->
     <IsPackable>true</IsPackable>
-    <PackageId>Lumina</PackageId>
+    <PackageId>Lumina.Core</PackageId>
     <Version>0.1.0</Version>
     <Authors>Lumina Contributors</Authors>
     <Description>Standard-mode window visual effects for WinForms, WPF, Win32 and borderless windows. No admin rights required.</Description>
