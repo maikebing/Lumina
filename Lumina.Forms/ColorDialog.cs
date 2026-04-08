@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
@@ -38,20 +39,19 @@ public sealed class ColorDialog : IDisposable
     /// <summary>
     /// Shows the dialog with an owner.
     /// </summary>
+    [ThreadStatic]
+    private static bool s_pendingDarkMode;
+
     public DialogResult ShowDialog(Form? owner)
     {
         nint customColorsPtr = 0;
-        GCHandle themeContext = default;
-        Win32.CommonDialogHookProc? hookProc = null;
 
         try
         {
             customColorsPtr = Marshal.AllocHGlobal(sizeof(int) * CustomColorCount);
             Marshal.Copy(CustomColors, 0, customColorsPtr, CustomColorCount);
 
-            bool useDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
-            themeContext = GCHandle.Alloc(useDarkMode);
-            hookProc = ColorDialogHook;
+            s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
 
             uint flags = Win32.CC_RGBINIT | Win32.CC_ENABLEHOOK;
             if (AnyColor)
@@ -71,8 +71,7 @@ public sealed class ColorDialog : IDisposable
                 rgbResult = Win32.ToColorRef(unchecked((uint)Color.ToArgb())),
                 lpCustColors = customColorsPtr,
                 Flags = flags,
-                lCustData = (nuint)GCHandle.ToIntPtr(themeContext),
-                lpfnHook = Marshal.GetFunctionPointerForDelegate(hookProc),
+                lpfnHook = GetHookProc(),
             };
 
             if (!Win32.ChooseColorW(ref chooseColor))
@@ -87,11 +86,6 @@ public sealed class ColorDialog : IDisposable
         }
         finally
         {
-            if (themeContext.IsAllocated)
-            {
-                themeContext.Free();
-            }
-
             if (customColorsPtr != 0)
             {
                 Marshal.FreeHGlobal(customColorsPtr);
@@ -99,34 +93,24 @@ public sealed class ColorDialog : IDisposable
         }
     }
 
-    private static nint ColorDialogHook(nint hWnd, uint message, nint wParam, nint lParam)
-    {
-        if (message != Win32.WM_INITDIALOG || lParam == 0)
-        {
-            return 0;
-        }
+    private static unsafe nint GetHookProc()
+        => (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&HookProc;
 
-        bool useDarkMode = false;
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint HookProc(nint hWnd, uint message, nint wParam, nint lParam)
+    {
         try
         {
-            Win32.CHOOSECOLORW initData = Marshal.PtrToStructure<Win32.CHOOSECOLORW>(lParam);
-            nint contextPtr = (nint)initData.lCustData;
-            if (contextPtr != 0)
+            if (message == Win32.WM_INITDIALOG)
             {
-                GCHandle contextHandle = GCHandle.FromIntPtr(contextPtr);
-                if (contextHandle.Target is bool target)
-                {
-                    useDarkMode = target;
-                }
+                CommonDialogThemeHelper.Apply(hWnd, s_pendingDarkMode);
             }
         }
         catch
         {
-            useDarkMode = false;
+            // Never propagate exceptions across unmanaged boundary.
         }
 
-        DarkModeNative.ApplyThemeToWindow(hWnd, useDarkMode);
-        _ = Win32.SetWindowTheme(hWnd, useDarkMode ? "DarkMode_Explorer" : "Explorer", null);
         return 0;
     }
 

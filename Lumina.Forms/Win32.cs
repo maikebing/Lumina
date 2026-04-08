@@ -1060,6 +1060,10 @@ internal static class Win32
     [DllImport("ole32.dll")]
     internal static extern void CoTaskMemFree(nint pv);
 
+    [DllImport("user32.dll", EntryPoint = "EnumChildWindows")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool EnumChildWindows(nint hWndParent, nint lpEnumFunc, nint lParam);
+
     [DllImport("dwmapi.dll")]
     internal static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
 

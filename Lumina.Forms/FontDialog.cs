@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
@@ -31,11 +32,12 @@ public sealed class FontDialog : IDisposable
     /// <summary>
     /// Shows the dialog with an owner.
     /// </summary>
+    [ThreadStatic]
+    private static bool s_pendingDarkMode;
+
     public DialogResult ShowDialog(Form? owner)
     {
         nint logFontPtr = 0;
-        GCHandle themeContext = default;
-        Win32.CommonDialogHookProc? hookProc = null;
 
         try
         {
@@ -43,9 +45,7 @@ public sealed class FontDialog : IDisposable
             logFontPtr = Marshal.AllocHGlobal(Marshal.SizeOf<Win32.LOGFONTW>());
             Marshal.StructureToPtr(logFont, logFontPtr, false);
 
-            bool useDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
-            themeContext = GCHandle.Alloc(useDarkMode);
-            hookProc = FontDialogHook;
+            s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
 
             var chooseFont = new Win32.CHOOSEFONTW
             {
@@ -54,8 +54,7 @@ public sealed class FontDialog : IDisposable
                 lpLogFont = logFontPtr,
                 Flags = Win32.CF_SCREENFONTS | Win32.CF_FORCEFONTEXIST | Win32.CF_INITTOLOGFONTSTRUCT | Win32.CF_ENABLEHOOK,
                 rgbColors = Win32.ToColorRef(unchecked((uint)Color.ToArgb())),
-                lCustData = (nuint)GCHandle.ToIntPtr(themeContext),
-                lpfnHook = Marshal.GetFunctionPointerForDelegate(hookProc),
+                lpfnHook = GetHookProc(),
             };
 
             if (ShowColor)
@@ -80,16 +79,32 @@ public sealed class FontDialog : IDisposable
         }
         finally
         {
-            if (themeContext.IsAllocated)
-            {
-                themeContext.Free();
-            }
-
             if (logFontPtr != 0)
             {
                 Marshal.FreeHGlobal(logFontPtr);
             }
         }
+    }
+
+    private static unsafe nint GetHookProc()
+        => (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&HookProc;
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint HookProc(nint hWnd, uint message, nint wParam, nint lParam)
+    {
+        try
+        {
+            if (message == Win32.WM_INITDIALOG)
+            {
+                CommonDialogThemeHelper.Apply(hWnd, s_pendingDarkMode);
+            }
+        }
+        catch
+        {
+            // Never propagate exceptions across unmanaged boundary.
+        }
+
+        return 0;
     }
 
     /// <inheritdoc />
@@ -152,37 +167,6 @@ public sealed class FontDialog : IDisposable
 
         string name = string.IsNullOrWhiteSpace(logFont.lfFaceName) ? GetDefaultDialogFontName() : logFont.lfFaceName;
         return new Font(name, pointSize, style, GraphicsUnit.Point, logFont.lfCharSet);
-    }
-
-    private static nint FontDialogHook(nint hWnd, uint message, nint wParam, nint lParam)
-    {
-        if (message != Win32.WM_INITDIALOG || lParam == 0)
-        {
-            return 0;
-        }
-
-        bool useDarkMode = false;
-        try
-        {
-            Win32.CHOOSEFONTW initData = Marshal.PtrToStructure<Win32.CHOOSEFONTW>(lParam);
-            nint contextPtr = (nint)initData.lCustData;
-            if (contextPtr != 0)
-            {
-                GCHandle contextHandle = GCHandle.FromIntPtr(contextPtr);
-                if (contextHandle.Target is bool target)
-                {
-                    useDarkMode = target;
-                }
-            }
-        }
-        catch
-        {
-            useDarkMode = false;
-        }
-
-        DarkModeNative.ApplyThemeToWindow(hWnd, useDarkMode);
-        _ = Win32.SetWindowTheme(hWnd, useDarkMode ? "DarkMode_Explorer" : "Explorer", null);
-        return 0;
     }
 
     private static Font GetDefaultDialogFont()
