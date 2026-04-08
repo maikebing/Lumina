@@ -191,6 +191,16 @@ public class Form : IDisposable
     public SizeF CurrentAutoScaleDimensions => GetCurrentAutoScaleDimensions();
 
     /// <summary>
+    /// Gets the Win32 window styles used when the form handle is created.
+    /// </summary>
+    protected virtual uint WindowStyle => Win32.WS_OVERLAPPEDWINDOW | Win32.WS_CLIPCHILDREN;
+
+    /// <summary>
+    /// Gets the Win32 extended window styles used when the form handle is created.
+    /// </summary>
+    protected virtual uint WindowExStyle => Win32.WS_EX_APPWINDOW | Win32.WS_EX_COMPOSITED;
+
+    /// <summary>
     /// Gets or sets the initial window width.
     /// </summary>
     public int Width { get; set; } = 960;
@@ -286,10 +296,10 @@ public class Form : IDisposable
         _selfHandle = GCHandle.Alloc(this);
 
         nint hwnd = Win32.CreateWindowExW(
-            Win32.WS_EX_APPWINDOW | Win32.WS_EX_COMPOSITED,
+            WindowExStyle,
             WindowClassName,
             Text,
-            Win32.WS_OVERLAPPEDWINDOW | Win32.WS_CLIPCHILDREN,
+            WindowStyle,
             Win32.CW_USEDEFAULT,
             Win32.CW_USEDEFAULT,
             Width,
@@ -1348,6 +1358,20 @@ public class Form : IDisposable
 
         return _controlsById.TryGetValue(controlId, out var control)
             && control.HandleNotify(notificationCode, lParam);
+    }
+
+    internal void RouteCommandFromContainer(Control control, int notificationCode, nint sourceHandle)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+
+        _ = control.HandleCommand(notificationCode);
+        OnCommand(control.Id, notificationCode, sourceHandle);
+    }
+
+    internal bool RouteNotifyFromContainer(Control control, int notificationCode, nint lParam)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        return control.HandleNotify(notificationCode, lParam);
     }
 
     private bool HandleContextMenu(nint wParam, nint lParam)

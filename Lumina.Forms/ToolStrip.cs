@@ -73,8 +73,16 @@ public class ToolStrip : ContainerControlBase
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        ClearNativeText();
         ApplyNativeThemeState();
         PerformLayout();
+    }
+
+    /// <inheritdoc />
+    protected override void OnTextChanged(EventArgs e)
+    {
+        base.OnTextChanged(e);
+        ClearNativeText();
     }
 
     /// <inheritdoc />
@@ -91,6 +99,14 @@ public class ToolStrip : ContainerControlBase
         }
 
         DarkModeNative.ApplyThemeToWindow(Handle, CurrentVisualStyle.IsDarkMode);
+    }
+
+    private void ClearNativeText()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.SetWindowTextW(Handle, string.Empty);
+        }
     }
 
     /// <inheritdoc />

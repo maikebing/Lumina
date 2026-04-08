@@ -387,32 +387,7 @@ public class TabControl : ContainerControlBase
         }
     }
 
-    private static int GetFallbackHeaderHeight()
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            return 17;
-        }
-
-        nint fontHandle = Win32.CreateUiFont();
-        bool ownsFontHandle = fontHandle != 0;
-        if (fontHandle == 0)
-        {
-            fontHandle = Win32.GetStockObject(Win32.DEFAULT_GUI_FONT);
-        }
-
-        try
-        {
-            return Win32.GetFontHeight(fontHandle);
-        }
-        finally
-        {
-            if (ownsFontHandle)
-            {
-                _ = Win32.DeleteObject(fontHandle);
-            }
-        }
-    }
+    private static int GetFallbackHeaderHeight() => 17;
 
     /// <summary>
     /// Raises the <see cref="SelectedIndexChanged"/> event.

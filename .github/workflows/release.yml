@@ -1,0 +1,195 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CONFIGURATION: Release
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve release version
+        id: version
+        run: |
+          $tag = '${{ github.ref_name }}'
+          if (-not $tag.StartsWith('v')) {
+            throw "Release tags must start with 'v'."
+          }
+
+          $version = $tag.Substring(1)
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Resolved package version is empty."
+          }
+
+          "package_version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Restore solution
+        run: dotnet restore Lumina.slnx
+
+      - name: Restore package-only project
+        run: dotnet restore Lumina.Advanced/Lumina.Advanced.csproj
+
+      - name: Restore demo publish graph
+        run: dotnet restore Lumina.NotepadDemo/Lumina.NotepadDemo.csproj -r win-x64
+
+      - name: Build solution
+        run: dotnet build Lumina.slnx -c $env:CONFIGURATION --no-restore /p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: dotnet test Lumina.Tests/Lumina.Tests.csproj -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Pack NuGet packages
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.package_version }}
+        run: |
+          $packageProjects = @(
+            'Lumina.Core/Lumina.Core.csproj',
+            'Lumina.Advanced/Lumina.Advanced.csproj',
+            'Lumina.Ext.WinForms/Lumina.Ext.WinForms.csproj',
+            'Lumina.Ext.Wpf/Lumina.Ext.Wpf.csproj',
+            'Lumina.Forms/Lumina.Forms.csproj',
+            'Lumina.Forms.Analyzers/Lumina.Forms.Analyzers.csproj'
+          )
+
+          $output = Join-Path $PWD 'artifacts/nupkgs'
+          if (Test-Path $output) {
+            Remove-Item $output -Recurse -Force
+          }
+
+          New-Item -ItemType Directory -Path $output -Force | Out-Null
+
+          foreach ($project in $packageProjects) {
+            dotnet pack $project `
+              -c $env:CONFIGURATION `
+              --no-restore `
+              -o $output `
+              /p:ContinuousIntegrationBuild=true `
+              /p:Version=$env:PACKAGE_VERSION
+
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+      - name: Publish demo release asset
+        id: demo
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.package_version }}
+        run: |
+          $publishDir = Join-Path $PWD 'artifacts/demo/Lumina.NotepadDemo-win-x64'
+          if (Test-Path $publishDir) {
+            Remove-Item $publishDir -Recurse -Force
+          }
+
+          dotnet publish Lumina.NotepadDemo/Lumina.NotepadDemo.csproj `
+            -c $env:CONFIGURATION `
+            -r win-x64 `
+            --self-contained true `
+            --no-restore `
+            -o $publishDir `
+            /p:ContinuousIntegrationBuild=true `
+            /p:Version=$env:PACKAGE_VERSION
+
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+          $demoExe = Get-ChildItem $publishDir -Filter *.exe | Select-Object -First 1
+          if ($null -eq $demoExe) {
+            throw "Demo publish output did not contain an .exe file."
+          }
+
+          $releaseDir = Join-Path $PWD 'artifacts/release-assets'
+          New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
+
+          $releaseAssetRelative = "artifacts/release-assets/Lumina.NotepadDemo-$env:PACKAGE_VERSION-win-x64.exe"
+          $releaseAssetFullPath = Join-Path $PWD $releaseAssetRelative
+          Copy-Item $demoExe.FullName $releaseAssetFullPath -Force
+
+          "demo_release_asset=$releaseAssetRelative" >> $env:GITHUB_OUTPUT
+
+      - name: Publish packages to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) {
+            throw "NUGET_API_KEY secret is not configured."
+          }
+
+          Get-ChildItem (Join-Path $PWD 'artifacts/nupkgs') -Filter *.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName `
+              --api-key $env:NUGET_API_KEY `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+      - name: Publish packages to GitHub Packages
+        env:
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $source = "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+          Get-ChildItem (Join-Path $PWD 'artifacts/nupkgs') -Filter *.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName `
+              --api-key $env:GITHUB_PACKAGES_TOKEN `
+              --source $source `
+              --skip-duplicate
+
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.ref_name }}
+          path: Lumina.Tests/TestResults/**/*.trx
+          if-no-files-found: warn
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ github.ref_name }}
+          path: |
+            artifacts/nupkgs/*.nupkg
+            ${{ steps.demo.outputs.demo_release_asset }}
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/nupkgs/*.nupkg
+            ${{ steps.demo.outputs.demo_release_asset }}
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

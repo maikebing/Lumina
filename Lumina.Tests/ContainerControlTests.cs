@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Lumina.Forms;
 using Xunit;
 
@@ -7,6 +8,9 @@ namespace Lumina.Tests;
 
 public class ContainerControlTests
 {
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    private static extern nint SendMessage(nint hWnd, int msg, nint wParam, nint lParam);
+
     [Fact]
     public void GroupBox_CanOwnChildControlsBeforeBeingAddedToForm()
     {
@@ -70,6 +74,28 @@ public class ContainerControlTests
         Assert.True(label.Top >= 12);
         Assert.True(label.Width >= 40);
         Assert.True(label.Height >= 20);
+    }
+
+    [Fact]
+    public void Panel_RoutesChildButtonCommandNotifications()
+    {
+        using var form = new Form();
+        var panel = new Panel();
+        var button = new Button();
+        int clickCount = 0;
+
+        button.Click += (_, _) => clickCount++;
+        panel.Controls.Add(button);
+        form.Controls.Add(panel);
+
+        form.Show();
+
+        Assert.NotEqual(0, panel.Handle);
+        Assert.NotEqual(0, button.Handle);
+
+        _ = SendMessage(panel.Handle, 0x0111, 0, button.Handle);
+
+        Assert.Equal(1, clickCount);
     }
 
     [Fact]

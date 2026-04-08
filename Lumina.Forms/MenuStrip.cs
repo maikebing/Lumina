@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
 
@@ -23,7 +24,7 @@ public class MenuStrip : ToolStrip
         GripStyle = ToolStripGripStyle.Hidden;
         Stretch = true;
         ShowItemToolTips = false;
-        Padding = new Padding(10, 2, 0, 2);
+        Padding = new Padding(6, 2, 0, 2);
     }
 
     /// <inheritdoc />
@@ -187,6 +188,8 @@ public class MenuStrip : ToolStrip
 
     private sealed class TopLevelMenuItemHost : Label
     {
+        private const int TextInset = 4;
+
         public event EventHandler? Click;
 
         private bool _hovered;
@@ -202,15 +205,31 @@ public class MenuStrip : ToolStrip
         protected override int GetNativeHeight(int requestedHeight)
             => requestedHeight;
 
+        protected override void OnHandleCreated()
+        {
+            base.OnHandleCreated();
+            Refresh();
+        }
+
         protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
         {
             switch (message)
             {
+                case Win32.WM_ERASEBKGND:
+                    result = 1;
+                    return true;
+
+                case Win32.WM_PAINT:
+                    PaintHost();
+                    result = 0;
+                    return true;
+
                 case Win32.WM_MOUSEMOVE:
                     if (!_hovered)
                     {
                         _hovered = true;
                         BackColor = Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.ControlHoverBackground));
+                        Refresh();
 
                         if (Handle != 0)
                         {
@@ -233,6 +252,7 @@ public class MenuStrip : ToolStrip
                     {
                         _hovered = false;
                         BackColor = Color.Empty;
+                        Refresh();
                     }
 
                     result = 0;
@@ -246,6 +266,86 @@ public class MenuStrip : ToolStrip
 
             result = 0;
             return false;
+        }
+
+        private void PaintHost()
+        {
+            if (Handle == 0)
+            {
+                return;
+            }
+
+            nint hdc = Win32.BeginPaint(Handle, out Win32.PAINTSTRUCT paintStruct);
+            if (hdc == 0)
+            {
+                return;
+            }
+
+            nint backgroundBrush = 0;
+            bool ownsBrush = false;
+            nint previousFont = 0;
+
+            try
+            {
+                if (!Win32.GetClientRect(Handle, out Win32.RECT clientRect))
+                {
+                    return;
+                }
+
+                uint backgroundArgb = _hovered && BackColor != Color.Empty
+                    ? unchecked((uint)BackColor.ToArgb())
+                    : CurrentVisualStyle.Palette.SurfaceBackground;
+                backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(backgroundArgb));
+                ownsBrush = backgroundBrush != 0;
+                if (backgroundBrush != 0)
+                {
+                    _ = Win32.FillRect(hdc, ref clientRect, backgroundBrush);
+                }
+
+                nint fontHandle = Owner?.UiFontHandle ?? 0;
+                if (fontHandle == 0)
+                {
+                    fontHandle = Win32.GetStockObject(Win32.DEFAULT_GUI_FONT);
+                }
+
+                if (fontHandle != 0)
+                {
+                    previousFont = Win32.SelectObject(hdc, fontHandle);
+                }
+
+                _ = Win32.SetBkMode(hdc, Win32.TRANSPARENT);
+                _ = Win32.SetTextColor(hdc, Win32.ToColorRef(CurrentVisualStyle.Palette.SurfaceForeground));
+
+                var textBounds = new Win32.RECT
+                {
+                    Left = TextInset,
+                    Top = clientRect.Top,
+                    Right = Math.Max(TextInset, clientRect.Right - TextInset),
+                    Bottom = clientRect.Bottom,
+                };
+
+                string text = Text ?? string.Empty;
+                _ = Win32.DrawTextW(
+                    hdc,
+                    text,
+                    text.Length,
+                    ref textBounds,
+                    Win32.DT_LEFT | Win32.DT_VCENTER | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
+            }
+            finally
+            {
+                if (previousFont != 0)
+                {
+                    _ = Win32.SelectObject(hdc, previousFont);
+                }
+
+                if (ownsBrush)
+                {
+                    _ = Win32.DeleteObject(backgroundBrush);
+                }
+
+                _ = Win32.EndPaint(Handle, ref paintStruct);
+            }
         }
     }
 }

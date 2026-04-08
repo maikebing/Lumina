@@ -45,6 +45,11 @@ public sealed class ColorDialog : IDisposable
     [ThreadStatic]
     private static ThemePalette? s_pendingPalette;
 
+    /// <summary>
+    /// Shows the dialog with an owner.
+    /// </summary>
+    /// <param name="owner">The owner window for the dialog, or <see langword="null"/>.</param>
+    /// <returns>The result of the dialog interaction.</returns>
     public DialogResult ShowDialog(Form? owner)
     {
         nint customColorsPtr = 0;

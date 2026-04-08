@@ -104,6 +104,22 @@ public abstract class ContainerControlBase : Control
     {
         switch (message)
         {
+            case Win32.WM_COMMAND:
+                if (TryForwardChildCommand(wParam, lParam, out result))
+                {
+                    return true;
+                }
+
+                break;
+
+            case Win32.WM_NOTIFY:
+                if (TryForwardChildNotify(lParam, out result))
+                {
+                    return true;
+                }
+
+                break;
+
             case Win32.WM_CTLCOLORBTN:
             case Win32.WM_CTLCOLORDLG:
             case Win32.WM_CTLCOLOREDIT:
@@ -118,6 +134,42 @@ public abstract class ContainerControlBase : Control
         }
 
         return base.HandleWindowMessage(message, wParam, lParam, out result);
+    }
+
+    private bool TryForwardChildCommand(nint wParam, nint lParam, out nint result)
+    {
+        result = 0;
+        if (lParam == 0 || Owner is null)
+        {
+            return false;
+        }
+
+        if (!Control.TryGetControlByHandle(lParam, out Control? childControl) || childControl is null)
+        {
+            return false;
+        }
+
+        int notificationCode = Win32.HighWord(wParam);
+        Owner.RouteCommandFromContainer(childControl, notificationCode, lParam);
+        return true;
+    }
+
+    private bool TryForwardChildNotify(nint lParam, out nint result)
+    {
+        result = 0;
+        if (lParam == 0 || Owner is null)
+        {
+            return false;
+        }
+
+        Win32.NMHDR header = Marshal.PtrToStructure<Win32.NMHDR>(lParam);
+        if (!Control.TryGetControlByHandle(header.hwndFrom, out Control? childControl) || childControl is null)
+        {
+            return false;
+        }
+
+        result = Owner.RouteNotifyFromContainer(childControl, unchecked((int)header.code), lParam) ? 0 : 0;
+        return true;
     }
 
     private bool TryHandleChildControlColor(uint message, nint wParam, nint lParam, out nint brush)
