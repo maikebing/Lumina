@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Runtime.Versioning;
 
 namespace Lumina.NotepadDemo;
@@ -82,7 +83,7 @@ internal static class NotepadMenuIconFactory
 
     private static Image LoadIcon(MenuIconKind kind)
     {
-        Bitmap bitmap = kind switch
+        string resourceName = kind switch
         {
             MenuIconKind.FileMenu => Properties.Resources.FileMenu,
             MenuIconKind.EditMenu => Properties.Resources.EditMenu,
@@ -107,6 +108,13 @@ internal static class NotepadMenuIconFactory
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
 
+        using Stream? iconStream = typeof(frmNotepad).Assembly.GetManifestResourceStream(resourceName);
+        if (iconStream is null)
+        {
+            throw new InvalidOperationException($"Menu icon resource '{resourceName}' was not found.");
+        }
+
+        using var bitmap = new Bitmap(iconStream);
         return new Bitmap(bitmap);
     }
 }

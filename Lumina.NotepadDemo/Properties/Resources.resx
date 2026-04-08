@@ -59,64 +59,64 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="About" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\About.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="About" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.About.png</value>
   </data>
-  <data name="Color" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Color.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Color" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Color.png</value>
   </data>
-  <data name="DateTime" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\DateTime.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="DateTime" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.DateTime.png</value>
   </data>
-  <data name="EditMenu" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\EditMenu.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="EditMenu" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.EditMenu.png</value>
   </data>
-  <data name="Exit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Exit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Exit" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Exit.png</value>
   </data>
-  <data name="FileMenu" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\FileMenu.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="FileMenu" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.FileMenu.png</value>
   </data>
-  <data name="Find" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Find.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Find" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Find.png</value>
   </data>
-  <data name="Font" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Font.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Font" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Font.png</value>
   </data>
-  <data name="FormatMenu" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\FormatMenu.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="FormatMenu" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.FormatMenu.png</value>
   </data>
-  <data name="Gitee" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Gitee.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Gitee" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Gitee.png</value>
   </data>
-  <data name="GitHub" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\GitHub.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="GitHub" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.GitHub.png</value>
   </data>
-  <data name="HelpMenu" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\HelpMenu.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="HelpMenu" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.HelpMenu.png</value>
   </data>
-  <data name="NewFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\NewFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="NewFile" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.NewFile.png</value>
   </data>
-  <data name="OpenFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\OpenFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="OpenFile" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.OpenFile.png</value>
   </data>
-  <data name="OpenFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\OpenFolder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="OpenFolder" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.OpenFolder.png</value>
   </data>
-  <data name="Replace" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Replace.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Replace" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Replace.png</value>
   </data>
-  <data name="Save" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\Save.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="Save" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.Save.png</value>
   </data>
-  <data name="SaveAs" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\SaveAs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.SaveAs.png</value>
   </data>
-  <data name="WordCount" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\WordCount.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="WordCount" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.WordCount.png</value>
   </data>
-  <data name="WrapText" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\MenuIcons\WrapText.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="WrapText" xml:space="preserve">
+    <value>Lumina.NotepadDemo.Resources.MenuIcons.WrapText.png</value>
   </data>
 </root>

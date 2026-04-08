@@ -13,8 +13,6 @@
     <PublishDocumentationFile>false</PublishDocumentationFile>
     <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
     <UseLuminaForms>true</UseLuminaForms>
-    <CustomResourceTypesSupport>true</CustomResourceTypesSupport>
-    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <ApplicationIcon Condition="'$(ApplicationIcon)' == ''">Resources\lumina-tray.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -39,7 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="10.0.5" />
+    <None Remove="Resources\MenuIcons\*.png" />
+    <EmbeddedResource Include="Resources\MenuIcons\*.png" LogicalName="Lumina.NotepadDemo.Resources.MenuIcons.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="CleanPublishAuxiliaryFiles" AfterTargets="Publish">

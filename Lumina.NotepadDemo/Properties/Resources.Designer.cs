@@ -41,43 +41,43 @@ internal class Resources
         set => resourceCulture = value;
     }
 
-    internal static global::System.Drawing.Bitmap About => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("About", resourceCulture)));
+    internal static string About => ResourceManager.GetString("About", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Color => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Color", resourceCulture)));
+    internal static string Color => ResourceManager.GetString("Color", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap DateTime => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("DateTime", resourceCulture)));
+    internal static string DateTime => ResourceManager.GetString("DateTime", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap EditMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("EditMenu", resourceCulture)));
+    internal static string EditMenu => ResourceManager.GetString("EditMenu", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Exit => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Exit", resourceCulture)));
+    internal static string Exit => ResourceManager.GetString("Exit", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap FileMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("FileMenu", resourceCulture)));
+    internal static string FileMenu => ResourceManager.GetString("FileMenu", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Find => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Find", resourceCulture)));
+    internal static string Find => ResourceManager.GetString("Find", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Font => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Font", resourceCulture)));
+    internal static string Font => ResourceManager.GetString("Font", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap FormatMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("FormatMenu", resourceCulture)));
+    internal static string FormatMenu => ResourceManager.GetString("FormatMenu", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Gitee => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Gitee", resourceCulture)));
+    internal static string Gitee => ResourceManager.GetString("Gitee", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap GitHub => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("GitHub", resourceCulture)));
+    internal static string GitHub => ResourceManager.GetString("GitHub", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap HelpMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("HelpMenu", resourceCulture)));
+    internal static string HelpMenu => ResourceManager.GetString("HelpMenu", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap NewFile => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("NewFile", resourceCulture)));
+    internal static string NewFile => ResourceManager.GetString("NewFile", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap OpenFile => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("OpenFile", resourceCulture)));
+    internal static string OpenFile => ResourceManager.GetString("OpenFile", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap OpenFolder => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("OpenFolder", resourceCulture)));
+    internal static string OpenFolder => ResourceManager.GetString("OpenFolder", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Replace => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Replace", resourceCulture)));
+    internal static string Replace => ResourceManager.GetString("Replace", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap Save => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Save", resourceCulture)));
+    internal static string Save => ResourceManager.GetString("Save", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap SaveAs => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("SaveAs", resourceCulture)));
+    internal static string SaveAs => ResourceManager.GetString("SaveAs", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap WordCount => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("WordCount", resourceCulture)));
+    internal static string WordCount => ResourceManager.GetString("WordCount", resourceCulture);
 
-    internal static global::System.Drawing.Bitmap WrapText => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("WrapText", resourceCulture)));
+    internal static string WrapText => ResourceManager.GetString("WrapText", resourceCulture);
 }
