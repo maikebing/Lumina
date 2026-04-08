@@ -292,6 +292,8 @@ internal static class Win32
     public const uint ICC_STANDARD_CLASSES = 0x00004000;
 
     public const int WH_MSGFILTER = -1;
+    public const int WH_CBT = 5;
+    public const int HCBT_ACTIVATE = 5;
     public const int MSGF_MENU = 2;
     public const int TRANSPARENT = 1;
     public const uint TME_LEAVE = 0x00000002;

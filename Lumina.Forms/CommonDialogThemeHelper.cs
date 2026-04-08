@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Collections.Concurrent;
 
 namespace Lumina.Forms;
 
@@ -9,6 +10,10 @@ namespace Lumina.Forms;
 /// </summary>
 internal static class CommonDialogThemeHelper
 {
+    private const nuint DialogSubclassId = 0x4C554D41;
+    private static readonly Win32.SubclassProc s_dialogSubclassProc = DialogSubclassProc;
+    private static readonly ConcurrentDictionary<nint, DialogThemeState> s_states = new();
+
     [ThreadStatic]
     private static bool s_darkMode;
 
@@ -17,11 +22,24 @@ internal static class CommonDialogThemeHelper
     /// Call this from a WM_INITDIALOG hook proc.
     /// </summary>
     internal static void Apply(nint hWnd, bool useDarkMode)
+        => Apply(hWnd, useDarkMode, null);
+
+    internal static void Apply(nint hWnd, bool useDarkMode, ThemePalette? palette)
     {
         if (hWnd == 0)
         {
             return;
         }
+
+        ThemePalette resolvedPalette = (palette ?? Application.CurrentVisualStyle.Palette).Clone();
+        DialogThemeState newState = DialogThemeState.Create(resolvedPalette);
+        if (s_states.TryRemove(hWnd, out DialogThemeState? existing))
+        {
+            existing.Dispose();
+        }
+
+        s_states[hWnd] = newState;
+        _ = Win32.SetWindowSubclass(hWnd, s_dialogSubclassProc, DialogSubclassId, 0);
 
         // Title bar — requires DWM attribute separate from uxtheme
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
@@ -57,5 +75,99 @@ internal static class CommonDialogThemeHelper
         }
 
         return true;
+    }
+
+    private static nint DialogSubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData)
+    {
+        if (!s_states.TryGetValue(hWnd, out DialogThemeState? state))
+        {
+            return Win32.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+        }
+
+        switch (uMsg)
+        {
+            case Win32.WM_CTLCOLORDLG:
+            case Win32.WM_CTLCOLORSTATIC:
+            case Win32.WM_CTLCOLORBTN:
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+                _ = Win32.SetTextColor(wParam, state.TextColorRef);
+                _ = Win32.SetBkColor(wParam, state.BackgroundColorRef);
+                return state.BackgroundBrush;
+
+            case Win32.WM_CTLCOLOREDIT:
+            case Win32.WM_CTLCOLORLISTBOX:
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+                _ = Win32.SetTextColor(wParam, state.ControlTextColorRef);
+                _ = Win32.SetBkColor(wParam, state.ControlBackgroundColorRef);
+                return state.ControlBackgroundBrush;
+
+            case Win32.WM_NCDESTROY:
+                if (s_states.TryRemove(hWnd, out DialogThemeState? removed))
+                {
+                    removed.Dispose();
+                }
+
+                break;
+        }
+
+        return Win32.DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    private sealed class DialogThemeState : IDisposable
+    {
+        public nint BackgroundBrush { get; }
+        public nint ControlBackgroundBrush { get; }
+        public uint BackgroundColorRef { get; }
+        public uint ControlBackgroundColorRef { get; }
+        public uint TextColorRef { get; }
+        public uint ControlTextColorRef { get; }
+
+        private DialogThemeState(
+            nint backgroundBrush,
+            nint controlBackgroundBrush,
+            uint backgroundColorRef,
+            uint controlBackgroundColorRef,
+            uint textColorRef,
+            uint controlTextColorRef)
+        {
+            BackgroundBrush = backgroundBrush;
+            ControlBackgroundBrush = controlBackgroundBrush;
+            BackgroundColorRef = backgroundColorRef;
+            ControlBackgroundColorRef = controlBackgroundColorRef;
+            TextColorRef = textColorRef;
+            ControlTextColorRef = controlTextColorRef;
+        }
+
+        public static DialogThemeState Create(ThemePalette palette)
+        {
+            uint backgroundColorRef = Win32.ToColorRef(palette.WindowBackground);
+            uint controlBackgroundColorRef = Win32.ToColorRef(palette.SurfaceBackground);
+            uint textColorRef = Win32.ToColorRef(palette.WindowForeground);
+            uint controlTextColorRef = Win32.ToColorRef(palette.SurfaceForeground);
+
+            nint backgroundBrush = Win32.CreateSolidBrush(backgroundColorRef);
+            nint controlBackgroundBrush = Win32.CreateSolidBrush(controlBackgroundColorRef);
+
+            return new DialogThemeState(
+                backgroundBrush,
+                controlBackgroundBrush,
+                backgroundColorRef,
+                controlBackgroundColorRef,
+                textColorRef,
+                controlTextColorRef);
+        }
+
+        public void Dispose()
+        {
+            if (BackgroundBrush != 0)
+            {
+                _ = Win32.DeleteObject(BackgroundBrush);
+            }
+
+            if (ControlBackgroundBrush != 0)
+            {
+                _ = Win32.DeleteObject(ControlBackgroundBrush);
+            }
+        }
     }
 }

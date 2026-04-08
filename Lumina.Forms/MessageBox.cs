@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -5,6 +8,12 @@ namespace Lumina.Forms;
 /// </summary>
 public static class MessageBox
 {
+    [ThreadStatic]
+    private static nint s_cbtHook;
+
+    [ThreadStatic]
+    private static bool s_pendingDarkMode;
+
     /// <summary>
     /// Displays a message box with specified text.
     /// </summary>
@@ -23,8 +32,53 @@ public static class MessageBox
     public static DialogResult Show(Form? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
     {
         uint type = MapButtons(buttons) | MapIcon(icon);
-        int result = Win32.MessageBoxW(owner?.Handle ?? 0, text ?? string.Empty, caption ?? string.Empty, type);
-        return MapResult(result);
+
+        if (!OperatingSystem.IsWindows())
+        {
+            int fallbackResult = Win32.MessageBoxW(owner?.Handle ?? 0, text ?? string.Empty, caption ?? string.Empty, type);
+            return MapResult(fallbackResult);
+        }
+
+        DarkModeNative.RefreshImmersiveState();
+        s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
+
+        unsafe
+        {
+            nint hookPtr = (nint)(delegate* unmanaged[Stdcall]<int, nint, nint, nint>)&CbtHookProc;
+            s_cbtHook = Win32.SetWindowsHookExW(Win32.WH_CBT, hookPtr, 0, Win32.GetCurrentThreadId());
+        }
+
+        try
+        {
+            int result = Win32.MessageBoxW(owner?.Handle ?? 0, text ?? string.Empty, caption ?? string.Empty, type);
+            return MapResult(result);
+        }
+        finally
+        {
+            if (s_cbtHook != 0)
+            {
+                _ = Win32.UnhookWindowsHookEx(s_cbtHook);
+                s_cbtHook = 0;
+            }
+        }
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint CbtHookProc(int nCode, nint wParam, nint lParam)
+    {
+        nint hook = s_cbtHook;
+
+        if (nCode == Win32.HCBT_ACTIVATE && wParam != 0)
+        {
+            CommonDialogThemeHelper.Apply(wParam, s_pendingDarkMode);
+            if (hook != 0)
+            {
+                _ = Win32.UnhookWindowsHookEx(hook);
+                s_cbtHook = 0;
+            }
+        }
+
+        return Win32.CallNextHookEx(hook, nCode, wParam, lParam);
     }
 
     private static uint MapButtons(MessageBoxButtons buttons)
