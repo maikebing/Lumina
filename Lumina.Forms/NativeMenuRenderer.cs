@@ -10,7 +10,7 @@ internal static class NativeMenuRenderer
 {
     private const int HorizontalPadding = 12;
     private const int VerticalPadding = 6;
-    private const int GlyphTextSpacing = 4;
+    private const int GlyphTextSpacing = 3;
     private const int SelectionInsetHorizontal = 4;
     private const int SelectionInsetVertical = 2;
     private const int SelectionCornerRadius = 6;
