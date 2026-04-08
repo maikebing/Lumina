@@ -10,14 +10,20 @@ internal static class NativeMenuRenderer
 {
     private const int HorizontalPadding = 12;
     private const int VerticalPadding = 6;
+    private const int SelectionInsetHorizontal = 4;
+    private const int SelectionInsetVertical = 2;
+    private const int SelectionCornerRadius = 6;
     private const int GlyphColumnWidth = 24;
     private const int GlyphSize = 16;
     private const int TextShortcutSpacing = 24;
     private const int ArrowColumnWidth = 16;
+    private const int SubMenuArrowWidth = 5;
+    private const int SubMenuArrowHeight = 9;
     private const int MinItemWidth = 120;
     private const int MinItemHeight = 28;
     private const int SeparatorHeight = 9;
     private const int IndicatorCornerRadius = 4;
+    private const int HighDpiOpticalLift = 1;
 
     private static readonly object s_sync = new();
     private static readonly Dictionary<nuint, OwnerDrawMenuItemData> s_items = [];
@@ -183,6 +189,15 @@ internal static class NativeMenuRenderer
             | blue;
     }
 
+    private static bool IsDarkColor(uint argb)
+    {
+        float red = ((argb >> 16) & 0xFF) / 255f;
+        float green = ((argb >> 8) & 0xFF) / 255f;
+        float blue = (argb & 0xFF) / 255f;
+        float luminance = (0.2126f * red) + (0.7152f * green) + (0.0722f * blue);
+        return luminance < 0.5f;
+    }
+
     private static void DrawText(nint hdc, string text, Rectangle bounds, uint colorArgb, uint flags)
     {
         if (string.IsNullOrEmpty(text) || bounds.Width <= 0 || bounds.Height <= 0)
@@ -326,9 +341,7 @@ internal static class NativeMenuRenderer
             bool disabled = (drawItem.itemState & (Win32.ODS_DISABLED | Win32.ODS_GRAYED)) != 0;
             bool selected = (drawItem.itemState & Win32.ODS_SELECTED) != 0 && !disabled;
 
-            uint backgroundArgb = selected
-                ? (_palette.ControlHoverBackground != 0 ? _palette.ControlHoverBackground : BlendOpaque(_palette.SurfaceBackground, _palette.Accent, 0.12f))
-                : _palette.SurfaceBackground;
+            uint backgroundArgb = _palette.SurfaceBackground;
             uint foregroundArgb = disabled
                 ? _palette.DisabledForeground
                 : selected
@@ -357,16 +370,26 @@ internal static class NativeMenuRenderer
                 return;
             }
 
+            if (selected)
+            {
+                DrawSelectionBackground(graphics, bounds);
+            }
+
+            Win32.TEXTMETRICW fontMetrics = default;
+            bool hasFontMetrics = Win32.GetTextMetricsW(drawItem.hDC, out fontMetrics);
+            int textHeight = ResolveTextLayoutHeight(hasFontMetrics ? fontMetrics : null);
+            int opticalLift = ResolveOpticalLift(hasFontMetrics ? fontMetrics : null);
+            int contentHeight = Math.Max(textHeight, _preparedImage is null ? 0 : GlyphSize);
+            int contentTop = Math.Max(bounds.Top + 1, bounds.Top + Math.Max(0, (bounds.Height - contentHeight) / 2) - opticalLift);
+
             Rectangle glyphBounds = new(
                 bounds.Left + HorizontalPadding,
-                bounds.Top + Math.Max(0, (bounds.Height - GlyphSize) / 2),
+                contentTop + Math.Max(0, (contentHeight - GlyphSize) / 2),
                 GlyphSize,
                 GlyphSize);
 
             DrawGlyph(graphics, glyphBounds, foregroundArgb, selected, disabled);
 
-            int contentTop = bounds.Top + VerticalPadding;
-            int contentHeight = Math.Max(1, bounds.Height - (VerticalPadding * 2));
             int contentRight = bounds.Right - HorizontalPadding - (_hasSubMenu ? ArrowColumnWidth : 0);
             int textLeft = bounds.Left + HorizontalPadding + GlyphColumnWidth;
             int textRight = contentRight;
@@ -379,15 +402,27 @@ internal static class NativeMenuRenderer
                 textRight = Math.Max(textLeft, shortcutLeft - TextShortcutSpacing);
             }
 
-            Rectangle textBounds = new Rectangle(textLeft, contentTop, Math.Max(0, textRight - textLeft), contentHeight);
-            DrawText(drawItem.hDC, _text, textBounds, foregroundArgb, Win32.DT_LEFT | Win32.DT_VCENTER | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
+            int textTop = contentTop + Math.Max(0, (contentHeight - textHeight) / 2);
+            Rectangle textBounds = new Rectangle(textLeft, textTop, Math.Max(0, textRight - textLeft), Math.Max(1, textHeight));
+            DrawText(drawItem.hDC, _text, textBounds, foregroundArgb, Win32.DT_LEFT | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
 
             if (_shortcutSize.Width > 0)
             {
                 uint shortcutColorArgb = disabled
                     ? _palette.DisabledForeground
                     : (_palette.MutedForeground != 0 ? _palette.MutedForeground : foregroundArgb);
-                DrawText(drawItem.hDC, _shortcutText, shortcutBounds, shortcutColorArgb, Win32.DT_RIGHT | Win32.DT_VCENTER | Win32.DT_SINGLELINE | Win32.DT_NOPREFIX);
+                Rectangle alignedShortcutBounds = new(shortcutBounds.Left, textTop, shortcutBounds.Width, Math.Max(1, textHeight));
+                DrawText(drawItem.hDC, _shortcutText, alignedShortcutBounds, shortcutColorArgb, Win32.DT_RIGHT | Win32.DT_SINGLELINE | Win32.DT_NOPREFIX);
+            }
+
+            if (_hasSubMenu)
+            {
+                Rectangle arrowBounds = new(
+                    bounds.Right - HorizontalPadding - ArrowColumnWidth + Math.Max(0, (ArrowColumnWidth - SubMenuArrowWidth) / 2),
+                    contentTop + Math.Max(0, (contentHeight - SubMenuArrowHeight) / 2),
+                    SubMenuArrowWidth,
+                    SubMenuArrowHeight);
+                DrawSubMenuArrow(graphics, arrowBounds, foregroundArgb);
             }
 
         }
@@ -445,6 +480,106 @@ internal static class NativeMenuRenderer
             PointF start = new(indicatorBounds.Left + 3f, indicatorBounds.Top + (indicatorBounds.Height * 0.55f));
             PointF middle = new(indicatorBounds.Left + (indicatorBounds.Width * 0.42f), indicatorBounds.Bottom - 4f);
             PointF end = new(indicatorBounds.Right - 3f, indicatorBounds.Top + 4f);
+            graphics.DrawLines(pen, [start, middle, end]);
+        }
+
+        private void DrawSelectionBackground(Graphics graphics, Rectangle bounds)
+        {
+            Rectangle selectionBounds = Rectangle.FromLTRB(
+                bounds.Left + SelectionInsetHorizontal,
+                bounds.Top + SelectionInsetVertical,
+                Math.Max(bounds.Left + SelectionInsetHorizontal + 1, bounds.Right - SelectionInsetHorizontal),
+                Math.Max(bounds.Top + SelectionInsetVertical + 1, bounds.Bottom - SelectionInsetVertical));
+
+            if (selectionBounds.Width <= 0 || selectionBounds.Height <= 0)
+            {
+                return;
+            }
+
+            bool darkSurface = IsDarkColor(_palette.SurfaceBackground);
+            uint hoverBase = _palette.ControlHoverBackground != 0 ? _palette.ControlHoverBackground : _palette.Accent;
+            uint borderBase = _palette.Accent != 0 ? _palette.Accent : (_palette.ControlBorder != 0 ? _palette.ControlBorder : hoverBase);
+            uint selectionBackgroundArgb = BlendOpaque(_palette.SurfaceBackground, hoverBase, darkSurface ? 0.34f : 0.52f);
+            uint selectionBorderArgb = BlendOpaque(_palette.SurfaceBorder, borderBase, darkSurface ? 0.18f : 0.24f);
+
+            using GraphicsPath path = CreateRoundedRectanglePath(selectionBounds, SelectionCornerRadius);
+            using var backgroundBrush = new SolidBrush(Color.FromArgb(unchecked((int)selectionBackgroundArgb)));
+            using var borderPen = new Pen(Color.FromArgb(unchecked((int)selectionBorderArgb)));
+            graphics.FillPath(backgroundBrush, path);
+            graphics.DrawPath(borderPen, path);
+        }
+
+        private int ResolveTextLayoutHeight(Win32.TEXTMETRICW? metrics)
+        {
+            if (string.IsNullOrEmpty(_text))
+            {
+                return 0;
+            }
+
+            if (metrics is Win32.TEXTMETRICW textMetrics)
+            {
+                int visualHeight = Math.Max(1, textMetrics.tmAscent + textMetrics.tmDescent);
+                if (visualHeight > 0)
+                {
+                    return visualHeight;
+                }
+            }
+
+            return Math.Max(1, _textSize.Height);
+        }
+
+        private int ResolveOpticalLift(Win32.TEXTMETRICW? metrics)
+        {
+            if (string.IsNullOrEmpty(_text) || !ContainsCjkCharacter(_text))
+            {
+                return 0;
+            }
+
+            float dpi = Win32.GetSystemDpiScaleDimensions().Height;
+            if (dpi < 120f)
+            {
+                return 0;
+            }
+
+            if (metrics is Win32.TEXTMETRICW textMetrics && textMetrics.tmHeight > textMetrics.tmAscent + textMetrics.tmDescent)
+            {
+                return HighDpiOpticalLift;
+            }
+
+            return HighDpiOpticalLift;
+        }
+
+        private static bool ContainsCjkCharacter(string text)
+        {
+            foreach (char ch in text)
+            {
+                if ((ch >= '\u2E80' && ch <= '\u9FFF') || (ch >= '\uF900' && ch <= '\uFAFF'))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void DrawSubMenuArrow(Graphics graphics, Rectangle bounds, uint colorArgb)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                return;
+            }
+
+            using var pen = new Pen(Color.FromArgb(unchecked((int)colorArgb)), 1.8f)
+            {
+                StartCap = LineCap.Round,
+                EndCap = LineCap.Round,
+                LineJoin = LineJoin.Round,
+            };
+
+            float midY = bounds.Top + (bounds.Height / 2f);
+            PointF start = new(bounds.Left + 1f, bounds.Top + 1f);
+            PointF middle = new(bounds.Right - 1.5f, midY);
+            PointF end = new(bounds.Left + 1f, bounds.Bottom - 1f);
             graphics.DrawLines(pen, [start, middle, end]);
         }
 

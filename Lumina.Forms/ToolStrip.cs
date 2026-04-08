@@ -609,11 +609,16 @@ public class ToolStrip : ContainerControlBase
     {
         // Build ordered list of navigable drop-down items on this strip.
         List<ToolStripDropDownItem> navigable = [];
+        List<Rectangle> navigableBounds = [];
         foreach (ToolStripItem it in Items)
         {
             if (it is ToolStripDropDownItem ddi && ddi.Visible && ddi.Enabled && ddi.DropDownItems.Count > 0)
             {
                 navigable.Add(ddi);
+                Control host = _itemHosts.TryGetValue(ddi, out Control? navigableHost) && navigableHost is not null
+                    ? navigableHost
+                    : initialHost;
+                navigableBounds.Add(GetScreenBounds(host));
             }
         }
 
@@ -633,23 +638,29 @@ public class ToolStrip : ContainerControlBase
             Point screenLocation = GetDropDownScreenLocation(host);
             nint ownerHandle = Owner?.Handle ?? Handle;
 
-            int direction;
+            int nextIndex;
             OnDropDownStateChanged(item, host, isOpen: true);
             try
             {
-                direction = ToolStripPopupMenu.ShowForMenuBar(item.DropDownItems, ownerHandle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
+                nextIndex = ToolStripPopupMenu.ShowForMenuBar(
+                    item.DropDownItems,
+                    ownerHandle,
+                    screenLocation,
+                    Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle,
+                    currentIndex,
+                    [.. navigableBounds]);
             }
             finally
             {
                 OnDropDownStateChanged(item, host, isOpen: false);
             }
 
-            if (direction == 0)
+            if (nextIndex < 0)
             {
                 break;
             }
 
-            currentIndex = ((currentIndex + direction) % count + count) % count;
+            currentIndex = nextIndex;
         }
     }
 
@@ -681,6 +692,16 @@ public class ToolStrip : ContainerControlBase
         }
 
         return new Point(host.Left, host.Bottom);
+    }
+
+    private static Rectangle GetScreenBounds(Control host)
+    {
+        if (host.Handle != 0 && Win32.GetWindowRect(host.Handle, out var rect))
+        {
+            return Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom);
+        }
+
+        return new Rectangle(host.Left, host.Top, host.Width, host.Height);
     }
 
     private void RemoveItemHost(Control host)

@@ -203,6 +203,28 @@ public class MenuStrip : ToolStrip
     private static bool ShouldShowTopLevelText(ToolStripItem item)
         => item.DisplayStyle is ToolStripItemDisplayStyle.Text or ToolStripItemDisplayStyle.ImageAndText;
 
+    private static uint BlendOpaque(uint background, uint foreground, float amount)
+    {
+        amount = Math.Clamp(amount, 0f, 1f);
+
+        float backgroundRed = (background >> 16) & 0xFF;
+        float backgroundGreen = (background >> 8) & 0xFF;
+        float backgroundBlue = background & 0xFF;
+
+        float foregroundRed = (foreground >> 16) & 0xFF;
+        float foregroundGreen = (foreground >> 8) & 0xFF;
+        float foregroundBlue = foreground & 0xFF;
+
+        byte red = (byte)Math.Clamp((backgroundRed * (1f - amount)) + (foregroundRed * amount), 0f, 255f);
+        byte green = (byte)Math.Clamp((backgroundGreen * (1f - amount)) + (foregroundGreen * amount), 0f, 255f);
+        byte blue = (byte)Math.Clamp((backgroundBlue * (1f - amount)) + (foregroundBlue * amount), 0f, 255f);
+
+        return 0xFF_00_00_00
+            | ((uint)red << 16)
+            | ((uint)green << 8)
+            | blue;
+    }
+
     private void DockToTop()
     {
         if (Owner is null)
@@ -239,6 +261,7 @@ public class MenuStrip : ToolStrip
         private const int HoverInsetHorizontal = 2;
         private const int HoverInsetVertical = 1;
         private const int HoverCornerRadius = 6;
+        private const int HighDpiOpticalLift = 1;
 
         public event EventHandler? Click;
 
@@ -360,9 +383,7 @@ public class MenuStrip : ToolStrip
                     return;
                 }
 
-                uint backgroundArgb = _hovered && BackColor != Color.Empty
-                    ? unchecked((uint)BackColor.ToArgb())
-                    : CurrentVisualStyle.Palette.SurfaceBackground;
+                uint backgroundArgb = CurrentVisualStyle.Palette.SurfaceBackground;
                 backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(backgroundArgb));
                 ownsBrush = backgroundBrush != 0;
                 if (backgroundBrush != 0)
@@ -399,6 +420,8 @@ public class MenuStrip : ToolStrip
                     Math.Max(clientBounds.Top + TopLevelContentVerticalPadding + 1, clientBounds.Bottom - TopLevelContentVerticalPadding));
 
                 string text = Text ?? string.Empty;
+                Win32.TEXTMETRICW fontMetrics = default;
+                bool hasFontMetrics = !string.IsNullOrEmpty(text) && Win32.GetTextMetricsW(hdc, out fontMetrics);
                 int textLeft = contentBounds.Left;
                 if (_image is not null)
                 {
@@ -406,9 +429,10 @@ public class MenuStrip : ToolStrip
                 }
 
                 int maxTextWidth = Math.Max(1, contentBounds.Right - textLeft);
-                int textHeight = MeasureTextHeight(hdc, text, maxTextWidth);
+                int textHeight = ResolveTextLayoutHeight(hdc, text, maxTextWidth, hasFontMetrics ? fontMetrics : null);
                 int contentHeight = Math.Max(_image is null ? 0 : MenuItemImageSize, textHeight);
-                int contentTop = contentBounds.Top + Math.Max(0, (contentBounds.Height - contentHeight) / 2);
+                int opticalLift = ResolveOpticalLift(text, hasFontMetrics ? fontMetrics : null);
+                int contentTop = Math.Max(contentBounds.Top, contentBounds.Top + Math.Max(0, (contentBounds.Height - contentHeight) / 2) - opticalLift);
 
                 if (_image is not null)
                 {
@@ -425,8 +449,6 @@ public class MenuStrip : ToolStrip
                     ? CurrentVisualStyle.Palette.DisabledForeground
                     : _popupOpen && CurrentVisualStyle.Palette.ControlPressedForeground != 0
                         ? CurrentVisualStyle.Palette.ControlPressedForeground
-                        : _hovered && CurrentVisualStyle.Palette.ControlHoverForeground != 0
-                        ? CurrentVisualStyle.Palette.ControlHoverForeground
                         : CurrentVisualStyle.Palette.SurfaceForeground;
                 _ = Win32.SetTextColor(hdc, Win32.ToColorRef(textArgb));
 
@@ -465,6 +487,63 @@ public class MenuStrip : ToolStrip
             }
         }
 
+        private int ResolveTextLayoutHeight(nint hdc, string text, int maxTextWidth, Win32.TEXTMETRICW? metrics)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return 0;
+            }
+
+            if (metrics is Win32.TEXTMETRICW textMetrics)
+            {
+                int visualHeight = Math.Max(1, textMetrics.tmAscent + textMetrics.tmDescent);
+                if (visualHeight > 0)
+                {
+                    return visualHeight;
+                }
+            }
+
+            return MeasureTextHeight(hdc, text, maxTextWidth);
+        }
+
+        private static int ResolveOpticalLift(string text, Win32.TEXTMETRICW? metrics)
+        {
+            if (string.IsNullOrEmpty(text) || !ContainsCjkCharacter(text))
+            {
+                return 0;
+            }
+
+            float dpi = Win32.GetSystemDpiScaleDimensions().Height;
+            if (dpi < 120f)
+            {
+                return 0;
+            }
+
+            if (metrics is Win32.TEXTMETRICW textMetrics)
+            {
+                int visualHeight = textMetrics.tmAscent + textMetrics.tmDescent;
+                if (textMetrics.tmHeight > visualHeight)
+                {
+                    return HighDpiOpticalLift;
+                }
+            }
+
+            return HighDpiOpticalLift;
+        }
+
+        private static bool ContainsCjkCharacter(string text)
+        {
+            foreach (char ch in text)
+            {
+                if ((ch >= '\u2E80' && ch <= '\u9FFF') || (ch >= '\uF900' && ch <= '\uFAFF'))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void DrawHighlightBackground(Graphics graphics, Rectangle clientBounds, bool isActive)
         {
             Rectangle hoverBounds = Rectangle.FromLTRB(
@@ -479,16 +558,23 @@ public class MenuStrip : ToolStrip
             }
 
             using GraphicsPath path = CreateRoundedRectanglePath(hoverBounds, HoverCornerRadius);
-            uint backgroundArgb = isActive && CurrentVisualStyle.Palette.ControlPressedBackground != 0
-                ? CurrentVisualStyle.Palette.ControlPressedBackground
-                : CurrentVisualStyle.Palette.ControlHoverBackground;
-            uint borderArgb = isActive && CurrentVisualStyle.Palette.ControlBorder != 0
-                ? CurrentVisualStyle.Palette.ControlBorder
-                : CurrentVisualStyle.Palette.SurfaceBorder;
+            ThemePalette palette = CurrentVisualStyle.Palette;
+            uint hoverBase = palette.ControlHoverBackground != 0 ? palette.ControlHoverBackground : palette.Accent;
+            uint activeBase = palette.ControlPressedBackground != 0 ? palette.ControlPressedBackground : hoverBase;
+            uint backgroundArgb = isActive
+                ? BlendOpaque(palette.SurfaceBackground, activeBase, CurrentVisualStyle.IsDarkMode ? 0.72f : 0.88f)
+                : BlendOpaque(palette.SurfaceBackground, hoverBase, CurrentVisualStyle.IsDarkMode ? 0.28f : 0.45f);
+            uint borderArgb = isActive
+                ? BlendOpaque(palette.SurfaceBorder, palette.Accent != 0 ? palette.Accent : palette.ControlBorder, CurrentVisualStyle.IsDarkMode ? 0.56f : 0.46f)
+                : BlendOpaque(palette.SurfaceBorder, palette.ControlBorder != 0 ? palette.ControlBorder : hoverBase, CurrentVisualStyle.IsDarkMode ? 0.18f : 0.24f);
             using var backgroundBrush = new SolidBrush(Color.FromArgb(unchecked((int)backgroundArgb)));
-            using var borderPen = new Pen(Color.FromArgb(unchecked((int)borderArgb)));
             graphics.FillPath(backgroundBrush, path);
-            graphics.DrawPath(borderPen, path);
+
+            if (isActive)
+            {
+                using var borderPen = new Pen(Color.FromArgb(unchecked((int)borderArgb)));
+                graphics.DrawPath(borderPen, path);
+            }
         }
 
         private static GraphicsPath CreateRoundedRectanglePath(Rectangle bounds, int radius)

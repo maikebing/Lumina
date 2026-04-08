@@ -6,10 +6,10 @@ namespace Lumina.Forms;
 
 internal static class ToolStripPopupMenu
 {
-    // Thread-local state used by the WH_MSGFILTER hook for Left/Right sibling navigation.
+    // Thread-local state used by the WH_MSGFILTER hook for top-level sibling navigation.
 
     [ThreadStatic]
-    private static int s_menuCloseDirection;      // -1=left, 0=none, 1=right
+    private static int s_requestedTopLevelIndex;  // -1 = no navigation requested
 
     [ThreadStatic]
     private static int s_menuDepth;               // 0 = no popup showing; 1 = root popup; 2+ = nested
@@ -19,6 +19,12 @@ internal static class ToolStripPopupMenu
 
     [ThreadStatic]
     private static nint s_msgHook;                // current thread hook handle
+
+    [ThreadStatic]
+    private static int s_currentTopLevelIndex;
+
+    [ThreadStatic]
+    private static Rectangle[]? s_topLevelItemBounds;
 
     /// <summary>
     /// Called from Form.WindowProc for WM_INITMENUPOPUP / WM_UNINITMENUPOPUP so that
@@ -34,14 +40,20 @@ internal static class ToolStripPopupMenu
         s_currentItemHasSubMenu = itemHasSubMenu;
 
     /// <summary>
-    /// Shows the popup and returns a navigation direction: -1 = navigate left,
-    /// 0 = closed normally (item clicked or Escape), 1 = navigate right.
-    /// Install a WH_MSGFILTER hook so Left/Right at the root-popup level
-    /// are captured and converted to Escape, then reported as a direction.
+    /// Shows the popup and returns the next top-level item index to activate,
+    /// or -1 when the popup closed normally.
+    /// Install a WH_MSGFILTER hook so Left/Right and top-level hover changes
+    /// at the root-popup level are captured and converted into a sibling switch.
     /// </summary>
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-    internal static int ShowForMenuBar(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
-        => ShowForMenuBarCore(items, ownerHandle, screenLocation, visualStyle);
+    internal static int ShowForMenuBar(
+        ToolStripItemCollection items,
+        nint ownerHandle,
+        Point screenLocation,
+        ResolvedVisualStyle visualStyle,
+        int currentTopLevelIndex,
+        Rectangle[] topLevelItemBounds)
+        => ShowForMenuBarCore(items, ownerHandle, screenLocation, visualStyle, currentTopLevelIndex, topLevelItemBounds);
 
     // The hook proc is an unmanaged static function pointer and AOT-safe.
     // lParam points to a MSG struct when nCode == MSGF_MENU.
@@ -58,15 +70,36 @@ internal static class ToolStripPopupMenu
                     nuint vk = msg->wParam;
                     if (vk == (nuint)Win32.VK_LEFT && s_menuDepth <= 1)
                     {
-                        // At root level: turn Left into Escape and record direction.
-                        s_menuCloseDirection = -1;
-                        msg->wParam = (nuint)Win32.VK_ESCAPE;
+                        int previousIndex = ResolveSiblingIndex(-1);
+                        if (previousIndex >= 0)
+                        {
+                            s_requestedTopLevelIndex = previousIndex;
+                            msg->message = (uint)Win32.WM_KEYDOWN;
+                            msg->wParam = (nuint)Win32.VK_ESCAPE;
+                            msg->lParam = 0;
+                        }
                     }
                     else if (vk == (nuint)Win32.VK_RIGHT && !s_currentItemHasSubMenu)
                     {
-                        // Right on a leaf item: turn it into Escape and record direction.
-                        s_menuCloseDirection = 1;
+                        int nextIndex = ResolveSiblingIndex(1);
+                        if (nextIndex >= 0)
+                        {
+                            s_requestedTopLevelIndex = nextIndex;
+                            msg->message = (uint)Win32.WM_KEYDOWN;
+                            msg->wParam = (nuint)Win32.VK_ESCAPE;
+                            msg->lParam = 0;
+                        }
+                    }
+                }
+                else if (msg->message == (uint)Win32.WM_MOUSEMOVE && s_menuDepth <= 1)
+                {
+                    int hoveredIndex = HitTestTopLevelItem(msg->pt);
+                    if (hoveredIndex >= 0 && hoveredIndex != s_currentTopLevelIndex)
+                    {
+                        s_requestedTopLevelIndex = hoveredIndex;
+                        msg->message = (uint)Win32.WM_KEYDOWN;
                         msg->wParam = (nuint)Win32.VK_ESCAPE;
+                        msg->lParam = 0;
                     }
                 }
             }
@@ -78,20 +111,28 @@ internal static class ToolStripPopupMenu
     internal static void Show(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
         => ShowCore(items, ownerHandle, screenLocation, visualStyle);
 
-    private static int ShowForMenuBarCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
+    private static int ShowForMenuBarCore(
+        ToolStripItemCollection items,
+        nint ownerHandle,
+        Point screenLocation,
+        ResolvedVisualStyle visualStyle,
+        int currentTopLevelIndex,
+        Rectangle[] topLevelItemBounds)
     {
         if (!OperatingSystem.IsWindows() || ownerHandle == 0)
         {
-            return 0;
+            return -1;
         }
 
         using NativeMenu nativeMenu = NativeMenu.CreatePopup(items, visualStyle);
         if (nativeMenu.Handle == 0)
         {
-            return 0;
+            return -1;
         }
 
-        s_menuCloseDirection = 0;
+        s_requestedTopLevelIndex = -1;
+        s_currentTopLevelIndex = currentTopLevelIndex;
+        s_topLevelItemBounds = topLevelItemBounds;
         DarkModeNative.RefreshImmersiveState();
 
         unsafe
@@ -117,11 +158,11 @@ internal static class ToolStripPopupMenu
             {
                 item.PerformClick();
                 _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
-                return 0;
+                return -1;
             }
 
             _ = Win32.PostMessageW(ownerHandle, Win32.WM_NULL, 0, 0);
-            return s_menuCloseDirection;
+            return s_requestedTopLevelIndex;
         }
         finally
         {
@@ -130,7 +171,44 @@ internal static class ToolStripPopupMenu
                 Win32.UnhookWindowsHookEx(s_msgHook);
                 s_msgHook = 0;
             }
+
+            s_requestedTopLevelIndex = -1;
+            s_currentTopLevelIndex = -1;
+            s_topLevelItemBounds = null;
         }
+    }
+
+    private static int ResolveSiblingIndex(int offset)
+    {
+        Rectangle[]? topLevelItemBounds = s_topLevelItemBounds;
+        if (topLevelItemBounds is null || topLevelItemBounds.Length == 0 || s_currentTopLevelIndex < 0)
+        {
+            return -1;
+        }
+
+        int count = topLevelItemBounds.Length;
+        return ((s_currentTopLevelIndex + offset) % count + count) % count;
+    }
+
+    private static int HitTestTopLevelItem(Win32.POINT cursor)
+    {
+        Rectangle[]? topLevelItemBounds = s_topLevelItemBounds;
+        if (topLevelItemBounds is null)
+        {
+            return -1;
+        }
+
+        Point screenPoint = new(cursor.x, cursor.y);
+        for (int i = 0; i < topLevelItemBounds.Length; i++)
+        {
+            Rectangle bounds = topLevelItemBounds[i];
+            if (bounds.Width > 0 && bounds.Height > 0 && bounds.Contains(screenPoint))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static void ShowCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
