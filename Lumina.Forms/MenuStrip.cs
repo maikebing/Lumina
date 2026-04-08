@@ -9,6 +9,8 @@ namespace Lumina.Forms;
 public class MenuStrip : ToolStrip
 {
     private const int MenuItemHorizontalPadding = 12;
+    private const int MenuItemImageSize = 16;
+    private const int MenuItemImageSpacing = 6;
 
     private NativeMenu? _nativeMenu;
 
@@ -70,11 +72,39 @@ public class MenuStrip : ToolStrip
 
     private protected override Size ResolveHostSize(ToolStripItem item, int availableHeight)
     {
-        Size textSize = MeasureItemText(item);
-        int width = Math.Max(MenuItemHorizontalPadding, textSize.Width + MenuItemHorizontalPadding);
+        string text = ShouldShowTopLevelText(item) ? ResolveItemText(item) : string.Empty;
+        Size textSize = string.IsNullOrEmpty(text)
+            ? Size.Empty
+            : MeasureTextCore(text, useMnemonicPrefix: true);
+
+        int width = MenuItemHorizontalPadding;
+        if (ShouldShowTopLevelImage(item))
+        {
+            width += MenuItemImageSize;
+            if (textSize.Width > 0)
+            {
+                width += MenuItemImageSpacing;
+            }
+        }
+
+        width += textSize.Width + MenuItemHorizontalPadding;
         int resolvedWidth = item.Size.Width > 0 ? item.Size.Width : width;
         int resolvedHeight = item.Size.Height > 0 ? item.Size.Height : Math.Max(1, availableHeight);
         return new Size(resolvedWidth, resolvedHeight);
+    }
+
+    private protected override void ApplyItemState(Control host, ToolStripItem item)
+    {
+        if (host is TopLevelMenuItemHost topLevelMenuItemHost)
+        {
+            topLevelMenuItemHost.SetContent(
+                ShouldShowTopLevelText(item) ? ResolveItemText(item) : string.Empty,
+                ShouldShowTopLevelImage(item) ? item.Image : null);
+            topLevelMenuItemHost.Enabled = item.Enabled;
+            return;
+        }
+
+        base.ApplyItemState(host, item);
     }
 
     /// <inheritdoc />
@@ -155,6 +185,13 @@ public class MenuStrip : ToolStrip
         _nativeMenu = null;
     }
 
+    private static bool ShouldShowTopLevelImage(ToolStripItem item)
+        => item.Image is not null
+            && item.DisplayStyle is ToolStripItemDisplayStyle.Image or ToolStripItemDisplayStyle.ImageAndText;
+
+    private static bool ShouldShowTopLevelText(ToolStripItem item)
+        => item.DisplayStyle is ToolStripItemDisplayStyle.Text or ToolStripItemDisplayStyle.ImageAndText;
+
     private void DockToTop()
     {
         if (Owner is null)
@@ -189,10 +226,13 @@ public class MenuStrip : ToolStrip
     private sealed class TopLevelMenuItemHost : Label
     {
         private const int TextInset = 4;
+        private const int ImageSize = 16;
+        private const int ImageSpacing = 6;
 
         public event EventHandler? Click;
 
         private bool _hovered;
+        private Image? _image;
 
         private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
 
@@ -208,6 +248,13 @@ public class MenuStrip : ToolStrip
         protected override void OnHandleCreated()
         {
             base.OnHandleCreated();
+            Refresh();
+        }
+
+        public void SetContent(string text, Image? image)
+        {
+            Text = text;
+            _image = image;
             Refresh();
         }
 
@@ -313,12 +360,29 @@ public class MenuStrip : ToolStrip
                     previousFont = Win32.SelectObject(hdc, fontHandle);
                 }
 
+                using var graphics = Graphics.FromHdc(hdc);
+                if (_image is not null)
+                {
+                    Rectangle imageBounds = new(
+                        TextInset,
+                        clientRect.Top + Math.Max(0, (clientRect.Height - ImageSize) / 2),
+                        ImageSize,
+                        ImageSize);
+                    graphics.DrawImage(_image, imageBounds);
+                }
+
                 _ = Win32.SetBkMode(hdc, Win32.TRANSPARENT);
                 _ = Win32.SetTextColor(hdc, Win32.ToColorRef(CurrentVisualStyle.Palette.SurfaceForeground));
 
+                int textLeft = TextInset;
+                if (_image is not null)
+                {
+                    textLeft += ImageSize + (string.IsNullOrEmpty(Text) ? 0 : ImageSpacing);
+                }
+
                 var textBounds = new Win32.RECT
                 {
-                    Left = TextInset,
+                    Left = textLeft,
                     Top = clientRect.Top,
                     Right = Math.Max(TextInset, clientRect.Right - TextInset),
                     Bottom = clientRect.Bottom,

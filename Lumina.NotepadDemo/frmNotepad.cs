@@ -20,6 +20,7 @@ public partial class frmNotepad : Form
     public frmNotepad()
     {
         InitializeComponent();
+        ApplyMenuIcons();
         _workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         FormClosing += frmNotepad_FormClosing;
         SizeChanged += frmNotepad_SizeChanged;

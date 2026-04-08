@@ -1,0 +1,75 @@
+version: '1.0'
+name: tag-release-pipeline
+
+displayName: LuminaGiteeReleasePipeline
+
+triggers:
+  trigger: auto
+  push:
+    tags:
+      prefix:
+        - v
+
+stages:
+  - name: compile
+    displayName: Compile
+    strategy: naturally
+    trigger: auto
+    steps:
+      - step: build@dotnet
+        name: build_dotnet
+        displayName: Build, Pack And Publish
+        dotnetVersion: '10.0'
+        commands:
+          - set -e
+          - VERSION="${GITEE_BRANCH#v}"
+          - if [ -z "${VERSION}" ]; then echo "Failed to resolve version from tag ${GITEE_BRANCH}" >&2; exit 1; fi
+          - rm -rf ./artifacts ./out
+          - mkdir -p ./artifacts/nupkgs ./artifacts/demo ./out
+          - dotnet restore Lumina.slnx -p:EnableWindowsTargeting=true
+          - dotnet restore Lumina.Advanced/Lumina.Advanced.csproj -p:EnableWindowsTargeting=true
+          - dotnet restore Lumina.NotepadDemo/Lumina.NotepadDemo.csproj -r win-x64 -p:EnableWindowsTargeting=true
+          - dotnet build Lumina.slnx -c Release --no-restore -p:ContinuousIntegrationBuild=true -p:EnableWindowsTargeting=true
+          - |
+            for project in \
+              Lumina.Core/Lumina.Core.csproj \
+              Lumina.Advanced/Lumina.Advanced.csproj \
+              Lumina.Ext.WinForms/Lumina.Ext.WinForms.csproj \
+              Lumina.Ext.Wpf/Lumina.Ext.Wpf.csproj \
+              Lumina.Forms/Lumina.Forms.csproj \
+              Lumina.Forms.Analyzers/Lumina.Forms.Analyzers.csproj
+            do
+              dotnet pack "$project" \
+                -c Release \
+                --no-restore \
+                -o ./artifacts/nupkgs \
+                -p:Version="${VERSION}" \
+                -p:ContinuousIntegrationBuild=true \
+                -p:EnableWindowsTargeting=true
+            done
+          - echo "Gitee hosted dotnet runners are inferred to be Linux-based, so the demo publish explicitly disables PublishAot for the win-x64 release asset."
+          - dotnet publish Lumina.NotepadDemo/Lumina.NotepadDemo.csproj -c Release -r win-x64 --self-contained true --no-restore -o ./artifacts/demo/Lumina.NotepadDemo-win-x64 -p:Version="${VERSION}" -p:PublishAot=false -p:ContinuousIntegrationBuild=true -p:EnableWindowsTargeting=true
+          - DEMO_EXE="$(find ./artifacts/demo/Lumina.NotepadDemo-win-x64 -maxdepth 1 -name '*.exe' | head -n 1)"
+          - if [ -z "${DEMO_EXE}" ]; then echo "Demo publish output does not contain an .exe file." >&2; exit 1; fi
+          - cp ./artifacts/nupkgs/*.nupkg ./out/
+          - cp "${DEMO_EXE}" "./out/Lumina.NotepadDemo-${VERSION}-win-x64.exe"
+          - (cd ./out && zip -r "Lumina-${GITEE_BRANCH}-release-assets.zip" .)
+        artifacts:
+          - name: LuminaReleaseAssets
+            path:
+              - ./out/
+        caches:
+          - ~/.nuget/packages
+        notify: []
+        strategy:
+          retry: '0'
+
+      - step: publish@general_artifacts
+        name: publish_general_artifacts
+        displayName: Upload Artifacts
+        dependArtifact: LuminaReleaseAssets
+        artifactName: LuminaReleaseAssets
+        notify: []
+        strategy:
+          retry: '0'
+        dependsOn: build_dotnet
