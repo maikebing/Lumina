@@ -1,0 +1,25 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "publish-notepad-aot",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"publish",
+				".\\Lumina.NotepadDemo\\Lumina.NotepadDemo.csproj",
+				"-c",
+				"Release",
+				"-r",
+				"win-x64",
+				"-o",
+				".\\bin\\publish\\Lumina.NotepadDemo\\aot\\win-x64"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		}
+	]
+}

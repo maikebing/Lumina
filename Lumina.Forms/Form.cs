@@ -215,7 +215,15 @@ public class Form : IDisposable
     /// </summary>
     public Size ClientSize
     {
-        get => new(Width, Height);
+        get
+        {
+            if (Handle != 0 && Win32.GetClientRect(Handle, out var clientRect))
+            {
+                return new Size(clientRect.Width, clientRect.Height);
+            }
+
+            return new Size(Width, Height);
+        }
         set
         {
             Width = value.Width;

@@ -616,10 +616,9 @@ public partial class frmNotepad : Form
         int menuHeight = Math.Max(0, menuStrip1.Height);
         int statusHeight = Math.Max(0, statusStrip1.Height);
 
-        int editorTop = menuHeight;
         int editorHeight = Math.Max(1, height - menuHeight - statusHeight);
 
-        editorTextBox.SetBounds(0, editorTop, width, editorHeight);
+        editorTextBox.SetBounds(0, 0, width, editorHeight);
         statusStrip1.SetBounds(0, Math.Max(0, height - statusHeight), width, statusHeight);
     }
 

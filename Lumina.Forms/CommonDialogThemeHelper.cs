@@ -148,6 +148,7 @@ internal static class CommonDialogThemeHelper
 
                 break;
 
+            case Win32.WM_CTLCOLORMSGBOX:
             case Win32.WM_CTLCOLORDLG:
             case Win32.WM_CTLCOLORSTATIC:
                 _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);

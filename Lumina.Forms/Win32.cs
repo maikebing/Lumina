@@ -324,6 +324,8 @@ internal static class Win32
     public const uint MB_ICONQUESTION = 0x00000020;
     public const uint MB_ICONWARNING = 0x00000030;
     public const uint MB_ICONINFORMATION = 0x00000040;
+    public const uint MB_SETFOREGROUND = 0x00010000;
+    public const uint MB_TOPMOST = 0x00040000;
 
     public const uint TDCBF_OK_BUTTON = 0x0001;
     public const uint TDCBF_YES_BUTTON = 0x0002;

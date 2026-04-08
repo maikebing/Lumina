@@ -8,8 +8,6 @@ namespace Lumina.Forms;
 /// </summary>
 public static class MessageBox
 {
-    private static readonly bool s_isTaskDialogSupported = IsTaskDialogSupported();
-
     [ThreadStatic]
     private static nint s_cbtHook;
 
@@ -41,43 +39,25 @@ public static class MessageBox
             return taskDialogResult;
         }
 
-        uint type = MapButtonsForMessageBox(buttons) | MapIconForMessageBox(icon);
-
         if (!OperatingSystem.IsWindows())
         {
             return DialogResult.None;
         }
 
-        DarkModeNative.RefreshImmersiveState();
-        s_pendingDarkMode = owner?.CurrentVisualStyle.IsDarkMode ?? Application.CurrentVisualStyle.IsDarkMode;
-        s_pendingPalette = (owner?.CurrentVisualStyle.Palette ?? Application.CurrentVisualStyle.Palette).Clone();
-
-        unsafe
+        DialogResult fallbackResult = ShowMessageBoxCore(owner?.Handle ?? 0, text, caption, buttons, icon);
+        if (fallbackResult != DialogResult.None || owner is null)
         {
-            nint hookPtr = (nint)(delegate* unmanaged[Stdcall]<int, nint, nint, nint>)&CbtHookProc;
-            s_cbtHook = Win32.SetWindowsHookExW(Win32.WH_CBT, hookPtr, 0, Win32.GetCurrentThreadId());
+            return fallbackResult;
         }
 
-        try
-        {
-            int result = Win32.MessageBoxW(owner?.Handle ?? 0, text ?? string.Empty, caption ?? string.Empty, type);
-            return MapResult(result);
-        }
-        finally
-        {
-            if (s_cbtHook != 0)
-            {
-                _ = Win32.UnhookWindowsHookEx(s_cbtHook);
-                s_cbtHook = 0;
-            }
-        }
+        return ShowMessageBoxCore(0, text, caption, buttons, icon);
     }
 
     private static bool TryShowTaskDialog(Form? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, out DialogResult result)
     {
         result = DialogResult.None;
 
-        if (!s_isTaskDialogSupported)
+        if (!OperatingSystem.IsWindows())
         {
             return false;
         }
@@ -94,7 +74,7 @@ public static class MessageBox
                 MapIconForTaskDialog(icon),
                 out int buttonId);
 
-            if (hr < 0)
+            if (hr < 0 || buttonId == 0)
             {
                 return false;
             }
@@ -120,20 +100,33 @@ public static class MessageBox
         }
     }
 
-    private static bool IsTaskDialogSupported()
+    private static DialogResult ShowMessageBoxCore(nint ownerHandle, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
     {
-        if (!OperatingSystem.IsWindows())
+        uint type = MapButtonsForMessageBox(buttons) | MapIconForMessageBox(icon) | Win32.MB_SETFOREGROUND | Win32.MB_TOPMOST;
+
+        DarkModeNative.RefreshImmersiveState();
+        s_pendingDarkMode = Application.CurrentVisualStyle.IsDarkMode;
+        s_pendingPalette = Application.CurrentVisualStyle.Palette.Clone();
+
+        unsafe
         {
-            return false;
+            nint hookPtr = (nint)(delegate* unmanaged[Stdcall]<int, nint, nint, nint>)&CbtHookProc;
+            s_cbtHook = Win32.SetWindowsHookExW(Win32.WH_CBT, hookPtr, 0, Win32.GetCurrentThreadId());
         }
 
-        nint comctl32 = Win32.GetModuleHandleW("comctl32.dll");
-        if (comctl32 == 0)
+        try
         {
-            comctl32 = Win32.LoadLibraryExW("comctl32.dll", 0, Win32.LOAD_LIBRARY_SEARCH_SYSTEM32);
+            int result = Win32.MessageBoxW(ownerHandle, text ?? string.Empty, caption ?? string.Empty, type);
+            return MapResult(result);
         }
-
-        return comctl32 != 0 && Win32.GetProcAddress(comctl32, "TaskDialog") != 0;
+        finally
+        {
+            if (s_cbtHook != 0)
+            {
+                _ = Win32.UnhookWindowsHookEx(s_cbtHook);
+                s_cbtHook = 0;
+            }
+        }
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]

@@ -23,7 +23,7 @@ public class MenuStrip : ToolStrip
         GripStyle = ToolStripGripStyle.Hidden;
         Stretch = true;
         ShowItemToolTips = false;
-        Padding = new Padding(6, 2, 0, 2);
+        Padding = new Padding(10, 2, 0, 2);
     }
 
     /// <inheritdoc />
