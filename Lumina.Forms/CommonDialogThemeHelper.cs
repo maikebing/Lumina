@@ -31,7 +31,7 @@ internal static class CommonDialogThemeHelper
             return;
         }
 
-        ThemePalette resolvedPalette = (palette ?? Application.CurrentVisualStyle.Palette).Clone();
+        ThemePalette resolvedPalette = CoercePaletteForTheme((palette ?? Application.CurrentVisualStyle.Palette).Clone(), useDarkMode);
         DialogThemeState newState = DialogThemeState.Create(resolvedPalette);
         if (s_states.TryRemove(hWnd, out DialogThemeState? existing))
         {
@@ -66,6 +66,49 @@ internal static class CommonDialogThemeHelper
             nint enumProc = (nint)(delegate* unmanaged[Stdcall]<nint, nint, bool>)&EnumChildProc;
             _ = Win32.EnumChildWindows(hWnd, enumProc, 0);
         }
+
+        _ = Win32.InvalidateRect(hWnd, 0, true);
+        _ = Win32.UpdateWindow(hWnd);
+    }
+
+    private static ThemePalette CoercePaletteForTheme(ThemePalette palette, bool useDarkMode)
+    {
+        bool windowIsDark = IsDarkColor(palette.WindowBackground);
+        bool surfaceIsDark = IsDarkColor(palette.SurfaceBackground);
+
+        if (useDarkMode && (!windowIsDark || !surfaceIsDark))
+        {
+            ThemePalette fallback = ThemePalette.CreateDark();
+            palette.WindowBackground = fallback.WindowBackground;
+            palette.WindowForeground = fallback.WindowForeground;
+            palette.SurfaceBackground = fallback.SurfaceBackground;
+            palette.SurfaceForeground = fallback.SurfaceForeground;
+            palette.ControlBackground = fallback.ControlBackground;
+            palette.ControlForeground = fallback.ControlForeground;
+        }
+        else if (!useDarkMode && (windowIsDark || surfaceIsDark))
+        {
+            ThemePalette fallback = ThemePalette.CreateLight();
+            palette.WindowBackground = fallback.WindowBackground;
+            palette.WindowForeground = fallback.WindowForeground;
+            palette.SurfaceBackground = fallback.SurfaceBackground;
+            palette.SurfaceForeground = fallback.SurfaceForeground;
+            palette.ControlBackground = fallback.ControlBackground;
+            palette.ControlForeground = fallback.ControlForeground;
+        }
+
+        return palette;
+    }
+
+    private static bool IsDarkColor(uint argb)
+    {
+        int r = (int)((argb >> 16) & 0xFF);
+        int g = (int)((argb >> 8) & 0xFF);
+        int b = (int)(argb & 0xFF);
+
+        // Perceived luminance in [0,255].
+        int luminance = (r * 299 + g * 587 + b * 114) / 1000;
+        return luminance < 128;
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -93,13 +136,27 @@ internal static class CommonDialogThemeHelper
 
         switch (uMsg)
         {
+            case Win32.WM_ERASEBKGND:
+                if (Win32.GetClientRect(hWnd, out Win32.RECT clientRect))
+                {
+                    _ = Win32.FillRect(wParam, ref clientRect, state.BackgroundBrush);
+                    return 1;
+                }
+
+                break;
+
             case Win32.WM_CTLCOLORDLG:
             case Win32.WM_CTLCOLORSTATIC:
-            case Win32.WM_CTLCOLORBTN:
                 _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
                 _ = Win32.SetTextColor(wParam, state.TextColorRef);
                 _ = Win32.SetBkColor(wParam, state.BackgroundColorRef);
                 return state.BackgroundBrush;
+
+            case Win32.WM_CTLCOLORBTN:
+                _ = Win32.SetBkMode(wParam, Win32.TRANSPARENT);
+                _ = Win32.SetTextColor(wParam, state.ControlTextColorRef);
+                _ = Win32.SetBkColor(wParam, state.ControlBackgroundColorRef);
+                return state.ControlBackgroundBrush;
 
             case Win32.WM_CTLCOLOREDIT:
             case Win32.WM_CTLCOLORLISTBOX:
