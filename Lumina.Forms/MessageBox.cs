@@ -8,6 +8,8 @@ namespace Lumina.Forms;
 /// </summary>
 public static class MessageBox
 {
+    private static readonly bool s_isTaskDialogSupported = IsTaskDialogSupported();
+
     [ThreadStatic]
     private static nint s_cbtHook;
 
@@ -34,12 +36,16 @@ public static class MessageBox
     /// </summary>
     public static DialogResult Show(Form? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
     {
+        if (OperatingSystem.IsWindows() && TryShowTaskDialog(owner, text, caption, buttons, icon, out DialogResult taskDialogResult))
+        {
+            return taskDialogResult;
+        }
+
         uint type = MapButtonsForMessageBox(buttons) | MapIconForMessageBox(icon);
 
         if (!OperatingSystem.IsWindows())
         {
-            int fallbackResult = Win32.MessageBoxW(owner?.Handle ?? 0, text ?? string.Empty, caption ?? string.Empty, type);
-            return MapResult(fallbackResult);
+            return DialogResult.None;
         }
 
         DarkModeNative.RefreshImmersiveState();
@@ -65,6 +71,69 @@ public static class MessageBox
                 s_cbtHook = 0;
             }
         }
+    }
+
+    private static bool TryShowTaskDialog(Form? owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, out DialogResult result)
+    {
+        result = DialogResult.None;
+
+        if (!s_isTaskDialogSupported)
+        {
+            return false;
+        }
+
+        try
+        {
+            int hr = Win32.TaskDialog(
+                owner?.Handle ?? 0,
+                0,
+                string.IsNullOrEmpty(caption) ? null : caption,
+                null,
+                text ?? string.Empty,
+                MapButtonsForTaskDialog(buttons),
+                MapIconForTaskDialog(icon),
+                out int buttonId);
+
+            if (hr < 0)
+            {
+                return false;
+            }
+
+            result = MapResult(buttonId);
+            return true;
+        }
+        catch (EntryPointNotFoundException)
+        {
+            return false;
+        }
+        catch (DllNotFoundException)
+        {
+            return false;
+        }
+        catch (BadImageFormatException)
+        {
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsTaskDialogSupported()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        nint comctl32 = Win32.GetModuleHandleW("comctl32.dll");
+        if (comctl32 == 0)
+        {
+            comctl32 = Win32.LoadLibraryExW("comctl32.dll", 0, Win32.LOAD_LIBRARY_SEARCH_SYSTEM32);
+        }
+
+        return comctl32 != 0 && Win32.GetProcAddress(comctl32, "TaskDialog") != 0;
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -96,6 +165,17 @@ public static class MessageBox
         };
     }
 
+    private static uint MapButtonsForTaskDialog(MessageBoxButtons buttons)
+    {
+        return buttons switch
+        {
+            MessageBoxButtons.OKCancel => Win32.TDCBF_OK_BUTTON | Win32.TDCBF_CANCEL_BUTTON,
+            MessageBoxButtons.YesNo => Win32.TDCBF_YES_BUTTON | Win32.TDCBF_NO_BUTTON,
+            MessageBoxButtons.YesNoCancel => Win32.TDCBF_YES_BUTTON | Win32.TDCBF_NO_BUTTON | Win32.TDCBF_CANCEL_BUTTON,
+            _ => Win32.TDCBF_OK_BUTTON,
+        };
+    }
+
     private static uint MapIconForMessageBox(MessageBoxIcon icon)
     {
         return icon switch
@@ -104,6 +184,18 @@ public static class MessageBox
             MessageBoxIcon.Warning => Win32.MB_ICONWARNING,
             MessageBoxIcon.Error => Win32.MB_ICONERROR,
             MessageBoxIcon.Question => Win32.MB_ICONQUESTION,
+            _ => 0,
+        };
+    }
+
+    private static nint MapIconForTaskDialog(MessageBoxIcon icon)
+    {
+        return icon switch
+        {
+            MessageBoxIcon.Warning => Win32.TD_WARNING_ICON,
+            MessageBoxIcon.Error => Win32.TD_ERROR_ICON,
+            MessageBoxIcon.Information => Win32.TD_INFORMATION_ICON,
+            MessageBoxIcon.Question => Win32.TD_INFORMATION_ICON,
             _ => 0,
         };
     }
