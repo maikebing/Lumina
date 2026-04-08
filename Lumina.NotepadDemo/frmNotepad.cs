@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using System.Runtime.Versioning;
@@ -245,14 +246,14 @@ public partial class frmNotepad : Form
         _ = SystemAboutDialog.Show(this, "Lumina Notepad", "Lumina.Forms WinForms Compatible Demo", Icon);
     }
 
-    private void 关于ToolStripMenuItem_Click(object? sender, EventArgs e)
+    private void GiteeToolStripMenuItem_Click(object? sender, EventArgs e)
     {
-        _ = MessageBox.Show(
-            this,
-            "Lumina Notepad Demo\n基于 Lumina.Forms，支持 AOT。",
-            "关于 Lumina Notepad",
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Information);
+        OpenRepositoryUrl("https://gitee.com/maikebing/Lumina", "已打开 Gitee 仓库");
+    }
+
+    private void GitHubToolStripMenuItem_Click(object? sender, EventArgs e)
+    {
+        OpenRepositoryUrl("https://github.com/maikebing/Lumina", "已打开 GitHub 仓库");
     }
 
     private void editorTextBox_TextChanged(object? sender, EventArgs e)
@@ -717,6 +718,24 @@ public partial class frmNotepad : Form
         if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
         {
             _workingDirectory = directory;
+        }
+    }
+
+    private void OpenRepositoryUrl(string url, string successStatus)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true,
+            });
+
+            UpdatePrimaryStatus(successStatus);
+        }
+        catch (Exception ex)
+        {
+            UpdatePrimaryStatus($"打开链接失败: {ex.Message}");
         }
     }
 }

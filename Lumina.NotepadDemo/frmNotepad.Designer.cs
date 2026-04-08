@@ -42,7 +42,9 @@ partial class frmNotepad
         toolStripSeparator3 = new ToolStripSeparator();
         帮助ToolStripMenuItem = new ToolStripMenuItem();
         系统关于ToolStripMenuItem = new ToolStripMenuItem();
-        关于ToolStripMenuItem = new ToolStripMenuItem();
+        toolStripSeparator4 = new ToolStripSeparator();
+        GiteeToolStripMenuItem = new ToolStripMenuItem();
+        GitHubToolStripMenuItem = new ToolStripMenuItem();
         editorTextBox = new TextBox();
         statusStrip1 = new StatusStrip();
         primaryStatusLabel = new ToolStripStatusLabel();
@@ -202,7 +204,7 @@ partial class frmNotepad
         // 
         // 帮助ToolStripMenuItem
         // 
-        帮助ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 系统关于ToolStripMenuItem, 关于ToolStripMenuItem });
+        帮助ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 系统关于ToolStripMenuItem, toolStripSeparator4, GiteeToolStripMenuItem, GitHubToolStripMenuItem });
         帮助ToolStripMenuItem.Name = "帮助ToolStripMenuItem";
         帮助ToolStripMenuItem.Size = new Size(44, 21);
         帮助ToolStripMenuItem.Text = "帮助";
@@ -211,15 +213,27 @@ partial class frmNotepad
         // 
         系统关于ToolStripMenuItem.Name = "系统关于ToolStripMenuItem";
         系统关于ToolStripMenuItem.Size = new Size(180, 22);
-        系统关于ToolStripMenuItem.Text = "系统关于";
+        系统关于ToolStripMenuItem.Text = "关于";
         系统关于ToolStripMenuItem.Click += 系统关于ToolStripMenuItem_Click;
         // 
-        // 关于ToolStripMenuItem
+        // toolStripSeparator4
         // 
-        关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
-        关于ToolStripMenuItem.Size = new Size(180, 22);
-        关于ToolStripMenuItem.Text = "关于";
-        关于ToolStripMenuItem.Click += 关于ToolStripMenuItem_Click;
+        toolStripSeparator4.Name = "toolStripSeparator4";
+        toolStripSeparator4.Size = new Size(177, 6);
+        // 
+        // GiteeToolStripMenuItem
+        // 
+        GiteeToolStripMenuItem.Name = "GiteeToolStripMenuItem";
+        GiteeToolStripMenuItem.Size = new Size(180, 22);
+        GiteeToolStripMenuItem.Text = "打开 Gitee 仓库";
+        GiteeToolStripMenuItem.Click += GiteeToolStripMenuItem_Click;
+        // 
+        // GitHubToolStripMenuItem
+        // 
+        GitHubToolStripMenuItem.Name = "GitHubToolStripMenuItem";
+        GitHubToolStripMenuItem.Size = new Size(180, 22);
+        GitHubToolStripMenuItem.Text = "打开 GitHub 仓库";
+        GitHubToolStripMenuItem.Click += GitHubToolStripMenuItem_Click;
         // 
         // editorTextBox
         // 
@@ -296,7 +310,9 @@ partial class frmNotepad
     private ToolStripSeparator toolStripSeparator3;
     private ToolStripMenuItem 帮助ToolStripMenuItem;
     private ToolStripMenuItem 系统关于ToolStripMenuItem;
-    private ToolStripMenuItem 关于ToolStripMenuItem;
+    private ToolStripSeparator toolStripSeparator4;
+    private ToolStripMenuItem GiteeToolStripMenuItem;
+    private ToolStripMenuItem GitHubToolStripMenuItem;
     private TextBox editorTextBox;
     private StatusStrip statusStrip1;
     private ToolStripStatusLabel primaryStatusLabel;
