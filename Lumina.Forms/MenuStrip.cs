@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 
 namespace Lumina.Forms;
@@ -11,6 +12,7 @@ public class MenuStrip : ToolStrip
     private const int MenuItemHorizontalPadding = 12;
     private const int MenuItemImageSize = 16;
     private const int MenuItemImageSpacing = 6;
+    private const int TopLevelItemSpacing = 6;
 
     private NativeMenu? _nativeMenu;
 
@@ -26,7 +28,7 @@ public class MenuStrip : ToolStrip
         GripStyle = ToolStripGripStyle.Hidden;
         Stretch = true;
         ShowItemToolTips = false;
-        Padding = new Padding(6, 2, 0, 2);
+        Padding = new Padding(6, 2, 6, 2);
     }
 
     /// <inheritdoc />
@@ -66,7 +68,7 @@ public class MenuStrip : ToolStrip
             Size hostSize = ResolveHostSize(item, availableHeight);
             int itemHeight = Math.Min(availableHeight, Math.Max(1, hostSize.Height));
             host.SetBounds(x, y, hostSize.Width, itemHeight);
-            x += hostSize.Width;
+            x += hostSize.Width + TopLevelItemSpacing;
         }
     }
 
@@ -88,7 +90,7 @@ public class MenuStrip : ToolStrip
         }
 
         width += textSize.Width + MenuItemHorizontalPadding;
-        int resolvedWidth = item.Size.Width > 0 ? item.Size.Width : width;
+        int resolvedWidth = item.Size.Width > 0 ? Math.Max(item.Size.Width, width) : width;
         int resolvedHeight = item.Size.Height > 0 ? item.Size.Height : Math.Max(1, availableHeight);
         return new Size(resolvedWidth, resolvedHeight);
     }
@@ -228,6 +230,9 @@ public class MenuStrip : ToolStrip
         private const int TextInset = 4;
         private const int ImageSize = 16;
         private const int ImageSpacing = 6;
+        private const int HoverInsetHorizontal = 2;
+        private const int HoverInsetVertical = 1;
+        private const int HoverCornerRadius = 6;
 
         public event EventHandler? Click;
 
@@ -361,40 +366,59 @@ public class MenuStrip : ToolStrip
                 }
 
                 using var graphics = Graphics.FromHdc(hdc);
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                Rectangle clientBounds = Rectangle.FromLTRB(clientRect.Left, clientRect.Top, clientRect.Right, clientRect.Bottom);
+                if (_hovered)
+                {
+                    DrawHoverBackground(graphics, clientBounds);
+                }
+
+                string text = Text ?? string.Empty;
+                int textLeft = TextInset;
+                if (_image is not null)
+                {
+                    textLeft += ImageSize + (string.IsNullOrEmpty(text) ? 0 : ImageSpacing);
+                }
+
+                int maxTextWidth = Math.Max(1, clientRect.Right - textLeft - TextInset);
+                int textHeight = MeasureTextHeight(hdc, text, maxTextWidth);
+                int contentHeight = Math.Max(_image is null ? 0 : ImageSize, textHeight);
+                int contentTop = clientRect.Top + Math.Max(0, (clientRect.Height - contentHeight) / 2);
+
                 if (_image is not null)
                 {
                     Rectangle imageBounds = new(
                         TextInset,
-                        clientRect.Top + Math.Max(0, (clientRect.Height - ImageSize) / 2),
+                        contentTop + Math.Max(0, (contentHeight - ImageSize) / 2),
                         ImageSize,
                         ImageSize);
                     graphics.DrawImage(_image, imageBounds);
                 }
 
                 _ = Win32.SetBkMode(hdc, Win32.TRANSPARENT);
-                _ = Win32.SetTextColor(hdc, Win32.ToColorRef(CurrentVisualStyle.Palette.SurfaceForeground));
-
-                int textLeft = TextInset;
-                if (_image is not null)
-                {
-                    textLeft += ImageSize + (string.IsNullOrEmpty(Text) ? 0 : ImageSpacing);
-                }
+                uint textArgb = !Enabled
+                    ? CurrentVisualStyle.Palette.DisabledForeground
+                    : _hovered && CurrentVisualStyle.Palette.ControlHoverForeground != 0
+                        ? CurrentVisualStyle.Palette.ControlHoverForeground
+                        : CurrentVisualStyle.Palette.SurfaceForeground;
+                _ = Win32.SetTextColor(hdc, Win32.ToColorRef(textArgb));
 
                 var textBounds = new Win32.RECT
                 {
                     Left = textLeft,
-                    Top = clientRect.Top,
+                    Top = contentTop + Math.Max(0, (contentHeight - textHeight) / 2),
                     Right = Math.Max(TextInset, clientRect.Right - TextInset),
-                    Bottom = clientRect.Bottom,
+                    Bottom = contentTop + Math.Max(0, (contentHeight - textHeight) / 2) + Math.Max(1, textHeight),
                 };
 
-                string text = Text ?? string.Empty;
                 _ = Win32.DrawTextW(
                     hdc,
                     text,
                     text.Length,
                     ref textBounds,
-                    Win32.DT_LEFT | Win32.DT_VCENTER | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
+                    Win32.DT_LEFT | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
             }
             finally
             {
@@ -411,5 +435,71 @@ public class MenuStrip : ToolStrip
                 _ = Win32.EndPaint(Handle, ref paintStruct);
             }
         }
+
+        private void DrawHoverBackground(Graphics graphics, Rectangle clientBounds)
+        {
+            Rectangle hoverBounds = Rectangle.FromLTRB(
+                clientBounds.Left + HoverInsetHorizontal,
+                clientBounds.Top + HoverInsetVertical,
+                Math.Max(clientBounds.Left + HoverInsetHorizontal + 1, clientBounds.Right - HoverInsetHorizontal),
+                Math.Max(clientBounds.Top + HoverInsetVertical + 1, clientBounds.Bottom - HoverInsetVertical));
+
+            if (hoverBounds.Width <= 0 || hoverBounds.Height <= 0)
+            {
+                return;
+            }
+
+            using GraphicsPath path = CreateRoundedRectanglePath(hoverBounds, HoverCornerRadius);
+            using var backgroundBrush = new SolidBrush(Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.ControlHoverBackground)));
+            using var borderPen = new Pen(Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.SurfaceBorder)));
+            graphics.FillPath(backgroundBrush, path);
+            graphics.DrawPath(borderPen, path);
+        }
+
+        private static GraphicsPath CreateRoundedRectanglePath(Rectangle bounds, int radius)
+        {
+            int diameter = Math.Max(1, radius * 2);
+            var path = new GraphicsPath();
+
+            if (bounds.Width <= diameter || bounds.Height <= diameter)
+            {
+                path.AddRectangle(bounds);
+                path.CloseFigure();
+                return path;
+            }
+
+            path.AddArc(bounds.Left, bounds.Top, diameter, diameter, 180, 90);
+            path.AddArc(bounds.Right - diameter, bounds.Top, diameter, diameter, 270, 90);
+            path.AddArc(bounds.Right - diameter, bounds.Bottom - diameter, diameter, diameter, 0, 90);
+            path.AddArc(bounds.Left, bounds.Bottom - diameter, diameter, diameter, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+
+        private static int MeasureTextHeight(nint hdc, string text, int maxWidth)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return 0;
+            }
+
+            var measurementBounds = new Win32.RECT
+            {
+                Left = 0,
+                Top = 0,
+                Right = Math.Max(1, maxWidth),
+                Bottom = 0,
+            };
+
+            _ = Win32.DrawTextW(
+                hdc,
+                text,
+                text.Length,
+                ref measurementBounds,
+                Win32.DT_LEFT | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX | Win32.DT_CALCRECT);
+
+            return Math.Max(1, measurementBounds.Bottom - measurementBounds.Top);
+        }
     }
 }
+

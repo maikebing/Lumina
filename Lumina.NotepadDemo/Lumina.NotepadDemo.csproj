@@ -13,7 +13,9 @@
     <PublishDocumentationFile>false</PublishDocumentationFile>
     <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
     <UseLuminaForms>true</UseLuminaForms>
-    <ApplicationIcon Condition="'$(ApplicationIcon)' == ''">..\msix\Assets\lumina-tray.ico</ApplicationIcon>
+    <CustomResourceTypesSupport>true</CustomResourceTypesSupport>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <ApplicationIcon Condition="'$(ApplicationIcon)' == ''">Resources\lumina-tray.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +24,22 @@
     <ProjectReference Include="..\Lumina.Forms.Analyzers\Lumina.Forms.Analyzers.csproj" />
     <Using Include="Lumina.Forms" />
     <Using Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="10.0.5" />
   </ItemGroup>
 
   <Target Name="CleanPublishAuxiliaryFiles" AfterTargets="Publish">

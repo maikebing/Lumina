@@ -12,3 +12,10 @@ layout: default
 - [LuminaForms 主题与 JSON 配置](/zh/nativeforms-themes/)
 - [LuminaForms 支持矩阵](/zh/nativeforms-support-matrix/)
 - [快速开始](/quickstart/)
+
+## 微信讨论群
+
+扫描下方二维码即可加入 Lumina 微信讨论群。
+该二维码用于长期加入。
+
+<img src="/assets/wechat-discussion-group-qr.png" width="180" alt="Lumina 微信讨论群二维码" />
