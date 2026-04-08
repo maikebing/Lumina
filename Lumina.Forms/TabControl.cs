@@ -9,7 +9,7 @@ namespace Lumina.Forms;
 public class TabControl : ContainerControlBase
 {
     private readonly Dictionary<TabPage, EventHandler> _textChangedHandlers = [];
-    private int _selectedIndex;
+    private int _selectedIndex = -1;
 
     [ThreadStatic]
     private static bool s_applyingTabTheme;
@@ -19,8 +19,14 @@ public class TabControl : ContainerControlBase
     /// </summary>
     public TabControl()
     {
+        Size = new Size(200, 100);
         Margin = new Padding(3);
     }
+
+    /// <summary>
+    /// Occurs when the selected page index changes.
+    /// </summary>
+    public event EventHandler? SelectedIndexChanged;
 
     /// <summary>
     /// Gets or sets the selected page index.
@@ -32,7 +38,7 @@ public class TabControl : ContainerControlBase
             if (Handle != 0)
             {
                 int nativeIndex = (int)Win32.SendMessageW(Handle, Win32.TCM_GETCURSEL, 0, 0);
-                if (nativeIndex >= 0)
+                if (nativeIndex >= -1)
                 {
                     _selectedIndex = nativeIndex;
                 }
@@ -43,13 +49,42 @@ public class TabControl : ContainerControlBase
         set
         {
             int pageCount = GetTabPages().Count;
-            _selectedIndex = pageCount == 0
-                ? 0
+            int resolvedIndex = pageCount == 0
+                ? -1
                 : Math.Clamp(value, 0, pageCount - 1);
 
-            ApplySelectedIndex();
+            if (_selectedIndex == resolvedIndex)
+            {
+                ApplySelectedIndex(raiseChangedEvent: false);
+                return;
+            }
+
+            _selectedIndex = resolvedIndex;
+            ApplySelectedIndex(raiseChangedEvent: true);
         }
     }
+
+    /// <summary>
+    /// Gets the number of hosted pages.
+    /// </summary>
+    public int TabCount => GetTabPages().Count;
+
+    /// <summary>
+    /// Gets the currently selected page, if any.
+    /// </summary>
+    public TabPage? SelectedTab
+    {
+        get
+        {
+            List<TabPage> pages = GetTabPages();
+            return _selectedIndex >= 0 && _selectedIndex < pages.Count
+                ? pages[_selectedIndex]
+                : null;
+        }
+    }
+
+    /// <inheritdoc />
+    public override Rectangle DisplayRectangle => GetPageBounds();
 
     /// <inheritdoc />
     protected override string ClassName => "SysTabControl32";
@@ -66,7 +101,8 @@ public class TabControl : ContainerControlBase
         ApplyNativeColors();
         SynchronizeTextHandlers();
         SynchronizeNativeTabs();
-        ApplySelectedIndex();
+        EnsureSelection();
+        ApplySelectedIndex(raiseChangedEvent: false);
     }
 
     /// <inheritdoc />
@@ -80,7 +116,8 @@ public class TabControl : ContainerControlBase
     {
         SynchronizeTextHandlers();
         SynchronizeNativeTabs();
-        ApplySelectedIndex();
+        EnsureSelection();
+        ApplySelectedIndex(raiseChangedEvent: false);
         base.PerformLayout();
     }
 
@@ -136,24 +173,51 @@ public class TabControl : ContainerControlBase
             return false;
         }
 
+        int previousIndex = _selectedIndex;
         int nativeIndex = (int)Win32.SendMessageW(Handle, Win32.TCM_GETCURSEL, 0, 0);
-        if (nativeIndex >= 0)
+        if (nativeIndex >= -1)
         {
             _selectedIndex = nativeIndex;
         }
 
         UpdateTabPages();
+        if (previousIndex != _selectedIndex)
+        {
+            OnSelectedIndexChanged(EventArgs.Empty);
+        }
+
         return true;
     }
 
-    private void ApplySelectedIndex()
+    internal override void OnChildAdded(Control control)
     {
-        if (Handle != 0 && GetTabPages().Count > 0)
+        if (control is TabPage)
+        {
+            EnsureSelection();
+        }
+    }
+
+    internal override void OnChildRemoved(Control control)
+    {
+        if (control is TabPage)
+        {
+            EnsureSelection();
+            ApplySelectedIndex(raiseChangedEvent: false);
+        }
+    }
+
+    private void ApplySelectedIndex(bool raiseChangedEvent)
+    {
+        if (Handle != 0)
         {
             _ = Win32.SendMessageW(Handle, Win32.TCM_SETCURSEL, (nint)_selectedIndex, 0);
         }
 
         UpdateTabPages();
+        if (raiseChangedEvent)
+        {
+            OnSelectedIndexChanged(EventArgs.Empty);
+        }
     }
 
     private void SynchronizeTextHandlers()
@@ -169,7 +233,7 @@ public class TabControl : ContainerControlBase
             EventHandler handler = (_, _) =>
             {
                 SynchronizeNativeTabs();
-                ApplySelectedIndex();
+                ApplySelectedIndex(raiseChangedEvent: false);
             };
 
             page.TextChanged += handler;
@@ -229,11 +293,11 @@ public class TabControl : ContainerControlBase
         List<TabPage> pages = GetTabPages();
         if (pages.Count == 0)
         {
-            _selectedIndex = 0;
+            _selectedIndex = -1;
             return;
         }
 
-        _selectedIndex = Math.Clamp(_selectedIndex, 0, pages.Count - 1);
+        EnsureSelection();
         Rectangle pageBounds = GetPageBounds();
         for (int tabPageIndex = 0; tabPageIndex < pages.Count; tabPageIndex++)
         {
@@ -255,11 +319,21 @@ public class TabControl : ContainerControlBase
                 Math.Max(1, rect.Height));
         }
 
+        if (GetTabPages().Count == 0)
+        {
+            return new Rectangle(
+                4,
+                4,
+                Math.Max(1, Width - 8),
+                Math.Max(1, Height - 8));
+        }
+
+        int fontHeight = GetFallbackHeaderHeight();
         return new Rectangle(
             4,
-            26,
+            fontHeight + 4,
             Math.Max(1, Width - 8),
-            Math.Max(1, Height - 30));
+            Math.Max(1, Height - fontHeight - 8));
     }
 
     private List<TabPage> GetTabPages()
@@ -296,6 +370,57 @@ public class TabControl : ContainerControlBase
         }
 
         _ = Win32.SendMessageW(Handle, Win32.TCM_SETPADDING, 0, Win32.MakeLParam(6, 3));
+    }
+
+    private void EnsureSelection()
+    {
+        int pageCount = GetTabPages().Count;
+        if (pageCount == 0)
+        {
+            _selectedIndex = -1;
+            return;
+        }
+
+        if (_selectedIndex < 0 || _selectedIndex >= pageCount)
+        {
+            _selectedIndex = 0;
+        }
+    }
+
+    private static int GetFallbackHeaderHeight()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return 17;
+        }
+
+        nint fontHandle = Win32.CreateUiFont();
+        bool ownsFontHandle = fontHandle != 0;
+        if (fontHandle == 0)
+        {
+            fontHandle = Win32.GetStockObject(Win32.DEFAULT_GUI_FONT);
+        }
+
+        try
+        {
+            return Win32.GetFontHeight(fontHandle);
+        }
+        finally
+        {
+            if (ownsFontHandle)
+            {
+                _ = Win32.DeleteObject(fontHandle);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Raises the <see cref="SelectedIndexChanged"/> event.
+    /// </summary>
+    /// <param name="e">The event arguments.</param>
+    protected virtual void OnSelectedIndexChanged(EventArgs e)
+    {
+        SelectedIndexChanged?.Invoke(this, e);
     }
 
     private void ApplyNativeColors()

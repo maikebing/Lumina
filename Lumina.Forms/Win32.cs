@@ -57,6 +57,9 @@ internal static class Win32
 
     public const int WM_SIZE = 0x0005;
     public const int WM_NULL = 0x0000;
+    public const int WM_CLOSE = 0x0010;
+    public const int WM_SETICON = 0x0080;
+    public const int WM_PAINT = 0x000F;
     public const int WM_SETCURSOR = 0x0020;
     public const int WM_ERASEBKGND = 0x0014;
     public const int WM_CTLCOLORMSGBOX = 0x0132;
@@ -69,6 +72,7 @@ internal static class Win32
     public const int WM_NOTIFY = 0x004E;
     public const int WM_CHANGEUISTATE = 0x0127;
     public const int WM_KEYDOWN = 0x0100;
+    public const int WM_KEYUP = 0x0101;
     public const int WM_MOUSEMOVE = 0x0200;
     public const int WM_MOUSELEAVE = 0x02A3;
     public const int WM_LBUTTONDOWN = 0x0201;
@@ -77,6 +81,7 @@ internal static class Win32
     public const int WM_RBUTTONUP = 0x0205;
     public const int WM_SETTINGCHANGE = 0x001A;
     public const int WM_COMMAND = 0x0111;
+    public const int WM_INITDIALOG = 0x0110;
     public const int WM_CONTEXTMENU = 0x007B;
     public const int WM_SYSCHAR = 0x0106;
     public const int WM_SYSKEYDOWN = 0x0104;
@@ -87,6 +92,7 @@ internal static class Win32
     public const int WM_THEMECHANGED = 0x031A;
     public const int WM_DRAWITEM = 0x002B;
     public const int WM_MEASUREITEM = 0x002C;
+    public const int WM_PRINTCLIENT = 0x0318;
 
     public const int BN_CLICKED = 0;
     public const int STN_CLICKED = 0;
@@ -103,6 +109,8 @@ internal static class Win32
     public const int CB_GETCURSEL = 0x0147;
     public const int CB_SETCURSEL = 0x014E;
     public const int EM_SETSEL = 0x00B1;
+    public const int EM_GETSEL = 0x00B0;
+    public const int EM_SCROLLCARET = 0x00B7;
     public const int EM_SETREADONLY = 0x00CF;
     public const int EM_REPLACESEL = 0x00C2;
     public const int LB_ADDSTRING = 0x0180;
@@ -193,6 +201,8 @@ internal static class Win32
     public const int VK_ESCAPE = 0x1B;
     public const int GWLP_WNDPROC = -4;
     public const int GWLP_USERDATA = -21;
+    public const int ICON_SMALL = 0;
+    public const int ICON_BIG = 1;
     public const int LOGPIXELSX = 88;
     public const int LOGPIXELSY = 90;
 
@@ -285,10 +295,49 @@ internal static class Win32
     public const int MSGF_MENU = 2;
     public const int TRANSPARENT = 1;
     public const uint TME_LEAVE = 0x00000002;
+    public const int MAX_PATH = 260;
+
+    public const uint OFN_READONLY = 0x00000001;
+    public const uint OFN_OVERWRITEPROMPT = 0x00000002;
+    public const uint OFN_HIDEREADONLY = 0x00000004;
+    public const uint OFN_NOCHANGEDIR = 0x00000008;
+    public const uint OFN_PATHMUSTEXIST = 0x00000800;
+    public const uint OFN_FILEMUSTEXIST = 0x00001000;
+    public const uint OFN_EXPLORER = 0x00080000;
+
+    public const uint BIF_RETURNONLYFSDIRS = 0x00000001;
+    public const uint BIF_EDITBOX = 0x00000010;
+    public const uint BIF_NEWDIALOGSTYLE = 0x00000040;
+    public const uint BIF_NONEWFOLDERBUTTON = 0x00000200;
 
     public const int WM_INITMENUPOPUP = 0x0117;
     public const int WM_UNINITMENUPOPUP = 0x0125;
     public const int WM_MENUSELECT = 0x011F;
+
+    public const uint MB_OK = 0x00000000;
+    public const uint MB_OKCANCEL = 0x00000001;
+    public const uint MB_YESNOCANCEL = 0x00000003;
+    public const uint MB_YESNO = 0x00000004;
+    public const uint MB_ICONERROR = 0x00000010;
+    public const uint MB_ICONQUESTION = 0x00000020;
+    public const uint MB_ICONWARNING = 0x00000030;
+    public const uint MB_ICONINFORMATION = 0x00000040;
+
+    public const uint CF_SCREENFONTS = 0x00000001;
+    public const uint CF_EFFECTS = 0x00000100;
+    public const uint CF_INITTOLOGFONTSTRUCT = 0x00000040;
+    public const uint CF_FORCEFONTEXIST = 0x00010000;
+    public const uint CF_ENABLEHOOK = 0x00000008;
+
+    public const uint CC_RGBINIT = 0x00000001;
+    public const uint CC_FULLOPEN = 0x00000002;
+    public const uint CC_ANYCOLOR = 0x00000100;
+    public const uint CC_ENABLEHOOK = 0x00000010;
+
+    public const int IDOK = 1;
+    public const int IDCANCEL = 2;
+    public const int IDYES = 6;
+    public const int IDNO = 7;
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct WNDCLASSEXW
@@ -462,8 +511,124 @@ internal static class Win32
         public uint dwHoverTime;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct PAINTSTRUCT
+    {
+        public nint hdc;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fErase;
+        public RECT rcPaint;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fRestore;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fIncUpdate;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+        public byte[] rgbReserved;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct OPENFILENAMEW
+    {
+        public uint lStructSize;
+        public nint hwndOwner;
+        public nint hInstance;
+        public nint lpstrFilter;
+        public nint lpstrCustomFilter;
+        public uint nMaxCustFilter;
+        public uint nFilterIndex;
+        public nint lpstrFile;
+        public uint nMaxFile;
+        public nint lpstrFileTitle;
+        public uint nMaxFileTitle;
+        public nint lpstrInitialDir;
+        public nint lpstrTitle;
+        public uint Flags;
+        public ushort nFileOffset;
+        public ushort nFileExtension;
+        public nint lpstrDefExt;
+        public nuint lCustData;
+        public nint lpfnHook;
+        public nint lpTemplateName;
+        public nint pvReserved;
+        public uint dwReserved;
+        public uint FlagsEx;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct BROWSEINFOW
+    {
+        public nint hwndOwner;
+        public nint pidlRoot;
+        public nint pszDisplayName;
+        public nint lpszTitle;
+        public uint ulFlags;
+        public nint lpfn;
+        public nint lParam;
+        public int iImage;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct LOGFONTW
+    {
+        public int lfHeight;
+        public int lfWidth;
+        public int lfEscapement;
+        public int lfOrientation;
+        public int lfWeight;
+        public byte lfItalic;
+        public byte lfUnderline;
+        public byte lfStrikeOut;
+        public byte lfCharSet;
+        public byte lfOutPrecision;
+        public byte lfClipPrecision;
+        public byte lfQuality;
+        public byte lfPitchAndFamily;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string lfFaceName;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct CHOOSEFONTW
+    {
+        public uint lStructSize;
+        public nint hwndOwner;
+        public nint hDC;
+        public nint lpLogFont;
+        public int iPointSize;
+        public uint Flags;
+        public uint rgbColors;
+        public nuint lCustData;
+        public nint lpfnHook;
+        public nint lpTemplateName;
+        public nint hInstance;
+        public nint lpszStyle;
+        public ushort nFontType;
+        public ushort ___MISSING_ALIGNMENT__;
+        public int nSizeMin;
+        public int nSizeMax;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct CHOOSECOLORW
+    {
+        public uint lStructSize;
+        public nint hwndOwner;
+        public nint hInstance;
+        public uint rgbResult;
+        public nint lpCustColors;
+        public uint Flags;
+        public nuint lCustData;
+        public nint lpfnHook;
+        public nint lpTemplateName;
+    }
+
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     internal delegate nint SubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData);
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate nint CommonDialogHookProc(nint hWnd, uint message, nint wParam, nint lParam);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct TCITEMW
@@ -554,6 +719,13 @@ internal static class Win32
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool DestroyWindow(nint hWnd);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern nint BeginPaint(nint hWnd, out PAINTSTRUCT lpPaint);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool EndPaint(nint hWnd, [In] ref PAINTSTRUCT lpPaint);
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ShowWindow(nint hWnd, int nCmdShow);
@@ -604,6 +776,9 @@ internal static class Win32
 
     [DllImport("user32.dll", EntryPoint = "SendMessageW")]
     internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, nint lParam);
+
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    internal static extern nint SendMessageW(nint hWnd, int msg, out int wParam, out int lParam);
 
     [DllImport("user32.dll", EntryPoint = "SendMessageW")]
     internal static extern nint SendMessageW(nint hWnd, int msg, nint wParam, ref RECT lParam);
@@ -673,6 +848,9 @@ internal static class Win32
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    internal static extern nint SetFocus(nint hWnd);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -821,6 +999,9 @@ internal static class Win32
     [DllImport("user32.dll", EntryPoint = "DrawTextW", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int DrawTextW(nint hdc, string lpchText, int cchText, ref RECT lprc, uint format);
 
+    [DllImport("user32.dll", EntryPoint = "MessageBoxW", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int MessageBoxW(nint hWnd, string lpText, string lpCaption, uint uType);
+
     [DllImport("uxtheme.dll", SetLastError = true)]
     internal static extern int GetThemeColor(nint hTheme, int iPartId, int iStateId, int iPropId, out uint color);
 
@@ -846,6 +1027,38 @@ internal static class Win32
 
     [DllImport("kernel32.dll")]
     internal static extern uint GetCurrentThreadId();
+
+    [DllImport("comdlg32.dll", EntryPoint = "GetOpenFileNameW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetOpenFileNameW(ref OPENFILENAMEW lpofn);
+
+    [DllImport("comdlg32.dll", EntryPoint = "GetSaveFileNameW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetSaveFileNameW(ref OPENFILENAMEW lpofn);
+
+    [DllImport("comdlg32.dll")]
+    internal static extern int CommDlgExtendedError();
+
+    [DllImport("comdlg32.dll", EntryPoint = "ChooseFontW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ChooseFontW(ref CHOOSEFONTW chooseFont);
+
+    [DllImport("comdlg32.dll", EntryPoint = "ChooseColorW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool ChooseColorW(ref CHOOSECOLORW chooseColor);
+
+    [DllImport("shell32.dll", EntryPoint = "ShellAboutW", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int ShellAboutW(nint hWnd, string szApp, string? szOtherStuff, nint hIcon);
+
+    [DllImport("shell32.dll", EntryPoint = "SHBrowseForFolderW", CharSet = CharSet.Unicode)]
+    internal static extern nint SHBrowseForFolderW(ref BROWSEINFOW lpbi);
+
+    [DllImport("shell32.dll", EntryPoint = "SHGetPathFromIDListW", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SHGetPathFromIDListW(nint pidl, [Out] char[] pszPath);
+
+    [DllImport("ole32.dll")]
+    internal static extern void CoTaskMemFree(nint pv);
 
     [DllImport("dwmapi.dll")]
     internal static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
@@ -960,6 +1173,38 @@ internal static class Win32
         return red | (green << 8) | (blue << 16);
     }
 
+    internal static uint FromColorRef(uint colorRef)
+    {
+        uint red = colorRef & 0xFF;
+        uint green = (colorRef >> 8) & 0xFF;
+        uint blue = (colorRef >> 16) & 0xFF;
+        return 0xFF_00_00_00 | (red << 16) | (green << 8) | blue;
+    }
+
+    internal static nint CreateFontFromManagedFont(Font font)
+    {
+        ArgumentNullException.ThrowIfNull(font);
+
+        float dpi = GetSystemDpiScaleDimensions().Height;
+        int height = -Math.Max(1, (int)Math.Round(font.SizeInPoints * dpi / 72f, MidpointRounding.AwayFromZero));
+
+        return CreateFontW(
+            height,
+            0,
+            0,
+            0,
+            font.Bold ? FW_BOLD : FW_NORMAL,
+            font.Italic ? 1u : 0u,
+            font.Underline ? 1u : 0u,
+            font.Strikeout ? 1u : 0u,
+            font.GdiCharSet,
+            OUT_DEFAULT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY,
+            DEFAULT_PITCH,
+            font.Name);
+    }
+
     internal static SizeF GetDefaultFontScaleDimensions()
     {
         nint screenDc = GetDC(0);
@@ -1044,7 +1289,7 @@ internal static class Win32
 
     internal static nint CreateUiFont(float pointSize = 0f)
     {
-        UiFontSpec fontSpec = OperatingSystem.IsWindows()
+        UiFontSpec fontSpec = OperatingSystem.IsWindowsVersionAtLeast(6, 1)
             ? ResolveWindowsUiFontSpec(pointSize)
             : new UiFontSpec("Segoe UI", pointSize > 0f ? pointSize : 9f, (byte)DEFAULT_CHARSET, Bold: false, Italic: false, Underline: false, Strikeout: false);
 
@@ -1068,7 +1313,7 @@ internal static class Win32
             fontSpec.FaceName);
     }
 
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
     private static UiFontSpec ResolveWindowsUiFontSpec(float requestedPointSize)
     {
         try

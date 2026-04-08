@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -7,6 +9,11 @@ public class TextBox : Control
 {
     private bool _multiline;
     private bool _readOnly;
+    private int _selectionStart;
+    private int _selectionLength;
+    private Font? _font = CreateDefaultFont();
+    private nint _fontHandle;
+    private bool _ownsFontHandle;
 
     /// <summary>
     /// Initializes a single-line editable text box.
@@ -53,6 +60,50 @@ public class TextBox : Control
             {
                 _ = Win32.SendMessageW(Handle, Win32.EM_SETREADONLY, value ? (nint)1 : 0, 0);
             }
+        }
+    }
+
+    /// <summary>
+    /// Gets the starting position of text selected in the text box.
+    /// </summary>
+    public int SelectionStart
+    {
+        get
+        {
+            UpdateSelectionFromHandle();
+            return _selectionStart;
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of characters selected in the text box.
+    /// </summary>
+    public int SelectionLength
+    {
+        get
+        {
+            UpdateSelectionFromHandle();
+            return _selectionLength;
+        }
+    }
+
+    /// <summary>
+    /// Occurs when the selection changes.
+    /// </summary>
+    public event EventHandler? SelectionChanged;
+
+    /// <summary>
+    /// Gets or sets the font of the text box.
+    /// </summary>
+    public Font Font
+    {
+        get => _font ??= CreateDefaultFont();
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _font?.Dispose();
+            _font = (Font)value.Clone();
+            ApplyFontToHandle();
         }
     }
 
@@ -109,6 +160,41 @@ public class TextBox : Control
         _ = UpdateTextFromHandle();
     }
 
+    /// <summary>
+    /// Selects a range of text in the text box.
+    /// </summary>
+    /// <param name="start">The starting position.</param>
+    /// <param name="length">The number of characters to select.</param>
+    public void Select(int start, int length)
+    {
+        int safeStart = Math.Max(0, start);
+        int safeLength = Math.Max(0, length);
+
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        _ = Win32.SendMessageW(Handle, Win32.EM_SETSEL, (nint)safeStart, (nint)(safeStart + safeLength));
+        if (_selectionStart != safeStart || _selectionLength != safeLength)
+        {
+            _selectionStart = safeStart;
+            _selectionLength = safeLength;
+            OnSelectionChanged(EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Scrolls the text box so that the caret is visible.
+    /// </summary>
+    public void ScrollToCaret()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.SendMessageW(Handle, Win32.EM_SCROLLCARET, 0, 0);
+        }
+    }
+
     /// <inheritdoc />
     protected override bool OnCommand(int notificationCode)
     {
@@ -118,6 +204,17 @@ public class TextBox : Control
         }
 
         return UpdateTextFromHandle();
+    }
+
+    /// <inheritdoc />
+    protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
+    {
+        if (message is Win32.WM_KEYUP or Win32.WM_LBUTTONUP)
+        {
+            _ = UpdateSelectionFromHandle();
+        }
+
+        return base.HandleWindowMessage(message, wParam, lParam, out result);
     }
 
     /// <inheritdoc />
@@ -132,6 +229,22 @@ public class TextBox : Control
     {
         base.OnHandleCreated();
         ApplyNativeThemeState();
+        ApplyFontToHandle();
+    }
+
+    /// <inheritdoc />
+    protected override void OnDisposing()
+    {
+        if (_fontHandle != 0 && _ownsFontHandle)
+        {
+            _ = Win32.DeleteObject(_fontHandle);
+        }
+
+        _fontHandle = 0;
+        _ownsFontHandle = false;
+        _font?.Dispose();
+        _font = null;
+        base.OnDisposing();
     }
 
     private void ApplyNativeThemeState()
@@ -153,4 +266,66 @@ public class TextBox : Control
     /// <inheritdoc />
     protected override string GetFallbackThemeClass(ResolvedVisualStyle visualStyle)
         => base.GetPreferredThemeClass(visualStyle);
+
+    /// <summary>
+    /// Raises the <see cref="SelectionChanged"/> event.
+    /// </summary>
+    protected virtual void OnSelectionChanged(EventArgs e)
+    {
+        SelectionChanged?.Invoke(this, e);
+    }
+
+    private static Font CreateDefaultFont()
+        => SystemFonts.MessageBoxFont is { } font
+            ? (Font)font.Clone()
+            : new Font("Segoe UI", 9f, FontStyle.Regular, GraphicsUnit.Point);
+
+    private bool UpdateSelectionFromHandle()
+    {
+        if (Handle == 0)
+        {
+            return false;
+        }
+
+        _ = Win32.SendMessageW(Handle, Win32.EM_GETSEL, out int start, out int end);
+        int normalizedStart = Math.Max(0, start);
+        int normalizedLength = Math.Max(0, end - start);
+
+        if (_selectionStart == normalizedStart && _selectionLength == normalizedLength)
+        {
+            return false;
+        }
+
+        _selectionStart = normalizedStart;
+        _selectionLength = normalizedLength;
+        OnSelectionChanged(EventArgs.Empty);
+        return true;
+    }
+
+    private void ApplyFontToHandle()
+    {
+        if (Handle == 0)
+        {
+            return;
+        }
+
+        if (_fontHandle != 0 && _ownsFontHandle)
+        {
+            _ = Win32.DeleteObject(_fontHandle);
+            _fontHandle = 0;
+            _ownsFontHandle = false;
+        }
+
+        if (_font is null)
+        {
+            return;
+        }
+
+        _fontHandle = Win32.CreateFontFromManagedFont(_font);
+        _ownsFontHandle = _fontHandle != 0;
+        if (_fontHandle != 0)
+        {
+            _ = Win32.SendMessageW(Handle, Win32.WM_SETFONT, _fontHandle, (nint)1);
+        }
+    }
 }

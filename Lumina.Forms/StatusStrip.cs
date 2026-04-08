@@ -14,6 +14,7 @@ public class StatusStrip : ToolStrip
     /// </summary>
     public StatusStrip()
     {
+        Size = new Size(200, 22);
         Height = 22;
         Dock = DockStyle.Bottom;
         CanOverflow = false;
@@ -22,7 +23,7 @@ public class StatusStrip : ToolStrip
         ShowItemToolTips = false;
         Stretch = true;
         SizingGrip = true;
-        Padding = new Padding(1, 0, 1, 0);
+        Padding = new Padding(1, 0, 14, 0);
     }
 
     /// <summary>

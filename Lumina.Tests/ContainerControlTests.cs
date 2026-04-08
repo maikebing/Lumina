@@ -206,7 +206,7 @@ public class ContainerControlTests
 
         Assert.False(firstPage.Visible);
         Assert.True(secondPage.Visible);
-        Assert.Equal(new Rectangle(4, 26, 192, 70), secondPage.Bounds);
+        Assert.Equal(new Rectangle(4, 21, 192, 75), secondPage.Bounds);
     }
 
     [Fact]
@@ -225,6 +225,32 @@ public class ContainerControlTests
         Assert.Equal(1, tabControl.SelectedIndex);
         Assert.False(firstPage.Visible);
         Assert.True(secondPage.Visible);
+    }
+
+    [Fact]
+    public void TabControl_Defaults_MatchWinFormsBaseline()
+    {
+        var tabControl = new TabControl();
+
+        Assert.Equal(new Size(200, 100), tabControl.Size);
+        Assert.Equal(-1, tabControl.SelectedIndex);
+        Assert.Equal(new Rectangle(4, 4, 192, 92), tabControl.DisplayRectangle);
+    }
+
+    [Fact]
+    public void TabControl_PerformLayout_SelectsFirstPage_WhenPagesArePresent()
+    {
+        var tabControl = new TabControl();
+        var firstPage = new TabPage { Text = "First" };
+        var secondPage = new TabPage { Text = "Second" };
+
+        tabControl.Controls.AddRange(firstPage, secondPage);
+        tabControl.PerformLayout();
+
+        Assert.Equal(0, tabControl.SelectedIndex);
+        Assert.Same(firstPage, tabControl.SelectedTab);
+        Assert.True(firstPage.Visible);
+        Assert.False(secondPage.Visible);
     }
 
     [Fact]

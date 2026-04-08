@@ -21,6 +21,7 @@ public class ToolStrip : ContainerControlBase
     public ToolStrip()
     {
         _items = new ToolStripItemCollection(OnItemsChanged);
+        Size = new Size(100, 25);
         Height = 25;
         Dock = DockStyle.Top;
         Margin = Padding.Empty;
@@ -455,10 +456,11 @@ public class ToolStrip : ContainerControlBase
             return item.Size;
         }
 
+        Size textSize = MeasureItemText(item);
         return item switch
         {
-            ToolStripLabel => new Size(Math.Max(36, item.Text.Length * 8 + 6), Math.Min(availableHeight, 20)),
-            ToolStripStatusLabel => new Size(Math.Max(56, item.Text.Length * 8 + 12), Math.Min(availableHeight, 20)),
+            ToolStripLabel => new Size(Math.Max(0, textSize.Width), Math.Min(availableHeight, 22)),
+            ToolStripStatusLabel => new Size(Math.Max(0, textSize.Width), Math.Min(availableHeight, 17)),
             ToolStripProgressBar => new Size(112, Math.Min(availableHeight, 18)),
             ToolStripComboBox => new Size(136, Math.Min(availableHeight, 25)),
             ToolStripTextBox => new Size(120, Math.Min(availableHeight, 25)),
@@ -469,8 +471,78 @@ public class ToolStrip : ContainerControlBase
                 => new Size(
                     Math.Max(23, item.Image.Width + 8),
                     Math.Max(23, Math.Min(availableHeight, item.Image.Height + 8))),
-            _ => new Size(Math.Max(36, ResolveItemText(item).Length * 8 + 16), Math.Max(23, Math.Min(availableHeight, 25))),
+            _ => new Size(
+                Math.Max(23, textSize.Width + 4),
+                Math.Max(22, Math.Min(availableHeight, 25))),
         };
+    }
+
+    private protected Size MeasureItemText(ToolStripItem item)
+        => MeasureTextCore(ResolveItemText(item), useMnemonicPrefix: true);
+
+    private protected Size MeasureTextCore(string text, bool useMnemonicPrefix)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return Size.Empty;
+        }
+
+        nint screenDc = Win32.GetDC(0);
+        if (screenDc == 0)
+        {
+            return Size.Empty;
+        }
+
+        nint fontHandle = Owner?.UiFontHandle ?? 0;
+        bool ownsFontHandle = false;
+        if (fontHandle == 0)
+        {
+            fontHandle = Win32.CreateUiFont();
+            ownsFontHandle = fontHandle != 0;
+        }
+
+        if (fontHandle == 0)
+        {
+            fontHandle = Win32.GetStockObject(Win32.DEFAULT_GUI_FONT);
+        }
+
+        nint previousFont = 0;
+        try
+        {
+            if (fontHandle != 0)
+            {
+                previousFont = Win32.SelectObject(screenDc, fontHandle);
+            }
+
+            var textBounds = new Win32.RECT();
+            uint flags = Win32.DT_SINGLELINE | Win32.DT_CALCRECT | (useMnemonicPrefix ? Win32.DT_HIDEPREFIX : Win32.DT_NOPREFIX);
+            _ = Win32.DrawTextW(screenDc, text, text.Length, ref textBounds, flags);
+
+            int width = Math.Max(0, textBounds.Width);
+            int height = Math.Max(0, textBounds.Height);
+
+            if ((width == 0 || height == 0) && Win32.GetTextExtentPoint32W(screenDc, text, text.Length, out Win32.SIZE textSize))
+            {
+                width = Math.Max(width, textSize.cx);
+                height = Math.Max(height, textSize.cy);
+            }
+
+            return new Size(width, height);
+        }
+        finally
+        {
+            if (previousFont != 0)
+            {
+                _ = Win32.SelectObject(screenDc, previousFont);
+            }
+
+            if (ownsFontHandle)
+            {
+                _ = Win32.DeleteObject(fontHandle);
+            }
+
+            _ = Win32.ReleaseDC(0, screenDc);
+        }
     }
 
     /// <summary>

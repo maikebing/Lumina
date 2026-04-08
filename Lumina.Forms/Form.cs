@@ -42,6 +42,7 @@ public class Form : IDisposable
     private uint _controlForegroundColorRef;
     private uint _surfaceBackgroundColorRef;
     private uint _controlBackgroundColorRef;
+    private Icon? _icon;
 
     /// <summary>
     /// Initializes a new top-level LuminaForms window.
@@ -72,6 +73,11 @@ public class Form : IDisposable
     public event EventHandler? Closed;
 
     /// <summary>
+    /// Occurs before the form closes.
+    /// </summary>
+    public event EventHandler<FormClosingEventArgs>? FormClosing;
+
+    /// <summary>
     /// Occurs when the form performs layout.
     /// </summary>
     public event EventHandler? Layout;
@@ -95,6 +101,36 @@ public class Form : IDisposable
     /// Gets or sets the window title text.
     /// </summary>
     public string Text { get; set; } = "Lumina Native Form";
+
+    /// <summary>
+    /// Gets or sets the window icon. When unset, Lumina.Forms falls back to its built-in logo icon.
+    /// </summary>
+    public Icon? Icon
+    {
+        get => _icon ?? DefaultAppIconProvider.GetIcon();
+        set
+        {
+            if (value is null && _icon is null)
+            {
+                return;
+            }
+
+            if (value is not null
+                && _icon is not null
+                && ReferenceEquals(_icon, value))
+            {
+                return;
+            }
+
+            ReleaseOwnedIcon();
+            _icon = value is null
+                ? null
+                : OperatingSystem.IsWindows()
+                    ? CloneIcon(value)
+                    : null;
+            ApplyWindowIcon();
+        }
+    }
 
     /// <summary>
     /// Gets or sets the design-time or lookup name of the form.
@@ -263,6 +299,7 @@ public class Form : IDisposable
         }
 
         Handle = hwnd;
+        ApplyWindowIcon();
         Application.EnsureVisualStylesInitialized();
         ApplyApplicationDefaults();
         RefreshMainMenuStrip();
@@ -289,7 +326,7 @@ public class Form : IDisposable
     {
         if (Handle != 0)
         {
-            _ = Win32.DestroyWindow(Handle);
+            _ = Win32.SendMessageW(Handle, Win32.WM_CLOSE, 0, 0);
         }
     }
 
@@ -539,6 +576,14 @@ public class Form : IDisposable
     }
 
     /// <summary>
+    /// Called before the form is closed.
+    /// </summary>
+    protected virtual void OnFormClosing(FormClosingEventArgs e)
+    {
+        FormClosing?.Invoke(this, e);
+    }
+
+    /// <summary>
     /// Called when the form size changes.
     /// </summary>
     protected virtual void OnSizeChanged()
@@ -675,6 +720,7 @@ public class Form : IDisposable
         }
 
         ReleasePaletteResources();
+        ReleaseOwnedIcon();
 
         if (UiFontHandle != 0 && OwnsUiFontHandle)
         {
@@ -1040,15 +1086,18 @@ public class Form : IDisposable
             return;
         }
 
+        nint defaultIconHandle = DefaultAppIconProvider.GetIconHandle();
         var windowClass = new Win32.WNDCLASSEXW
         {
             cbSize = (uint)Marshal.SizeOf<Win32.WNDCLASSEXW>(),
             style = Win32.CS_HREDRAW | Win32.CS_VREDRAW,
                 lpfnWndProc = (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&WindowProcThunk,
             hInstance = instanceHandle,
+            hIcon = defaultIconHandle,
             hCursor = Win32.LoadCursorW(0, (nint)Win32.IDC_ARROW),
             hbrBackground = Win32.GetSysColorBrush(Win32.COLOR_BTNFACE),
             lpszClassName = WindowClassName,
+            hIconSm = defaultIconHandle,
         };
 
             ushort atom = Win32.RegisterClassExW(ref windowClass);
@@ -1213,6 +1262,18 @@ public class Form : IDisposable
             case Win32.WM_DESTROY:
                 OnClosed();
                 return 0;
+
+            case Win32.WM_CLOSE:
+            {
+                FormClosingEventArgs closingArgs = new();
+                OnFormClosing(closingArgs);
+                if (closingArgs.Cancel)
+                {
+                    return 0;
+                }
+
+                break;
+            }
 
             case Win32.WM_NCDESTROY:
                 ReleaseMainMenuStrip();
@@ -1543,6 +1604,54 @@ public class Form : IDisposable
         {
             control.ReleaseHandleRecursive();
         }
+    }
+
+    private void ApplyWindowIcon()
+    {
+        if (!OperatingSystem.IsWindows() || Handle == 0)
+        {
+            return;
+        }
+
+        nint iconHandle = ResolveIconHandle();
+        if (iconHandle == 0)
+        {
+            return;
+        }
+
+        _ = Win32.SendMessageW(Handle, Win32.WM_SETICON, (nint)Win32.ICON_BIG, iconHandle);
+        _ = Win32.SendMessageW(Handle, Win32.WM_SETICON, (nint)Win32.ICON_SMALL, iconHandle);
+    }
+
+    private nint ResolveIconHandle()
+        => OperatingSystem.IsWindows()
+            ? ResolveIconHandleCore()
+            : 0;
+
+    private void ReleaseOwnedIcon()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            _icon = null;
+            return;
+        }
+
+        ReleaseOwnedIconCore();
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static Icon CloneIcon(Icon icon)
+        => (Icon)icon.Clone();
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private nint ResolveIconHandleCore()
+        => Icon?.Handle ?? 0;
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void ReleaseOwnedIconCore()
+    {
+        _icon?.Dispose();
+        _icon = null;
     }
 
     private void ThrowIfDisposed()

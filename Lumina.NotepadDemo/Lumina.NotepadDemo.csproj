@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net10.0</TargetFramework>
+    <PublishAot>true</PublishAot>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+    <PublishDocumentationFile>false</PublishDocumentationFile>
+    <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
+    <UseLuminaForms>true</UseLuminaForms>
+    <ApplicationIcon Condition="'$(ApplicationIcon)' == ''">..\msix\Assets\lumina-tray.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lumina.Core\Lumina.Core.csproj" />
+    <ProjectReference Include="..\Lumina.Forms\Lumina.Forms.csproj" />
+    <ProjectReference Include="..\Lumina.Forms.Analyzers\Lumina.Forms.Analyzers.csproj" />
+    <Using Include="Lumina.Forms" />
+    <Using Include="System.Drawing" />
+  </ItemGroup>
+
+  <Target Name="CleanPublishAuxiliaryFiles" AfterTargets="Publish">
+    <ItemGroup>
+      <PublishAuxiliaryFiles Include="$(PublishDir)**\*.pdb" />
+      <PublishAuxiliaryFiles Include="$(PublishDir)**\*.xml" />
+    </ItemGroup>
+    <Delete Files="@(PublishAuxiliaryFiles)" />
+  </Target>
+
+  <Target Name="ExcludeAuxiliaryFilesFromPublish" BeforeTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.Extension)' == '.pdb'" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.Extension)' == '.xml'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

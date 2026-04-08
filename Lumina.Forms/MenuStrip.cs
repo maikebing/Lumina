@@ -7,7 +7,7 @@ namespace Lumina.Forms;
 /// </summary>
 public class MenuStrip : ToolStrip
 {
-    private const int MenuItemHorizontalPadding = 16;
+    private const int MenuItemHorizontalPadding = 12;
 
     private NativeMenu? _nativeMenu;
 
@@ -18,6 +18,7 @@ public class MenuStrip : ToolStrip
     /// </summary>
     public MenuStrip()
     {
+        Size = new Size(200, 24);
         CanOverflow = false;
         GripStyle = ToolStripGripStyle.Hidden;
         Stretch = true;
@@ -68,8 +69,8 @@ public class MenuStrip : ToolStrip
 
     private protected override Size ResolveHostSize(ToolStripItem item, int availableHeight)
     {
-        string text = ResolveItemText(item);
-        int width = Math.Max(48, text.Length * 8 + (MenuItemHorizontalPadding * 2));
+        Size textSize = MeasureItemText(item);
+        int width = Math.Max(MenuItemHorizontalPadding, textSize.Width + MenuItemHorizontalPadding);
         int resolvedWidth = item.Size.Width > 0 ? item.Size.Width : width;
         int resolvedHeight = item.Size.Height > 0 ? item.Size.Height : Math.Max(1, availableHeight);
         return new Size(resolvedWidth, resolvedHeight);

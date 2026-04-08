@@ -469,6 +469,17 @@ public abstract class Control : IDisposable
     }
 
     /// <summary>
+    /// Sets input focus to the control.
+    /// </summary>
+    public void Focus()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.SetFocus(Handle);
+        }
+    }
+
+    /// <summary>
     /// Suspends layout logic for compatibility with designer-generated code.
     /// </summary>
     public virtual void SuspendLayout()

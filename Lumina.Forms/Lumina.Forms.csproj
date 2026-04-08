@@ -30,6 +30,12 @@
     <None Include="..\README.md" Pack="true" PackagePath="/" />
     <None Include="..\THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
     <None Include="..\assets\nuget-icon.png" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive\Lumina.Forms.props" Pack="true" PackagePath="buildTransitive\Lumina.Forms.props" />
+    <None Include="..\msix\Assets\lumina-tray.ico" Pack="true" PackagePath="buildTransitive\Lumina.Forms.default.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\msix\Assets\lumina-tray.ico" LogicalName="Lumina.Forms.Assets.DefaultAppIcon.ico" />
   </ItemGroup>
 
   <ItemGroup>

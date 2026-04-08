@@ -46,6 +46,43 @@ public sealed class CompatibilityControlsTests
     }
 
     [Fact]
+    public void Form_UsesEmbeddedDefaultIcon_WhenUnset()
+    {
+        Type providerType = typeof(Form).Assembly.GetType("Lumina.Forms.DefaultAppIconProvider", throwOnError: true)!;
+        MethodInfo? providerMethod = providerType.GetMethod("GetIconHandle", BindingFlags.Static | BindingFlags.NonPublic);
+        MethodInfo? resolveMethod = typeof(Form).GetMethod("ResolveIconHandle", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(providerMethod);
+        Assert.NotNull(resolveMethod);
+
+        using var form = new Form();
+        nint defaultHandle = Assert.IsType<nint>(providerMethod!.Invoke(null, null));
+        nint resolvedHandle = Assert.IsType<nint>(resolveMethod!.Invoke(form, null));
+
+        Assert.NotEqual(0, defaultHandle);
+        Assert.Equal(defaultHandle, resolvedHandle);
+        Assert.NotNull(form.Icon);
+    }
+
+    [Fact]
+    public void NotifyIcon_UsesEmbeddedDefaultIcon_WhenUnset()
+    {
+        Type providerType = typeof(Form).Assembly.GetType("Lumina.Forms.DefaultAppIconProvider", throwOnError: true)!;
+        MethodInfo? providerMethod = providerType.GetMethod("GetIconHandle", BindingFlags.Static | BindingFlags.NonPublic);
+        MethodInfo? resolveMethod = typeof(NotifyIcon).GetMethod("ResolveIconHandle", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(providerMethod);
+        Assert.NotNull(resolveMethod);
+
+        using var notifyIcon = new NotifyIcon();
+        nint defaultHandle = Assert.IsType<nint>(providerMethod!.Invoke(null, null));
+        nint resolvedHandle = Assert.IsType<nint>(resolveMethod!.Invoke(notifyIcon, null));
+
+        Assert.NotEqual(0, defaultHandle);
+        Assert.Equal(defaultHandle, resolvedHandle);
+    }
+
+    [Fact]
     public void PictureBox_AutoSize_UsesSourceImageDimensions()
     {
         string imagePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.png");
@@ -98,11 +135,54 @@ public sealed class CompatibilityControlsTests
     }
 
     [Fact]
-    public void StripDefaults_MatchWinFormsBaselineHeights()
+    public void StripDefaults_MatchWinFormsBaselineMetrics()
     {
-        Assert.Equal(25, new ToolStrip().Height);
-        Assert.Equal(25, new MenuStrip().Height);
-        Assert.Equal(22, new StatusStrip().Height);
+        Assert.Equal(new Size(100, 25), new ToolStrip().Size);
+        Assert.Equal(new Padding(0, 0, 1, 0), new ToolStrip().Padding);
+
+        Assert.Equal(new Size(200, 24), new MenuStrip().Size);
+        Assert.Equal(new Padding(6, 2, 0, 2), new MenuStrip().Padding);
+
+        Assert.Equal(new Size(200, 22), new StatusStrip().Size);
+        Assert.Equal(new Padding(1, 0, 14, 0), new StatusStrip().Padding);
+    }
+
+    [Fact]
+    public void StripTextHosts_UseWinFormsLikePaddingOverMeasuredTextWidth()
+    {
+        var toolStrip = new ToolStrip();
+        var label = new ToolStripLabel { Text = "主题" };
+        var button = new ToolStripButton { Text = "主题" };
+        toolStrip.Items.Add(label);
+        toolStrip.Items.Add(button);
+        toolStrip.PerformLayout();
+
+        var menuStrip = new MenuStrip();
+        var menuItem = new ToolStripMenuItem { Text = "主题" };
+        menuStrip.Items.Add(menuItem);
+        menuStrip.PerformLayout();
+
+        var statusStrip = new StatusStrip();
+        var statusLabel = new ToolStripStatusLabel { Text = "主题" };
+        statusStrip.Items.Add(statusLabel);
+        statusStrip.PerformLayout();
+
+        FieldInfo? itemHostsField = typeof(ToolStrip).GetField("_itemHosts", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(itemHostsField);
+
+        var toolStripHosts = Assert.IsType<Dictionary<ToolStripItem, Control>>(itemHostsField!.GetValue(toolStrip));
+        var menuStripHosts = Assert.IsType<Dictionary<ToolStripItem, Control>>(itemHostsField.GetValue(menuStrip));
+        var statusStripHosts = Assert.IsType<Dictionary<ToolStripItem, Control>>(itemHostsField.GetValue(statusStrip));
+
+        Control labelHost = toolStripHosts[label];
+        Control buttonHost = toolStripHosts[button];
+        Control menuHost = menuStripHosts[menuItem];
+        Control statusHost = statusStripHosts[statusLabel];
+
+        Assert.Equal(labelHost.Width, statusHost.Width);
+        Assert.Equal(labelHost.Width + 4, buttonHost.Width);
+        Assert.Equal(labelHost.Width + 12, menuHost.Width);
+        Assert.Equal(20, menuHost.Height);
     }
 
     [Fact]

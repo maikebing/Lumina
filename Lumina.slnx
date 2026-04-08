@@ -5,6 +5,7 @@
   </Configurations>
   <Folder Name="/Demos/">
     <Project Path="NativeFormsDemo/NativeFormsDemo.csproj" />
+    <Project Path="Lumina.NotepadDemo/Lumina.NotepadDemo.csproj" />
   </Folder>
   <Project Path="Lumina.App/Lumina.App.csproj">
     <Platform Solution="*|x64" Project="x64" />

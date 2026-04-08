@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="'$(UseLuminaForms)' == 'true' and '$(ApplicationIcon)' == ''">
+    <ApplicationIcon>$(MSBuildThisFileDirectory)Lumina.Forms.default.ico</ApplicationIcon>
+  </PropertyGroup>
+</Project>

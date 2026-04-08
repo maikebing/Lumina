@@ -358,7 +358,7 @@ public class NotifyIcon : Component
             }
         }
 
-        return LoadIconW(0, (nint)32512);
+        return DefaultAppIconProvider.GetIconHandle();
     }
 
     private void ReleaseLoadedIcon()
@@ -500,9 +500,6 @@ public class NotifyIcon : Component
     [DllImport("shell32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool Shell_NotifyIconW(uint dwMessage, ref NOTIFYICONDATAW lpData);
-
-    [DllImport("user32.dll")]
-    private static extern nint LoadIconW(nint hInstance, nint lpIconName);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct NOTIFYICONDATAW
