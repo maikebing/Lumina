@@ -15,12 +15,11 @@ public class TabControl : ContainerControlBase
     private static bool s_applyingTabTheme;
 
     /// <summary>
-    /// Initializes a tab control with more spacious default layout metrics.
+    /// Initializes a tab control with WinForms-compatible default layout metrics.
     /// </summary>
     public TabControl()
     {
-        Margin = new Padding(6);
-        Padding = new Padding(8);
+        Margin = new Padding(3);
     }
 
     /// <summary>
@@ -257,10 +256,10 @@ public class TabControl : ContainerControlBase
         }
 
         return new Rectangle(
-            8,
-            34,
-            Math.Max(1, Width - 16),
-            Math.Max(1, Height - 42));
+            4,
+            26,
+            Math.Max(1, Width - 8),
+            Math.Max(1, Height - 30));
     }
 
     private List<TabPage> GetTabPages()
@@ -296,8 +295,7 @@ public class TabControl : ContainerControlBase
             return;
         }
 
-        _ = Win32.SendMessageW(Handle, Win32.TCM_SETPADDING, 0, Win32.MakeLParam(18, 6));
-        _ = Win32.SendMessageW(Handle, Win32.TCM_SETMINTABWIDTH, 0, (nint)72);
+        _ = Win32.SendMessageW(Handle, Win32.TCM_SETPADDING, 0, Win32.MakeLParam(6, 3));
     }
 
     private void ApplyNativeColors()

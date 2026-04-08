@@ -5,6 +5,7 @@ using System.Threading;
 
 namespace Lumina.Forms;
 
+[SupportedOSPlatform("windows")]
 internal sealed class NativeMenu : IDisposable
 {
 
@@ -14,6 +15,7 @@ internal sealed class NativeMenu : IDisposable
     private static int s_nextCommandId = CommandIdStart;
     private readonly Dictionary<uint, ToolStripItem> _commands = [];
     private readonly List<nint> _imageHandles = [];
+    private readonly List<nuint> _ownerDrawItemKeys = [];
     private nint _backgroundBrush;
     private bool _ownsBackgroundBrush;
     private readonly bool _isMenuBar;
@@ -58,6 +60,13 @@ internal sealed class NativeMenu : IDisposable
 
         _imageHandles.Clear();
 
+        foreach (nuint ownerDrawItemKey in _ownerDrawItemKeys)
+        {
+            NativeMenuRenderer.Unregister(ownerDrawItemKey);
+        }
+
+        _ownerDrawItemKeys.Clear();
+
         if (_backgroundBrush != 0 && _ownsBackgroundBrush)
         {
             _ = Win32.DeleteObject(_backgroundBrush);
@@ -91,22 +100,28 @@ internal sealed class NativeMenu : IDisposable
 
     private void ApplyDarkMenuStyling(nint menuHandle, ResolvedVisualStyle visualStyle)
     {
-        if (menuHandle == 0 || !DarkModeNative.IsSupported)
+        if (menuHandle == 0)
         {
             return;
         }
 
-        DarkModeNative.RefreshImmersiveState();
+        if (DarkModeNative.IsSupported)
+        {
+            DarkModeNative.RefreshImmersiveState();
+        }
 
-        uint menuArgb = visualStyle.IsDarkMode
-            ? visualStyle.Palette.SurfaceBackground
-            : visualStyle.Palette.ControlBackground;
-
-        _backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(menuArgb));
-        _ownsBackgroundBrush = _backgroundBrush != 0;
         if (_backgroundBrush == 0)
         {
-            return;
+            uint menuArgb = visualStyle.IsDarkMode
+                ? visualStyle.Palette.SurfaceBackground
+                : visualStyle.Palette.ControlBackground;
+
+            _backgroundBrush = Win32.CreateSolidBrush(Win32.ToColorRef(menuArgb));
+            _ownsBackgroundBrush = _backgroundBrush != 0;
+            if (_backgroundBrush == 0)
+            {
+                return;
+            }
         }
 
         var menuInfo = new Win32.MENUINFO
@@ -121,6 +136,7 @@ internal sealed class NativeMenu : IDisposable
 
     private void PopulateMenu(nint menuHandle, IEnumerable<ToolStripItem> items)
     {
+        bool useOwnerDraw = !_isMenuBar;
         uint position = 0;
         foreach (ToolStripItem item in items)
         {
@@ -131,6 +147,24 @@ internal sealed class NativeMenu : IDisposable
 
             if (item is ToolStripSeparator)
             {
+                if (useOwnerDraw)
+                {
+                    nuint ownerDrawItemKey = NativeMenuRenderer.Register(item, _visualStyle);
+                    _ownerDrawItemKeys.Add(ownerDrawItemKey);
+
+                    var ownerDrawSeparatorInfo = new Win32.MENUITEMINFOW
+                    {
+                        cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.MENUITEMINFOW>(),
+                        fMask = Win32.MIIM_FTYPE | Win32.MIIM_STATE | Win32.MIIM_DATA,
+                        fType = Win32.MFT_OWNERDRAW,
+                        fState = Win32.MFS_DISABLED,
+                        dwItemData = ownerDrawItemKey,
+                    };
+
+                    _ = Win32.InsertMenuItemW(menuHandle, position++, true, ref ownerDrawSeparatorInfo);
+                    continue;
+                }
+
                 var separatorInfo = new Win32.MENUITEMINFOW
                 {
                     cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.MENUITEMINFOW>(),
@@ -142,7 +176,7 @@ internal sealed class NativeMenu : IDisposable
                 continue;
             }
 
-            nint menuBitmap = CreateBitmapHandle(item);
+            nint menuBitmap = useOwnerDraw ? 0 : CreateBitmapHandle(item);
             if (menuBitmap != 0)
             {
                 _imageHandles.Add(menuBitmap);
@@ -156,8 +190,21 @@ internal sealed class NativeMenu : IDisposable
                     continue;
                 }
 
+                ApplyDarkMenuStyling(subMenuHandle, _visualStyle);
                 PopulateMenu(subMenuHandle, dropDownItem.DropDownItems);
-                var itemInfo = CreateMenuItemInfo(item, menuBitmap);
+
+                Win32.MENUITEMINFOW itemInfo;
+                if (useOwnerDraw)
+                {
+                    nuint ownerDrawItemKey = NativeMenuRenderer.Register(item, _visualStyle);
+                    _ownerDrawItemKeys.Add(ownerDrawItemKey);
+                    itemInfo = CreateOwnerDrawMenuItemInfo(item, ownerDrawItemKey);
+                }
+                else
+                {
+                    itemInfo = CreateMenuItemInfo(item, menuBitmap);
+                }
+
                 itemInfo.fMask |= Win32.MIIM_SUBMENU;
                 itemInfo.hSubMenu = subMenuHandle;
 
@@ -174,7 +221,18 @@ internal sealed class NativeMenu : IDisposable
             uint commandId = NextCommandId();
             _commands[commandId] = item;
 
-            var commandItemInfo = CreateMenuItemInfo(item, menuBitmap);
+            Win32.MENUITEMINFOW commandItemInfo;
+            if (useOwnerDraw)
+            {
+                nuint ownerDrawItemKey = NativeMenuRenderer.Register(item, _visualStyle);
+                _ownerDrawItemKeys.Add(ownerDrawItemKey);
+                commandItemInfo = CreateOwnerDrawMenuItemInfo(item, ownerDrawItemKey);
+            }
+            else
+            {
+                commandItemInfo = CreateMenuItemInfo(item, menuBitmap);
+            }
+
             commandItemInfo.fMask |= Win32.MIIM_ID;
             commandItemInfo.wID = commandId;
 
@@ -186,6 +244,21 @@ internal sealed class NativeMenu : IDisposable
             ApplyMenuItemCheckState(item, ref commandItemInfo);
             _ = Win32.InsertMenuItemW(menuHandle, position++, true, ref commandItemInfo);
         }
+    }
+
+    private static Win32.MENUITEMINFOW CreateOwnerDrawMenuItemInfo(ToolStripItem item, nuint ownerDrawItemKey)
+    {
+        string displayText = GetDisplayText(item);
+        return new Win32.MENUITEMINFOW
+        {
+            cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Win32.MENUITEMINFOW>(),
+            fMask = Win32.MIIM_FTYPE | Win32.MIIM_STATE | Win32.MIIM_STRING | Win32.MIIM_DATA,
+            fType = Win32.MFT_OWNERDRAW,
+            fState = 0,
+            dwTypeData = displayText,
+            cch = (uint)displayText.Length,
+            dwItemData = ownerDrawItemKey,
+        };
     }
 
     private static uint NextCommandId()
@@ -304,7 +377,7 @@ internal sealed class NativeMenu : IDisposable
             : 0;
 
     [SupportedOSPlatform("windows")]
-    private static Image PrepareMenuImage(Image sourceImage, Color transparentColor)
+    internal static Image PrepareMenuImage(Image sourceImage, Color transparentColor)
     {
         var bitmap = new Bitmap(sourceImage);
         if (transparentColor != Color.Empty)

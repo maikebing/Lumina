@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -5,6 +7,16 @@ namespace Lumina.Forms;
 /// </summary>
 public class MonthCalendar : Control
 {
+    private static readonly Size s_defaultMinimumSize = new(178, 155);
+
+    /// <summary>
+    /// Initializes a month calendar with the WinForms default single-month size.
+    /// </summary>
+    public MonthCalendar()
+    {
+        Size = s_defaultMinimumSize;
+    }
+
     /// <inheritdoc />
     protected override string ClassName => "SysMonthCal32";
 
@@ -13,7 +25,7 @@ public class MonthCalendar : Control
 
     /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
-        => Math.Max(160, requestedHeight);
+        => Math.Max(GetMinimumRequiredSize().Height, requestedHeight);
 
     /// <inheritdoc />
     protected override void ApplyTheme()
@@ -27,6 +39,7 @@ public class MonthCalendar : Control
     protected override void OnHandleCreated()
     {
         base.OnHandleCreated();
+        EnsureMinimumSize();
         ApplyNativeThemeState();
         ApplyNativeColors();
     }
@@ -75,5 +88,35 @@ public class MonthCalendar : Control
     private nint SetCalendarColor(int colorIndex, uint colorRef)
     {
         return Win32.SendMessageW(Handle, Win32.MCM_SETCOLOR, (nint)colorIndex, unchecked((nint)colorRef));
+    }
+
+    private void EnsureMinimumSize()
+    {
+        Size minimumSize = GetMinimumRequiredSize();
+        if (Width >= minimumSize.Width && Height >= minimumSize.Height)
+        {
+            return;
+        }
+
+        SetBounds(
+            Left,
+            Top,
+            Math.Max(Width, minimumSize.Width),
+            Math.Max(Height, minimumSize.Height));
+    }
+
+    private Size GetMinimumRequiredSize()
+    {
+        if (Handle == 0)
+        {
+            return s_defaultMinimumSize;
+        }
+
+        var rect = new Win32.RECT();
+        _ = Win32.SendMessageW(Handle, Win32.MCM_GETMINREQRECT, 0, ref rect);
+
+        return rect.Width > 0 && rect.Height > 0
+            ? new Size(rect.Width, rect.Height)
+            : s_defaultMinimumSize;
     }
 }

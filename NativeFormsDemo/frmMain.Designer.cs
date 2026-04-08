@@ -71,6 +71,7 @@
             treeView1 = new TreeView();
             menuStrip1 = new MenuStrip();
             文件ToolStripMenuItem = new ToolStripMenuItem();
+            退出ToolStripMenuItem = new ToolStripMenuItem();
             视图ToolStripMenuItem = new ToolStripMenuItem();
             themeToolStripMenuItem = new ToolStripMenuItem();
             followSystemThemeToolStripMenuItem = new ToolStripMenuItem();
@@ -107,6 +108,10 @@
             toolStripMenuItem4 = new ToolStripMenuItem();
             toolStripSplitButton2 = new ToolStripSplitButton();
             toolStrip1 = new ToolStrip();
+            toolStripButton1 = new ToolStripButton();
+            toolStripLabel1 = new ToolStripLabel();
+            toolStripSeparator5 = new ToolStripSeparator();
+            toolStripTextBox4 = new ToolStripTextBox();
             flowLayoutPanel1 = new FlowLayoutPanel();
             button2 = new Button();
             checkBox2 = new CheckBox();
@@ -116,15 +121,15 @@
             button4 = new Button();
             splitContainer1 = new SplitContainer();
             button5 = new Button();
+            splitPanelListLabel = new Label();
             checkBox3 = new CheckBox();
+            splitPanelStatusLabel = new Label();
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             button6 = new Button();
             tabPage2 = new TabPage();
             comboBox2 = new ComboBox();
             tableLayoutPanel1 = new TableLayoutPanel();
-            splitPanelListLabel = new Label();
-            splitPanelStatusLabel = new Label();
             radioButton3 = new RadioButton();
             radioButton4 = new RadioButton();
             textBox2 = new TextBox();
@@ -134,10 +139,6 @@
             containerSectionLabel = new Label();
             styleSectionLabel = new Label();
             darkModeVerificationLabel = new Label();
-            toolStripButton1 = new ToolStripButton();
-            toolStripLabel1 = new ToolStripLabel();
-            toolStripSeparator5 = new ToolStripSeparator();
-            toolStripTextBox4 = new ToolStripTextBox();
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -262,16 +263,16 @@
             // 
             listBox1.FormattingEnabled = true;
             listBox1.Items.AddRange(new object[] { "1", "2", "3", "4", "5" });
-            listBox1.Location = new Point(260, 286);
+            listBox1.Location = new Point(350, 292);
             listBox1.Name = "listBox1";
             listBox1.Size = new Size(160, 174);
             listBox1.TabIndex = 6;
             // 
             // listView1
             // 
-            listView1.Location = new Point(436, 286);
+            listView1.Location = new Point(527, 286);
             listView1.Name = "listView1";
-            listView1.Size = new Size(280, 196);
+            listView1.Size = new Size(189, 196);
             listView1.TabIndex = 7;
             listView1.UseCompatibleStateImageBehavior = false;
             // 
@@ -284,7 +285,7 @@
             // 
             // monthCalendar1
             // 
-            monthCalendar1.Location = new Point(24, 286);
+            monthCalendar1.Location = new Point(42, 292);
             monthCalendar1.Name = "monthCalendar1";
             monthCalendar1.TabIndex = 9;
             // 
@@ -305,7 +306,7 @@
             // 
             pictureBox1.ContextMenuStrip = contextMenuStrip1;
             pictureBox1.Image = Properties.Resources.SplashScreen;
-            pictureBox1.Location = new Point(1030, 332);
+            pictureBox1.Location = new Point(1069, 284);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(406, 222);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
@@ -391,15 +392,22 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { 文件ToolStripMenuItem, 视图ToolStripMenuItem, 编辑ToolStripMenuItem, 关于ToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(1460, 25);
+            menuStrip1.Size = new Size(1523, 25);
             menuStrip1.TabIndex = 18;
             menuStrip1.Text = "menuStrip1";
             // 
             // 文件ToolStripMenuItem
             // 
+            文件ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 退出ToolStripMenuItem });
             文件ToolStripMenuItem.Name = "文件ToolStripMenuItem";
             文件ToolStripMenuItem.Size = new Size(44, 21);
             文件ToolStripMenuItem.Text = "文件";
+            // 
+            // 退出ToolStripMenuItem
+            // 
+            退出ToolStripMenuItem.Name = "退出ToolStripMenuItem";
+            退出ToolStripMenuItem.Size = new Size(100, 22);
+            退出ToolStripMenuItem.Text = "退出";
             // 
             // 视图ToolStripMenuItem
             // 
@@ -412,7 +420,7 @@
             // 
             themeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { followSystemThemeToolStripMenuItem, lightThemeToolStripMenuItem, darkThemeToolStripMenuItem, toolStripSeparator4, systemColorsToolStripMenuItem, customThemeToolStripMenuItem });
             themeToolStripMenuItem.Name = "themeToolStripMenuItem";
-            themeToolStripMenuItem.Size = new Size(124, 22);
+            themeToolStripMenuItem.Size = new Size(180, 22);
             themeToolStripMenuItem.Text = "主题";
             // 
             // followSystemThemeToolStripMenuItem
@@ -459,7 +467,7 @@
             // 
             luminaExtWinFormsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { recommendedStyleToolStripMenuItem, clearEffectToolStripMenuItem, toolStripSeparator3, micaToolStripMenuItem, micaAltToolStripMenuItem, acrylicToolStripMenuItem, aeroToolStripMenuItem, blurToolStripMenuItem });
             luminaExtWinFormsToolStripMenuItem.Name = "luminaExtWinFormsToolStripMenuItem";
-            luminaExtWinFormsToolStripMenuItem.Size = new Size(124, 22);
+            luminaExtWinFormsToolStripMenuItem.Size = new Size(180, 22);
             luminaExtWinFormsToolStripMenuItem.Text = "窗口风格";
             // 
             // recommendedStyleToolStripMenuItem
@@ -564,16 +572,16 @@
             // 
             statusStrip1.ContextMenuStrip = contextMenuStrip1;
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripProgressBar1, toolStripDropDownButton1, toolStripSplitButton1, toolStripSplitButton2 });
-            statusStrip1.Location = new Point(0, 878);
+            statusStrip1.Location = new Point(0, 934);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1460, 22);
+            statusStrip1.Size = new Size(1523, 22);
             statusStrip1.TabIndex = 19;
             statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
             toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(44, 17);
+            toolStripStatusLabel1.Size = new Size(262, 17);
             toolStripStatusLabel1.Text = "Ready | Deep dark-mode verification layout";
             // 
             // toolStripProgressBar1
@@ -645,16 +653,41 @@
             toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripButton1, toolStripLabel1, toolStripSeparator5, toolStripTextBox4 });
             toolStrip1.Location = new Point(0, 25);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new Size(1460, 25);
+            toolStrip1.Size = new Size(1523, 25);
             toolStrip1.TabIndex = 20;
             toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripButton1
+            // 
+            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
+            toolStripButton1.ImageTransparentColor = Color.Magenta;
+            toolStripButton1.Name = "toolStripButton1";
+            toolStripButton1.Size = new Size(23, 22);
+            toolStripButton1.Text = "toolStripButton1";
+            // 
+            // toolStripLabel1
+            // 
+            toolStripLabel1.Name = "toolStripLabel1";
+            toolStripLabel1.Size = new Size(96, 22);
+            toolStripLabel1.Text = "toolStripLabel1";
+            // 
+            // toolStripSeparator5
+            // 
+            toolStripSeparator5.Name = "toolStripSeparator5";
+            toolStripSeparator5.Size = new Size(6, 25);
+            // 
+            // toolStripTextBox4
+            // 
+            toolStripTextBox4.Name = "toolStripTextBox4";
+            toolStripTextBox4.Size = new Size(100, 25);
             // 
             // flowLayoutPanel1
             // 
             flowLayoutPanel1.Controls.Add(button2);
             flowLayoutPanel1.Controls.Add(checkBox2);
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
-            flowLayoutPanel1.Location = new Point(24, 510);
+            flowLayoutPanel1.Location = new Point(24, 553);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
             flowLayoutPanel1.Padding = new Padding(12);
             flowLayoutPanel1.Size = new Size(300, 96);
@@ -685,7 +718,7 @@
             // groupBox1
             // 
             groupBox1.Controls.Add(button3);
-            groupBox1.Location = new Point(350, 510);
+            groupBox1.Location = new Point(350, 553);
             groupBox1.Name = "groupBox1";
             groupBox1.Size = new Size(300, 96);
             groupBox1.TabIndex = 22;
@@ -705,7 +738,7 @@
             // 
             panel1.ContextMenuStrip = contextMenuStrip1;
             panel1.Controls.Add(button4);
-            panel1.Location = new Point(676, 510);
+            panel1.Location = new Point(682, 553);
             panel1.Name = "panel1";
             panel1.Size = new Size(300, 96);
             panel1.TabIndex = 23;
@@ -722,7 +755,7 @@
             // splitContainer1
             // 
             splitContainer1.IsSplitterFixed = true;
-            splitContainer1.Location = new Point(24, 622);
+            splitContainer1.Location = new Point(24, 678);
             splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -738,24 +771,6 @@
             splitContainer1.SplitterDistance = 488;
             splitContainer1.TabIndex = 24;
             // 
-            // splitPanelListLabel
-            // 
-            splitPanelListLabel.AutoSize = true;
-            splitPanelListLabel.Location = new Point(18, 12);
-            splitPanelListLabel.Name = "splitPanelListLabel";
-            splitPanelListLabel.Size = new Size(278, 17);
-            splitPanelListLabel.TabIndex = 1;
-            splitPanelListLabel.Text = "左侧面板验证 SplitContainer + Button 的深色联动";
-            // 
-            // splitPanelStatusLabel
-            // 
-            splitPanelStatusLabel.AutoSize = true;
-            splitPanelStatusLabel.Location = new Point(22, 12);
-            splitPanelStatusLabel.Name = "splitPanelStatusLabel";
-            splitPanelStatusLabel.Size = new Size(279, 17);
-            splitPanelStatusLabel.TabIndex = 1;
-            splitPanelStatusLabel.Text = "右侧面板验证 SplitContainer + CheckBox 的深色联动";
-            // 
             // button5
             // 
             button5.Location = new Point(18, 46);
@@ -764,6 +779,15 @@
             button5.TabIndex = 0;
             button5.Text = "Split Action";
             button5.UseVisualStyleBackColor = true;
+            // 
+            // splitPanelListLabel
+            // 
+            splitPanelListLabel.AutoSize = true;
+            splitPanelListLabel.Location = new Point(18, 12);
+            splitPanelListLabel.Name = "splitPanelListLabel";
+            splitPanelListLabel.Size = new Size(284, 17);
+            splitPanelListLabel.TabIndex = 1;
+            splitPanelListLabel.Text = "左侧面板验证 SplitContainer + Button 的深色联动";
             // 
             // checkBox3
             // 
@@ -775,11 +799,20 @@
             checkBox3.Text = "Pinned";
             checkBox3.UseVisualStyleBackColor = true;
             // 
+            // splitPanelStatusLabel
+            // 
+            splitPanelStatusLabel.AutoSize = true;
+            splitPanelStatusLabel.Location = new Point(22, 12);
+            splitPanelStatusLabel.Name = "splitPanelStatusLabel";
+            splitPanelStatusLabel.Size = new Size(303, 17);
+            splitPanelStatusLabel.TabIndex = 1;
+            splitPanelStatusLabel.Text = "右侧面板验证 SplitContainer + CheckBox 的深色联动";
+            // 
             // tabControl1
             // 
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
-            tabControl1.Location = new Point(1040, 520);
+            tabControl1.Location = new Point(1079, 553);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
             tabControl1.Size = new Size(396, 218);
@@ -836,7 +869,7 @@
             tableLayoutPanel1.Controls.Add(radioButton4, 0, 1);
             tableLayoutPanel1.Controls.Add(textBox2, 1, 0);
             tableLayoutPanel1.Controls.Add(button7, 1, 1);
-            tableLayoutPanel1.Location = new Point(1040, 752);
+            tableLayoutPanel1.Location = new Point(1079, 800);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 2;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
@@ -885,7 +918,7 @@
             // 
             // richTextBox1
             // 
-            richTextBox1.Location = new Point(1030, 198);
+            richTextBox1.Location = new Point(1081, 129);
             richTextBox1.Name = "richTextBox1";
             richTextBox1.ReadOnly = true;
             richTextBox1.Size = new Size(406, 120);
@@ -904,7 +937,7 @@
             // containerSectionLabel
             // 
             containerSectionLabel.AutoSize = true;
-            containerSectionLabel.Location = new Point(24, 482);
+            containerSectionLabel.Location = new Point(24, 521);
             containerSectionLabel.Name = "containerSectionLabel";
             containerSectionLabel.Size = new Size(56, 17);
             containerSectionLabel.TabIndex = 29;
@@ -913,7 +946,7 @@
             // styleSectionLabel
             // 
             styleSectionLabel.AutoSize = true;
-            styleSectionLabel.Location = new Point(1030, 138);
+            styleSectionLabel.Location = new Point(1081, 69);
             styleSectionLabel.Name = "styleSectionLabel";
             styleSectionLabel.Size = new Size(56, 17);
             styleSectionLabel.TabIndex = 30;
@@ -922,42 +955,17 @@
             // darkModeVerificationLabel
             // 
             darkModeVerificationLabel.AutoSize = true;
-            darkModeVerificationLabel.Location = new Point(24, 746);
+            darkModeVerificationLabel.Location = new Point(24, 847);
             darkModeVerificationLabel.Name = "darkModeVerificationLabel";
-            darkModeVerificationLabel.Size = new Size(415, 17);
+            darkModeVerificationLabel.Size = new Size(540, 17);
             darkModeVerificationLabel.TabIndex = 32;
             darkModeVerificationLabel.Text = "深色验证重点：主菜单 + 右键菜单 + MonthCalendar + ListView + StatusStrip + SplitContainer";
-            // 
-            // toolStripButton1
-            // 
-            toolStripButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
-            toolStripButton1.ImageTransparentColor = Color.Magenta;
-            toolStripButton1.Name = "toolStripButton1";
-            toolStripButton1.Size = new Size(23, 22);
-            toolStripButton1.Text = "toolStripButton1";
-            // 
-            // toolStripLabel1
-            // 
-            toolStripLabel1.Name = "toolStripLabel1";
-            toolStripLabel1.Size = new Size(96, 22);
-            toolStripLabel1.Text = "toolStripLabel1";
-            // 
-            // toolStripSeparator5
-            // 
-            toolStripSeparator5.Name = "toolStripSeparator5";
-            toolStripSeparator5.Size = new Size(6, 25);
-            // 
-            // toolStripTextBox4
-            // 
-            toolStripTextBox4.Name = "toolStripTextBox4";
-            toolStripTextBox4.Size = new Size(100, 25);
             // 
             // frmMain
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1460, 900);
+            ClientSize = new Size(1523, 956);
             Controls.Add(styleSectionLabel);
             Controls.Add(darkModeVerificationLabel);
             Controls.Add(containerSectionLabel);
@@ -1008,6 +1016,7 @@
             groupBox1.ResumeLayout(false);
             panel1.ResumeLayout(false);
             splitContainer1.Panel1.ResumeLayout(false);
+            splitContainer1.Panel1.PerformLayout();
             splitContainer1.Panel2.ResumeLayout(false);
             splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
@@ -1118,5 +1127,6 @@
         private ToolStripLabel toolStripLabel1;
         private ToolStripSeparator toolStripSeparator5;
         private ToolStripTextBox toolStripTextBox4;
+        private ToolStripMenuItem 退出ToolStripMenuItem;
     }
 }

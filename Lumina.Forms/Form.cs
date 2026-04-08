@@ -1178,6 +1178,22 @@ public class Form : IDisposable
 
                 break;
 
+            case Win32.WM_MEASUREITEM:
+                if (OperatingSystem.IsWindows() && NativeMenuRenderer.TryHandleMeasureItem(lParam))
+                {
+                    return (nint)1;
+                }
+
+                break;
+
+            case Win32.WM_DRAWITEM:
+                if (OperatingSystem.IsWindows() && NativeMenuRenderer.TryHandleDrawItem(lParam))
+                {
+                    return (nint)1;
+                }
+
+                break;
+
             case Win32.WM_NOTIFY:
                 if (HandleNotify(lParam))
                 {

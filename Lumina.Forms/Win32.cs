@@ -31,6 +31,7 @@ internal static class Win32
     public const uint WS_EX_APPWINDOW = 0x00040000;
     public const uint WS_EX_COMPOSITED = 0x02000000;
     public const uint WS_EX_CLIENTEDGE = 0x00000200;
+    public const uint WS_EX_CONTROLPARENT = 0x00010000;
 
     public const uint ES_LEFT = 0x0000;
     public const uint ES_MULTILINE = 0x0004;
@@ -150,6 +151,7 @@ internal static class Win32
     public const uint TVS_EX_FADEINOUTEXPANDOS = 0x0040;
 
     public const int MCM_FIRST = 0x1000;
+    public const int MCM_GETMINREQRECT = MCM_FIRST + 9;
     public const int MCM_SETCOLOR = MCM_FIRST + 10;
     public const int DTM_FIRST = 0x1000;
     public const int DTM_SETMCCOLOR = DTM_FIRST + 6;
@@ -171,6 +173,7 @@ internal static class Win32
     public const int COLOR_BTNFACE = 15;
     public const int DEFAULT_GUI_FONT = 17;
     public const int FW_NORMAL = 400;
+    public const int FW_BOLD = 700;
     public const uint DEFAULT_CHARSET = 1;
     public const uint OUT_DEFAULT_PRECIS = 0;
     public const uint CLIP_DEFAULT_PRECIS = 0;
@@ -231,9 +234,11 @@ internal static class Win32
     public const uint ODS_HOTLIGHT = 0x0040;
 
     public const uint DT_LEFT = 0x00000000;
+    public const uint DT_RIGHT = 0x00000002;
     public const uint DT_CENTER = 0x00000001;
     public const uint DT_VCENTER = 0x00000004;
     public const uint DT_SINGLELINE = 0x00000020;
+    public const uint DT_CALCRECT = 0x00000400;
     public const uint DT_HIDEPREFIX = 0x00100000;
     public const uint DT_NOPREFIX = 0x00000800;
 
@@ -1003,27 +1008,108 @@ internal static class Win32
         return new SizeF(8f, 20f);
     }
 
-    internal static nint CreateUiFont(float pointSize = 9f)
+    internal static int GetFontHeight(nint fontHandle)
     {
+        nint screenDc = GetDC(0);
+        if (screenDc == 0)
+        {
+            return 16;
+        }
+
+        nint previousObject = 0;
+        try
+        {
+            if (fontHandle != 0)
+            {
+                previousObject = SelectObject(screenDc, fontHandle);
+            }
+
+            if (GetTextMetricsW(screenDc, out TEXTMETRICW metrics) && metrics.tmHeight > 0)
+            {
+                return metrics.tmHeight;
+            }
+        }
+        finally
+        {
+            if (previousObject != 0)
+            {
+                _ = SelectObject(screenDc, previousObject);
+            }
+
+            _ = ReleaseDC(0, screenDc);
+        }
+
+        return 16;
+    }
+
+    internal static nint CreateUiFont(float pointSize = 0f)
+    {
+        UiFontSpec fontSpec = OperatingSystem.IsWindows()
+            ? ResolveWindowsUiFontSpec(pointSize)
+            : new UiFontSpec("Segoe UI", pointSize > 0f ? pointSize : 9f, (byte)DEFAULT_CHARSET, Bold: false, Italic: false, Underline: false, Strikeout: false);
+
         float dpi = GetSystemDpiScaleDimensions().Height;
-        int height = -Math.Max(1, (int)Math.Round(pointSize * dpi / 72f, MidpointRounding.AwayFromZero));
+        int height = -Math.Max(1, (int)Math.Round(fontSpec.PointSize * dpi / 72f, MidpointRounding.AwayFromZero));
 
         return CreateFontW(
             height,
             0,
             0,
             0,
-            FW_NORMAL,
-            0,
-            0,
-            0,
-            DEFAULT_CHARSET,
+            fontSpec.Bold ? FW_BOLD : FW_NORMAL,
+            fontSpec.Italic ? 1u : 0u,
+            fontSpec.Underline ? 1u : 0u,
+            fontSpec.Strikeout ? 1u : 0u,
+            fontSpec.CharSet,
             OUT_DEFAULT_PRECIS,
             CLIP_DEFAULT_PRECIS,
             CLEARTYPE_QUALITY,
             DEFAULT_PITCH,
-            "Segoe UI");
+            fontSpec.FaceName);
     }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static UiFontSpec ResolveWindowsUiFontSpec(float requestedPointSize)
+    {
+        try
+        {
+            Font? font = SystemFonts.MessageBoxFont;
+            if (font is null)
+            {
+                throw new ArgumentException("System message box font is unavailable.");
+            }
+
+            float pointSize = requestedPointSize > 0f
+                ? requestedPointSize
+                : (font.SizeInPoints > 0f ? font.SizeInPoints : 9f);
+
+            return new UiFontSpec(
+                font.Name,
+                pointSize,
+                font.GdiCharSet,
+                Bold: font.Style.HasFlag(FontStyle.Bold),
+                Italic: font.Style.HasFlag(FontStyle.Italic),
+                Underline: font.Style.HasFlag(FontStyle.Underline),
+                Strikeout: font.Style.HasFlag(FontStyle.Strikeout));
+        }
+        catch (ArgumentException)
+        {
+        }
+        catch (PlatformNotSupportedException)
+        {
+        }
+
+        return new UiFontSpec("Segoe UI", requestedPointSize > 0f ? requestedPointSize : 9f, (byte)DEFAULT_CHARSET, Bold: false, Italic: false, Underline: false, Strikeout: false);
+    }
+
+    private readonly record struct UiFontSpec(
+        string FaceName,
+        float PointSize,
+        byte CharSet,
+        bool Bold,
+        bool Italic,
+        bool Underline,
+        bool Strikeout);
 
     [InlineArray(Capacity)]
     private struct InlineCharBuffer

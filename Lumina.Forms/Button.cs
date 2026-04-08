@@ -10,7 +10,7 @@ public class Button : Control
     /// </summary>
     public Button()
     {
-        Margin = new Padding(6);
+        Margin = new Padding(3);
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public class Button : Control
 
     /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
-        => Math.Max(32, requestedHeight);
+        => Math.Max(23, requestedHeight);
 
     /// <inheritdoc />
     protected override bool OnCommand(int notificationCode)

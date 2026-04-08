@@ -13,6 +13,18 @@ public class MenuStrip : ToolStrip
 
     internal bool UsesNativeMenuBar => false;
 
+    /// <summary>
+    /// Initializes a menu strip with WinForms-compatible top-level defaults.
+    /// </summary>
+    public MenuStrip()
+    {
+        CanOverflow = false;
+        GripStyle = ToolStripGripStyle.Hidden;
+        Stretch = true;
+        ShowItemToolTips = false;
+        Padding = new Padding(6, 2, 0, 2);
+    }
+
     /// <inheritdoc />
     protected override bool ShouldCreateNativeHandle => !UsesNativeMenuBar;
 
@@ -29,15 +41,38 @@ public class MenuStrip : ToolStrip
 
     private protected override void LayoutItemHosts()
     {
-        int availableHeight = Math.Max(1, Height);
-        LayoutItemHosts(0, 0, 0, availableHeight, Height);
+        int availableHeight = Math.Max(1, Height - Padding.Vertical);
+        int x = Padding.Left;
+        int y = Padding.Top;
+
+        foreach (ToolStripItem item in Items)
+        {
+            if (!TryGetItemHost(item, out Control? host) || host is null)
+            {
+                continue;
+            }
+
+            ApplyItemState(host, item);
+            host.Visible = item.Visible;
+            if (!item.Visible)
+            {
+                continue;
+            }
+
+            Size hostSize = ResolveHostSize(item, availableHeight);
+            int itemHeight = Math.Min(availableHeight, Math.Max(1, hostSize.Height));
+            host.SetBounds(x, y, hostSize.Width, itemHeight);
+            x += hostSize.Width;
+        }
     }
 
     private protected override Size ResolveHostSize(ToolStripItem item, int availableHeight)
     {
         string text = ResolveItemText(item);
         int width = Math.Max(48, text.Length * 8 + (MenuItemHorizontalPadding * 2));
-        return new Size(width, Math.Max(1, availableHeight));
+        int resolvedWidth = item.Size.Width > 0 ? item.Size.Width : width;
+        int resolvedHeight = item.Size.Height > 0 ? item.Size.Height : Math.Max(1, availableHeight);
+        return new Size(resolvedWidth, resolvedHeight);
     }
 
     /// <inheritdoc />
@@ -76,7 +111,7 @@ public class MenuStrip : ToolStrip
 
     internal void SynchronizeNativeMenu()
     {
-        if (!UsesNativeMenuBar)
+        if (!OperatingSystem.IsWindows() || !UsesNativeMenuBar)
         {
             ReleaseNativeMenu();
             return;
@@ -88,10 +123,17 @@ public class MenuStrip : ToolStrip
     }
 
     internal nint GetNativeMenuHandle()
-        => _nativeMenu?.Handle ?? 0;
+        => OperatingSystem.IsWindows()
+            ? _nativeMenu?.Handle ?? 0
+            : 0;
 
     internal bool TryHandleNativeCommand(int commandId)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
         if (_nativeMenu is null || !_nativeMenu.TryGetCommand(unchecked((uint)commandId), out ToolStripItem item))
         {
             return false;
@@ -103,7 +145,11 @@ public class MenuStrip : ToolStrip
 
     internal void ReleaseNativeMenu()
     {
-        _nativeMenu?.Dispose();
+        if (OperatingSystem.IsWindows())
+        {
+            _nativeMenu?.Dispose();
+        }
+
         _nativeMenu = null;
     }
 
@@ -120,7 +166,7 @@ public class MenuStrip : ToolStrip
             clientWidth = clientRect.Width;
         }
 
-        int height = Math.Max(28, Height);
+        int height = Math.Max(1, Height);
         int width = Math.Max(1, clientWidth);
 
         if (Left == 0 && Top == 0 && Width == width && Height == height)
@@ -153,7 +199,7 @@ public class MenuStrip : ToolStrip
         protected override uint Style => base.Style | Win32.SS_NOTIFY;
 
         protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(26, requestedHeight);
+            => requestedHeight;
 
         protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
         {

@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Reflection;
 using Lumina.Forms;
 using Xunit;
 
@@ -17,6 +18,27 @@ public class ContainerControlTests
         form.Controls.Add(groupBox);
 
         Assert.Same(groupBox, button.Parent);
+    }
+
+    [Fact]
+    public void GroupBox_Defaults_MatchWinFormsBaseline()
+    {
+        var groupBox = new GroupBox();
+        Font? messageBoxFont = SystemFonts.MessageBoxFont;
+        Assert.NotNull(messageBoxFont);
+        int fontHeight = messageBoxFont!.Height;
+
+        Assert.Equal(new Size(200, 100), groupBox.Size);
+        Assert.Equal(new Padding(3), groupBox.Padding);
+        Assert.Equal(
+            new Rectangle(3, fontHeight + 3, 194, Math.Max(0, 100 - fontHeight - 6)),
+            groupBox.DisplayRectangle);
+
+        PropertyInfo? exStyleProperty = typeof(Control).GetProperty("ExStyle", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(exStyleProperty);
+
+        uint exStyle = Assert.IsType<uint>(exStyleProperty!.GetValue(groupBox));
+        Assert.NotEqual(0u, exStyle & 0x00010000u);
     }
 
     [Fact]
@@ -81,8 +103,9 @@ public class ContainerControlTests
         splitContainer.PerformLayout();
 
         Assert.Equal(90, splitContainer.Panel1.Width);
-        Assert.Equal(96, splitContainer.Panel2.Left);
-        Assert.Equal(204, splitContainer.Panel2.Width);
+        Assert.Equal(94, splitContainer.Panel2.Left);
+        Assert.Equal(206, splitContainer.Panel2.Width);
+        Assert.Equal(new Rectangle(90, 0, 4, 120), splitContainer.SplitterRectangle);
     }
 
     [Fact]
@@ -100,9 +123,72 @@ public class ContainerControlTests
 
         splitContainer.PerformLayout();
 
-        Assert.Equal(74, splitContainer.Panel1.Height);
+        Assert.Equal(76, splitContainer.Panel1.Height);
         Assert.Equal(80, splitContainer.Panel2.Top);
         Assert.Equal(40, splitContainer.Panel2.Height);
+    }
+
+    [Fact]
+    public void SplitContainer_FixedPanel_Panel2_PreservesTrailingPanelSizeOnResize()
+    {
+        var splitContainer = new SplitContainer
+        {
+            FixedPanel = FixedPanel.Panel2,
+        };
+
+        splitContainer.SetBounds(0, 0, 300, 120);
+        splitContainer.SplitterDistance = 90;
+        splitContainer.PerformLayout();
+
+        Assert.Equal(206, splitContainer.Panel2.Width);
+
+        splitContainer.SetBounds(0, 0, 360, 120);
+        splitContainer.PerformLayout();
+
+        Assert.Equal(150, splitContainer.Panel1.Width);
+        Assert.Equal(206, splitContainer.Panel2.Width);
+    }
+
+    [Fact]
+    public void SplitContainer_CollapsingPanel_HidesCollapsedPanelAndExpandsVisiblePanel()
+    {
+        var splitContainer = new SplitContainer();
+        splitContainer.SetBounds(0, 0, 200, 100);
+        splitContainer.Panel1Collapsed = true;
+
+        splitContainer.PerformLayout();
+
+        Assert.False(splitContainer.Panel1.Visible);
+        Assert.True(splitContainer.Panel2.Visible);
+        Assert.Equal(new Rectangle(0, 0, 200, 100), splitContainer.Panel2.Bounds);
+        Assert.Equal(Rectangle.Empty, splitContainer.SplitterRectangle);
+    }
+
+    [Fact]
+    public void Splitter_SplitPosition_ResizesAdjacentControls()
+    {
+        using var form = new Form
+        {
+            ClientSize = new Size(300, 100),
+        };
+
+        var leftPanel = new Panel();
+        leftPanel.SetBounds(0, 0, 100, 100);
+
+        var splitter = new Splitter();
+        splitter.SetBounds(100, 0, 3, 100);
+
+        var fillPanel = new Panel();
+        fillPanel.SetBounds(103, 0, 197, 100);
+
+        form.Controls.AddRange(leftPanel, splitter, fillPanel);
+
+        splitter.SplitPosition = 120;
+
+        Assert.Equal(120, leftPanel.Width);
+        Assert.Equal(120, splitter.Left);
+        Assert.Equal(123, fillPanel.Left);
+        Assert.Equal(177, fillPanel.Width);
     }
 
     [Fact]

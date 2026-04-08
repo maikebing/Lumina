@@ -14,8 +14,21 @@ public class StatusStrip : ToolStrip
     /// </summary>
     public StatusStrip()
     {
-        Height = 30;
+        Height = 22;
+        Dock = DockStyle.Bottom;
+        CanOverflow = false;
+        GripStyle = ToolStripGripStyle.Hidden;
+        LayoutStyle = ToolStripLayoutStyle.Table;
+        ShowItemToolTips = false;
+        Stretch = true;
+        SizingGrip = true;
+        Padding = new Padding(1, 0, 1, 0);
     }
+
+    /// <summary>
+    /// Gets or sets whether a sizing grip is shown.
+    /// </summary>
+    public bool SizingGrip { get; set; }
 
     /// <inheritdoc />
     protected override string ClassName => base.ClassName;
@@ -24,12 +37,8 @@ public class StatusStrip : ToolStrip
     protected override uint Style => base.Style | Win32.WS_CLIPSIBLINGS;
 
     /// <inheritdoc />
-    private protected override bool ShouldCreateHostControl(ToolStripItem item)
-        => item is not ToolStripStatusLabel && item is not ToolStripSeparator;
-
-    /// <inheritdoc />
     protected override int GetNativeHeight(int requestedHeight)
-        => Math.Max(18, requestedHeight);
+        => requestedHeight;
 
     /// <inheritdoc />
     protected override void OnHandleCreated()
@@ -115,6 +124,78 @@ public class StatusStrip : ToolStrip
         }
     }
 
+    private protected override void LayoutItemHosts()
+    {
+        int availableHeight = Math.Max(1, Height - Padding.Vertical);
+        int x = Padding.Left;
+
+        int springItemCount = 0;
+        int fixedWidth = 0;
+        foreach (ToolStripItem item in Items)
+        {
+            if (!TryGetItemHost(item, out Control? host) || host is null)
+            {
+                continue;
+            }
+
+            ApplyItemState(host, item);
+            host.Visible = item.Visible;
+            if (!item.Visible)
+            {
+                continue;
+            }
+
+            Size hostSize = ResolveHostSize(item, availableHeight);
+            if (item is ToolStripStatusLabel { Spring: true })
+            {
+                springItemCount++;
+            }
+            else
+            {
+                fixedWidth += hostSize.Width;
+            }
+        }
+
+        int springWidth = 0;
+        int springRemainder = 0;
+        if (springItemCount > 0)
+        {
+            int remainingWidth = Math.Max(0, Width - Padding.Horizontal - fixedWidth);
+            springWidth = remainingWidth / springItemCount;
+            springRemainder = remainingWidth % springItemCount;
+        }
+
+        foreach (ToolStripItem item in Items)
+        {
+            if (!TryGetItemHost(item, out Control? host) || host is null)
+            {
+                continue;
+            }
+
+            ApplyItemState(host, item);
+            host.Visible = item.Visible;
+            if (!item.Visible)
+            {
+                continue;
+            }
+
+            Size hostSize = ResolveHostSize(item, availableHeight);
+            int width = hostSize.Width;
+            if (item is ToolStripStatusLabel { Spring: true })
+            {
+                width = Math.Max(width, springWidth + (springRemainder > 0 ? 1 : 0));
+                if (springRemainder > 0)
+                {
+                    springRemainder--;
+                }
+            }
+
+            int y = Padding.Top + Math.Max(0, (availableHeight - hostSize.Height) / 2);
+            host.SetBounds(x, y, width, hostSize.Height);
+            x += width;
+        }
+    }
+
     private void DockToBottom()
     {
         if (Owner is null)
@@ -130,7 +211,7 @@ public class StatusStrip : ToolStrip
             clientHeight = clientRect.Height;
         }
 
-        int height = Math.Max(18, Height);
+        int height = Math.Max(1, Height);
         int width = Math.Max(1, clientWidth);
         int top = Math.Max(0, clientHeight - height);
 

@@ -22,6 +22,7 @@ public abstract class Control : IDisposable
     private bool _disposed;
     private Padding _padding;
     private Padding _margin = new(3);
+    private DockStyle _dock;
     private Color _backColor = Color.Empty;
     private Color _foreColor = Color.Empty;
     private nint _backgroundBrush;
@@ -98,6 +99,25 @@ public abstract class Control : IDisposable
 
             _margin = value;
             Parent?.PerformLayout();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets which edge of the parent container the control is docked to.
+    /// </summary>
+    public virtual DockStyle Dock
+    {
+        get => _dock;
+        set
+        {
+            if (_dock == value)
+            {
+                return;
+            }
+
+            _dock = value;
+            Parent?.PerformLayout();
+            Owner?.PerformLayout();
         }
     }
 
@@ -315,6 +335,15 @@ public abstract class Control : IDisposable
         get => new(_left, _top, _width, _height);
         set => SetBounds(value.X, value.Y, value.Width, value.Height);
     }
+
+    /// <summary>
+    /// Gets the rectangle that represents the logical content area available to child content.
+    /// </summary>
+    public virtual Rectangle DisplayRectangle => new(
+        Padding.Left,
+        Padding.Top,
+        Math.Max(0, Width - Padding.Horizontal),
+        Math.Max(0, Height - Padding.Vertical));
 
     internal Form? Owner { get; private set; }
 

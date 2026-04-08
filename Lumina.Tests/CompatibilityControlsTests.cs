@@ -98,7 +98,15 @@ public sealed class CompatibilityControlsTests
     }
 
     [Fact]
-    public void MenuStrip_DoesNotMaterializeHosts_WhenActingAsMainMenu()
+    public void StripDefaults_MatchWinFormsBaselineHeights()
+    {
+        Assert.Equal(25, new ToolStrip().Height);
+        Assert.Equal(25, new MenuStrip().Height);
+        Assert.Equal(22, new StatusStrip().Height);
+    }
+
+    [Fact]
+    public void MenuStrip_MaterializesHosts_WhenActingAsMainMenuLikeWinForms()
     {
         var form = new Form();
         var menuStrip = new MenuStrip();
@@ -113,7 +121,8 @@ public sealed class CompatibilityControlsTests
         Assert.NotNull(itemHostsField);
 
         var itemHosts = Assert.IsType<Dictionary<ToolStripItem, Control>>(itemHostsField!.GetValue(menuStrip));
-        Assert.Empty(itemHosts);
+        Assert.Single(itemHosts);
+        Assert.IsAssignableFrom<Label>(itemHosts[fileMenu]);
     }
 
     [Fact]
@@ -129,6 +138,14 @@ public sealed class CompatibilityControlsTests
 
         item.PerformClick();
         Assert.False(item.Checked);
+    }
+
+    [Fact]
+    public void MonthCalendar_DefaultSize_MatchesSingleMonthBaseline()
+    {
+        var monthCalendar = new MonthCalendar();
+
+        Assert.Equal(new Size(178, 155), monthCalendar.Size);
     }
 
     [Fact]
@@ -239,6 +256,55 @@ public sealed class CompatibilityControlsTests
         }
     }
 
+    [Fact]
+    public void NativeMenuRenderer_RegisterItem_AllowsOwnerDrawMeasurement()
+    {
+        var item = new ToolStripMenuItem
+        {
+            Text = "&Theme",
+            ShortcutKeys = Keys.Control | Keys.T,
+            Checked = true,
+        };
+
+        Type assemblyTypeAnchor = typeof(MenuStrip);
+        Type rendererType = assemblyTypeAnchor.Assembly.GetType("Lumina.Forms.NativeMenuRenderer", throwOnError: true)!;
+        Type measureItemType = assemblyTypeAnchor.Assembly.GetType("Lumina.Forms.Win32+MEASUREITEMSTRUCT", throwOnError: true)!;
+
+        MethodInfo? registerMethod = rendererType.GetMethod("Register", BindingFlags.Static | BindingFlags.NonPublic);
+        MethodInfo? unregisterMethod = rendererType.GetMethod("Unregister", BindingFlags.Static | BindingFlags.NonPublic);
+        MethodInfo? measureMethod = rendererType.GetMethod("TryHandleMeasureItem", BindingFlags.Static | BindingFlags.NonPublic);
+
+        Assert.NotNull(registerMethod);
+        Assert.NotNull(unregisterMethod);
+        Assert.NotNull(measureMethod);
+
+        nuint ownerDrawKey = (nuint)registerMethod!.Invoke(null, [item, new Form().CurrentVisualStyle])!;
+        object measureItem = Activator.CreateInstance(measureItemType)!;
+        measureItemType.GetField("CtlType")!.SetValue(measureItem, 1u);
+        measureItemType.GetField("itemData")!.SetValue(measureItem, ownerDrawKey);
+
+        nint buffer = Marshal.AllocHGlobal(Marshal.SizeOf(measureItemType));
+        try
+        {
+            Marshal.StructureToPtr(measureItem, buffer, false);
+
+            bool handled = Assert.IsType<bool>(measureMethod!.Invoke(null, [buffer]));
+            Assert.True(handled);
+
+            object updated = Marshal.PtrToStructure(buffer, measureItemType)!;
+            uint width = Assert.IsType<uint>(measureItemType.GetField("itemWidth")!.GetValue(updated));
+            uint height = Assert.IsType<uint>(measureItemType.GetField("itemHeight")!.GetValue(updated));
+
+            Assert.True(width >= 120);
+            Assert.True(height >= 28);
+        }
+        finally
+        {
+            unregisterMethod!.Invoke(null, [ownerDrawKey]);
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
     [DllImport("gdi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DeleteObject(nint hObject);
@@ -300,5 +366,18 @@ public sealed class CompatibilityControlsTests
 
         Assert.Single(statusStrip.Controls);
         Assert.IsAssignableFrom<PictureBox>(statusStrip.Controls[0]);
+    }
+
+    [Fact]
+    public void StatusStrip_MaterializesStatusLabelHosts()
+    {
+        var statusStrip = new StatusStrip();
+        var item = new ToolStripStatusLabel { Text = "Ready" };
+
+        statusStrip.Items.Add(item);
+        statusStrip.PerformLayout();
+
+        Assert.Single(statusStrip.Controls);
+        Assert.IsAssignableFrom<Label>(statusStrip.Controls[0]);
     }
 }

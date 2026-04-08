@@ -8,9 +8,7 @@ namespace Lumina.Forms;
 /// </summary>
 public class ToolStrip : ContainerControlBase
 {
-    private const int StripHorizontalPadding = 8;
-    private const int StripVerticalPadding = 6;
-    private const int StripItemSpacing = 6;
+    private const int StripItemSpacing = 0;
 
     private readonly ToolStripItemCollection _items;
     private readonly Dictionary<ToolStripItem, Control> _itemHosts = [];
@@ -23,13 +21,46 @@ public class ToolStrip : ContainerControlBase
     public ToolStrip()
     {
         _items = new ToolStripItemCollection(OnItemsChanged);
-        Height = 36;
+        Height = 25;
+        Dock = DockStyle.Top;
+        Margin = Padding.Empty;
+        Padding = new Padding(0, 0, 1, 0);
+        TabStop = false;
+        CanOverflow = true;
+        ShowItemToolTips = true;
+        GripStyle = ToolStripGripStyle.Visible;
+        LayoutStyle = ToolStripLayoutStyle.StackWithOverflow;
     }
 
     /// <summary>
     /// Gets the items contained in the strip.
     /// </summary>
     public ToolStripItemCollection Items => _items;
+
+    /// <summary>
+    /// Gets or sets whether items may overflow onto another surface.
+    /// </summary>
+    public bool CanOverflow { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether item tooltips are shown.
+    /// </summary>
+    public bool ShowItemToolTips { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the strip stretches across its docked edge.
+    /// </summary>
+    public bool Stretch { get; set; }
+
+    /// <summary>
+    /// Gets or sets the grip visibility.
+    /// </summary>
+    public ToolStripGripStyle GripStyle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the layout style.
+    /// </summary>
+    public ToolStripLayoutStyle LayoutStyle { get; set; }
 
     /// <inheritdoc />
     protected override string ClassName => "STATIC";
@@ -111,7 +142,7 @@ public class ToolStrip : ContainerControlBase
             }
         }
 
-        int height = Math.Max(28, Height);
+        int height = Math.Max(1, Height);
         int width = Math.Max(1, clientWidth);
 
         if (Left == 0 && Top == top && Width == width && Height == height)
@@ -237,8 +268,8 @@ public class ToolStrip : ContainerControlBase
 
     private protected virtual void LayoutItemHosts()
     {
-        int x = StripHorizontalPadding;
-        int availableHeight = Math.Max(1, Height - (StripVerticalPadding * 2));
+        int x = Padding.Left;
+        int availableHeight = Math.Max(1, Height - Padding.Vertical);
 
         foreach (ToolStripItem item in Items)
         {
@@ -255,7 +286,7 @@ public class ToolStrip : ContainerControlBase
             }
 
             Size hostSize = ResolveHostSize(item, availableHeight);
-            int y = Math.Max(0, (Height - hostSize.Height) / 2);
+            int y = Padding.Top + Math.Max(0, (availableHeight - hostSize.Height) / 2);
             host.SetBounds(x, y, hostSize.Width, hostSize.Height);
             x += hostSize.Width + StripItemSpacing;
         }
@@ -421,7 +452,7 @@ public class ToolStrip : ContainerControlBase
     {
         if (item.Size.Width > 0 && item.Size.Height > 0)
         {
-            return new Size(item.Size.Width, Math.Max(1, Math.Min(item.Size.Height, Math.Max(item.Size.Height, availableHeight))));
+            return item.Size;
         }
 
         return item switch
@@ -429,16 +460,16 @@ public class ToolStrip : ContainerControlBase
             ToolStripLabel => new Size(Math.Max(36, item.Text.Length * 8 + 6), Math.Min(availableHeight, 20)),
             ToolStripStatusLabel => new Size(Math.Max(56, item.Text.Length * 8 + 12), Math.Min(availableHeight, 20)),
             ToolStripProgressBar => new Size(112, Math.Min(availableHeight, 18)),
-            ToolStripComboBox => new Size(136, Math.Min(availableHeight, 28)),
-            ToolStripTextBox => new Size(120, Math.Min(availableHeight, 28)),
+            ToolStripComboBox => new Size(136, Math.Min(availableHeight, 25)),
+            ToolStripTextBox => new Size(120, Math.Min(availableHeight, 25)),
             ToolStripSeparator => new Size(10, availableHeight),
             _ when OperatingSystem.IsWindowsVersionAtLeast(6, 1)
                 && item.DisplayStyle == ToolStripItemDisplayStyle.Image
                 && item.Image is not null
                 => new Size(
-                    Math.Max(28, item.Image.Width + 12),
-                    Math.Max(28, Math.Min(availableHeight, item.Image.Height + 12))),
-            _ => new Size(Math.Max(36, ResolveItemText(item).Length * 8 + 24), Math.Max(28, Math.Min(availableHeight, 32))),
+                    Math.Max(23, item.Image.Width + 8),
+                    Math.Max(23, Math.Min(availableHeight, item.Image.Height + 8))),
+            _ => new Size(Math.Max(36, ResolveItemText(item).Length * 8 + 16), Math.Max(23, Math.Min(availableHeight, 25))),
         };
     }
 
@@ -558,7 +589,7 @@ public class ToolStrip : ContainerControlBase
         protected override bool UseParentBackgroundForTheming => true;
 
         protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(28, requestedHeight);
+            => requestedHeight;
     }
 
     private sealed class ItemPictureHost : PictureBox
@@ -570,6 +601,6 @@ public class ToolStrip : ContainerControlBase
         protected override bool UseParentBackgroundForTheming => true;
 
         protected override int GetNativeHeight(int requestedHeight)
-            => Math.Max(28, requestedHeight);
+            => requestedHeight;
     }
 }

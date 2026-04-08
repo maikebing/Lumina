@@ -80,7 +80,7 @@ internal static class ToolStripPopupMenu
 
     private static int ShowForMenuBarCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
     {
-        if (ownerHandle == 0)
+        if (!OperatingSystem.IsWindows() || ownerHandle == 0)
         {
             return 0;
         }
@@ -135,7 +135,7 @@ internal static class ToolStripPopupMenu
 
     private static void ShowCore(ToolStripItemCollection items, nint ownerHandle, Point screenLocation, ResolvedVisualStyle visualStyle)
     {
-        if (ownerHandle == 0)
+        if (!OperatingSystem.IsWindows() || ownerHandle == 0)
         {
             return;
         }
