@@ -82,7 +82,7 @@ internal static class NotepadMenuIconFactory
 
     private static Image LoadIcon(MenuIconKind kind)
     {
-        Icon icon = kind switch
+        Bitmap bitmap = kind switch
         {
             MenuIconKind.FileMenu => Properties.Resources.FileMenu,
             MenuIconKind.EditMenu => Properties.Resources.EditMenu,
@@ -107,7 +107,6 @@ internal static class NotepadMenuIconFactory
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
 
-        using Bitmap bitmap = icon.ToBitmap();
         return new Bitmap(bitmap);
     }
 }

@@ -597,6 +597,10 @@ public class ToolStrip : ContainerControlBase
         item.PerformClick();
     }
 
+    private protected virtual void OnDropDownStateChanged(ToolStripDropDownItem item, Control host, bool isOpen)
+    {
+    }
+
     /// <summary>
     /// Shows the drop-down for a top-level item and handles Left/Right sibling navigation
     /// by looping until the user either selects a command or presses Escape.
@@ -629,7 +633,16 @@ public class ToolStrip : ContainerControlBase
             Point screenLocation = GetDropDownScreenLocation(host);
             nint ownerHandle = Owner?.Handle ?? Handle;
 
-            int direction = ToolStripPopupMenu.ShowForMenuBar(item.DropDownItems, ownerHandle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
+            int direction;
+            OnDropDownStateChanged(item, host, isOpen: true);
+            try
+            {
+                direction = ToolStripPopupMenu.ShowForMenuBar(item.DropDownItems, ownerHandle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
+            }
+            finally
+            {
+                OnDropDownStateChanged(item, host, isOpen: false);
+            }
 
             if (direction == 0)
             {
@@ -649,7 +662,15 @@ public class ToolStrip : ContainerControlBase
         }
 
         Point screenLocation = GetDropDownScreenLocation(host);
-        ToolStripPopupMenu.Show(item.DropDownItems, Owner?.Handle ?? Handle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
+        OnDropDownStateChanged(item, host, isOpen: true);
+        try
+        {
+            ToolStripPopupMenu.Show(item.DropDownItems, Owner?.Handle ?? Handle, screenLocation, Owner?.CurrentVisualStyle ?? Application.CurrentVisualStyle);
+        }
+        finally
+        {
+            OnDropDownStateChanged(item, host, isOpen: false);
+        }
     }
 
     private static Point GetDropDownScreenLocation(Control host)

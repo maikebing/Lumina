@@ -15,9 +15,9 @@ namespace Lumina.NotepadDemo.Properties;
 [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
 internal class Resources
 {
-    private static global::System.Resources.ResourceManager? resourceMan;
+    private static global::System.Resources.ResourceManager resourceMan;
 
-    private static global::System.Globalization.CultureInfo? resourceCulture;
+    private static global::System.Globalization.CultureInfo resourceCulture;
 
     [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
     internal Resources()
@@ -35,49 +35,49 @@ internal class Resources
     }
 
     [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-    internal static global::System.Globalization.CultureInfo? Culture
+    internal static global::System.Globalization.CultureInfo Culture
     {
         get => resourceCulture;
         set => resourceCulture = value;
     }
 
-    internal static global::System.Drawing.Icon About => ((global::System.Drawing.Icon)(ResourceManager.GetObject("About", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap About => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("About", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Color => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Color", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Color => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Color", resourceCulture)));
 
-    internal static global::System.Drawing.Icon DateTime => ((global::System.Drawing.Icon)(ResourceManager.GetObject("DateTime", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap DateTime => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("DateTime", resourceCulture)));
 
-    internal static global::System.Drawing.Icon EditMenu => ((global::System.Drawing.Icon)(ResourceManager.GetObject("EditMenu", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap EditMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("EditMenu", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Exit => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Exit", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Exit => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Exit", resourceCulture)));
 
-    internal static global::System.Drawing.Icon FileMenu => ((global::System.Drawing.Icon)(ResourceManager.GetObject("FileMenu", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap FileMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("FileMenu", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Find => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Find", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Find => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Find", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Font => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Font", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Font => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Font", resourceCulture)));
 
-    internal static global::System.Drawing.Icon FormatMenu => ((global::System.Drawing.Icon)(ResourceManager.GetObject("FormatMenu", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap FormatMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("FormatMenu", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Gitee => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Gitee", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Gitee => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Gitee", resourceCulture)));
 
-    internal static global::System.Drawing.Icon GitHub => ((global::System.Drawing.Icon)(ResourceManager.GetObject("GitHub", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap GitHub => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("GitHub", resourceCulture)));
 
-    internal static global::System.Drawing.Icon HelpMenu => ((global::System.Drawing.Icon)(ResourceManager.GetObject("HelpMenu", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap HelpMenu => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("HelpMenu", resourceCulture)));
 
-    internal static global::System.Drawing.Icon NewFile => ((global::System.Drawing.Icon)(ResourceManager.GetObject("NewFile", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap NewFile => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("NewFile", resourceCulture)));
 
-    internal static global::System.Drawing.Icon OpenFile => ((global::System.Drawing.Icon)(ResourceManager.GetObject("OpenFile", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap OpenFile => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("OpenFile", resourceCulture)));
 
-    internal static global::System.Drawing.Icon OpenFolder => ((global::System.Drawing.Icon)(ResourceManager.GetObject("OpenFolder", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap OpenFolder => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("OpenFolder", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Replace => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Replace", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Replace => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Replace", resourceCulture)));
 
-    internal static global::System.Drawing.Icon Save => ((global::System.Drawing.Icon)(ResourceManager.GetObject("Save", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap Save => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("Save", resourceCulture)));
 
-    internal static global::System.Drawing.Icon SaveAs => ((global::System.Drawing.Icon)(ResourceManager.GetObject("SaveAs", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap SaveAs => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("SaveAs", resourceCulture)));
 
-    internal static global::System.Drawing.Icon WordCount => ((global::System.Drawing.Icon)(ResourceManager.GetObject("WordCount", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap WordCount => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("WordCount", resourceCulture)));
 
-    internal static global::System.Drawing.Icon WrapText => ((global::System.Drawing.Icon)(ResourceManager.GetObject("WrapText", resourceCulture)!));
+    internal static global::System.Drawing.Bitmap WrapText => ((global::System.Drawing.Bitmap)(ResourceManager.GetObject("WrapText", resourceCulture)));
 }

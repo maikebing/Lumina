@@ -9,7 +9,8 @@ namespace Lumina.Forms;
 /// </summary>
 public class MenuStrip : ToolStrip
 {
-    private const int MenuItemHorizontalPadding = 12;
+    private const int TopLevelContentHorizontalPadding = 8;
+    private const int TopLevelContentVerticalPadding = 1;
     private const int MenuItemImageSize = 16;
     private const int MenuItemImageSpacing = 6;
     private const int TopLevelItemSpacing = 6;
@@ -79,7 +80,7 @@ public class MenuStrip : ToolStrip
             ? Size.Empty
             : MeasureTextCore(text, useMnemonicPrefix: true);
 
-        int width = MenuItemHorizontalPadding;
+        int width = TopLevelContentHorizontalPadding;
         if (ShouldShowTopLevelImage(item))
         {
             width += MenuItemImageSize;
@@ -89,7 +90,7 @@ public class MenuStrip : ToolStrip
             }
         }
 
-        width += textSize.Width + MenuItemHorizontalPadding;
+        width += textSize.Width + TopLevelContentHorizontalPadding;
         int resolvedWidth = item.Size.Width > 0 ? Math.Max(item.Size.Width, width) : width;
         int resolvedHeight = item.Size.Height > 0 ? item.Size.Height : Math.Max(1, availableHeight);
         return new Size(resolvedWidth, resolvedHeight);
@@ -107,6 +108,14 @@ public class MenuStrip : ToolStrip
         }
 
         base.ApplyItemState(host, item);
+    }
+
+    private protected override void OnDropDownStateChanged(ToolStripDropDownItem item, Control host, bool isOpen)
+    {
+        if (host is TopLevelMenuItemHost topLevelMenuItemHost)
+        {
+            topLevelMenuItemHost.SetPopupOpen(isOpen);
+        }
     }
 
     /// <inheritdoc />
@@ -227,9 +236,6 @@ public class MenuStrip : ToolStrip
 
     private sealed class TopLevelMenuItemHost : Label
     {
-        private const int TextInset = 4;
-        private const int ImageSize = 16;
-        private const int ImageSpacing = 6;
         private const int HoverInsetHorizontal = 2;
         private const int HoverInsetVertical = 1;
         private const int HoverCornerRadius = 6;
@@ -237,6 +243,7 @@ public class MenuStrip : ToolStrip
         public event EventHandler? Click;
 
         private bool _hovered;
+        private bool _popupOpen;
         private Image? _image;
 
         private protected override ThemeColorSlot DefaultBackgroundSlot => ThemeColorSlot.Surface;
@@ -263,6 +270,17 @@ public class MenuStrip : ToolStrip
             Refresh();
         }
 
+        public void SetPopupOpen(bool isOpen)
+        {
+            if (_popupOpen == isOpen)
+            {
+                return;
+            }
+
+            _popupOpen = isOpen;
+            Refresh();
+        }
+
         protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
         {
             switch (message)
@@ -277,10 +295,9 @@ public class MenuStrip : ToolStrip
                     return true;
 
                 case Win32.WM_MOUSEMOVE:
-                    if (!_hovered)
+                    if (Enabled && !_hovered)
                     {
                         _hovered = true;
-                        BackColor = Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.ControlHoverBackground));
                         Refresh();
 
                         if (Handle != 0)
@@ -303,7 +320,6 @@ public class MenuStrip : ToolStrip
                     if (_hovered)
                     {
                         _hovered = false;
-                        BackColor = Color.Empty;
                         Refresh();
                     }
 
@@ -370,55 +386,68 @@ public class MenuStrip : ToolStrip
                 graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
                 Rectangle clientBounds = Rectangle.FromLTRB(clientRect.Left, clientRect.Top, clientRect.Right, clientRect.Bottom);
-                if (_hovered)
+                bool drawHighlight = Enabled && (_hovered || _popupOpen);
+                if (drawHighlight)
                 {
-                    DrawHoverBackground(graphics, clientBounds);
+                    DrawHighlightBackground(graphics, clientBounds, isActive: _popupOpen);
                 }
+
+                Rectangle contentBounds = Rectangle.FromLTRB(
+                    clientBounds.Left + TopLevelContentHorizontalPadding,
+                    clientBounds.Top + TopLevelContentVerticalPadding,
+                    Math.Max(clientBounds.Left + TopLevelContentHorizontalPadding + 1, clientBounds.Right - TopLevelContentHorizontalPadding),
+                    Math.Max(clientBounds.Top + TopLevelContentVerticalPadding + 1, clientBounds.Bottom - TopLevelContentVerticalPadding));
 
                 string text = Text ?? string.Empty;
-                int textLeft = TextInset;
+                int textLeft = contentBounds.Left;
                 if (_image is not null)
                 {
-                    textLeft += ImageSize + (string.IsNullOrEmpty(text) ? 0 : ImageSpacing);
+                    textLeft += MenuItemImageSize + (string.IsNullOrEmpty(text) ? 0 : MenuItemImageSpacing);
                 }
 
-                int maxTextWidth = Math.Max(1, clientRect.Right - textLeft - TextInset);
+                int maxTextWidth = Math.Max(1, contentBounds.Right - textLeft);
                 int textHeight = MeasureTextHeight(hdc, text, maxTextWidth);
-                int contentHeight = Math.Max(_image is null ? 0 : ImageSize, textHeight);
-                int contentTop = clientRect.Top + Math.Max(0, (clientRect.Height - contentHeight) / 2);
+                int contentHeight = Math.Max(_image is null ? 0 : MenuItemImageSize, textHeight);
+                int contentTop = contentBounds.Top + Math.Max(0, (contentBounds.Height - contentHeight) / 2);
 
                 if (_image is not null)
                 {
                     Rectangle imageBounds = new(
-                        TextInset,
-                        contentTop + Math.Max(0, (contentHeight - ImageSize) / 2),
-                        ImageSize,
-                        ImageSize);
+                        contentBounds.Left,
+                        contentTop + Math.Max(0, (contentHeight - MenuItemImageSize) / 2),
+                        MenuItemImageSize,
+                        MenuItemImageSize);
                     graphics.DrawImage(_image, imageBounds);
                 }
 
                 _ = Win32.SetBkMode(hdc, Win32.TRANSPARENT);
                 uint textArgb = !Enabled
                     ? CurrentVisualStyle.Palette.DisabledForeground
-                    : _hovered && CurrentVisualStyle.Palette.ControlHoverForeground != 0
+                    : _popupOpen && CurrentVisualStyle.Palette.ControlPressedForeground != 0
+                        ? CurrentVisualStyle.Palette.ControlPressedForeground
+                        : _hovered && CurrentVisualStyle.Palette.ControlHoverForeground != 0
                         ? CurrentVisualStyle.Palette.ControlHoverForeground
                         : CurrentVisualStyle.Palette.SurfaceForeground;
                 _ = Win32.SetTextColor(hdc, Win32.ToColorRef(textArgb));
 
+                int textTop = contentTop + Math.Max(0, (contentHeight - textHeight) / 2);
                 var textBounds = new Win32.RECT
                 {
                     Left = textLeft,
-                    Top = contentTop + Math.Max(0, (contentHeight - textHeight) / 2),
-                    Right = Math.Max(TextInset, clientRect.Right - TextInset),
-                    Bottom = contentTop + Math.Max(0, (contentHeight - textHeight) / 2) + Math.Max(1, textHeight),
+                    Top = textTop,
+                    Right = Math.Max(textLeft + 1, contentBounds.Right),
+                    Bottom = textTop + Math.Max(1, textHeight),
                 };
 
-                _ = Win32.DrawTextW(
-                    hdc,
-                    text,
-                    text.Length,
-                    ref textBounds,
-                    Win32.DT_LEFT | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
+                if (!string.IsNullOrEmpty(text))
+                {
+                    _ = Win32.DrawTextW(
+                        hdc,
+                        text,
+                        text.Length,
+                        ref textBounds,
+                        Win32.DT_LEFT | Win32.DT_SINGLELINE | Win32.DT_HIDEPREFIX);
+                }
             }
             finally
             {
@@ -436,7 +465,7 @@ public class MenuStrip : ToolStrip
             }
         }
 
-        private void DrawHoverBackground(Graphics graphics, Rectangle clientBounds)
+        private void DrawHighlightBackground(Graphics graphics, Rectangle clientBounds, bool isActive)
         {
             Rectangle hoverBounds = Rectangle.FromLTRB(
                 clientBounds.Left + HoverInsetHorizontal,
@@ -450,8 +479,14 @@ public class MenuStrip : ToolStrip
             }
 
             using GraphicsPath path = CreateRoundedRectanglePath(hoverBounds, HoverCornerRadius);
-            using var backgroundBrush = new SolidBrush(Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.ControlHoverBackground)));
-            using var borderPen = new Pen(Color.FromArgb(unchecked((int)CurrentVisualStyle.Palette.SurfaceBorder)));
+            uint backgroundArgb = isActive && CurrentVisualStyle.Palette.ControlPressedBackground != 0
+                ? CurrentVisualStyle.Palette.ControlPressedBackground
+                : CurrentVisualStyle.Palette.ControlHoverBackground;
+            uint borderArgb = isActive && CurrentVisualStyle.Palette.ControlBorder != 0
+                ? CurrentVisualStyle.Palette.ControlBorder
+                : CurrentVisualStyle.Palette.SurfaceBorder;
+            using var backgroundBrush = new SolidBrush(Color.FromArgb(unchecked((int)backgroundArgb)));
+            using var borderPen = new Pen(Color.FromArgb(unchecked((int)borderArgb)));
             graphics.FillPath(backgroundBrush, path);
             graphics.DrawPath(borderPen, path);
         }
