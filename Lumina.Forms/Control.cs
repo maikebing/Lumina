@@ -510,6 +510,16 @@ public abstract class Control : IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed and unmanaged resources used by the control.
+    /// </summary>
+    /// <param name="disposing"><see langword="true"/> when called from <see cref="Dispose()"/>; otherwise, <see langword="false"/>.</param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed)
         {
             return;
@@ -525,7 +535,11 @@ public abstract class Control : IDisposable
         }
 
         _disposed = true;
-        OnDisposing();
+
+        if (disposing)
+        {
+            OnDisposing();
+        }
 
         if (Handle != 0)
         {

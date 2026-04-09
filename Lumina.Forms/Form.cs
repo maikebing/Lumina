@@ -566,7 +566,7 @@ public class Form : IDisposable
     /// </summary>
     protected virtual void OnLoad()
     {
-        Load?.Invoke(this, EventArgs.Empty);
+        OnLoad(EventArgs.Empty);
     }
 
     /// <summary>
@@ -574,7 +574,25 @@ public class Form : IDisposable
     /// </summary>
     protected virtual void OnShown()
     {
-        Shown?.Invoke(this, EventArgs.Empty);
+        OnShown(EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="Load"/> event.
+    /// </summary>
+    /// <param name="e">The event data.</param>
+    protected virtual void OnLoad(EventArgs e)
+    {
+        Load?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="Shown"/> event.
+    /// </summary>
+    /// <param name="e">The event data.</param>
+    protected virtual void OnShown(EventArgs e)
+    {
+        Shown?.Invoke(this, e);
     }
 
     /// <summary>
