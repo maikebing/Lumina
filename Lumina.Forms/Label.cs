@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -5,6 +7,8 @@ namespace Lumina.Forms;
 /// </summary>
 public class Label : Control
 {
+    public ContentAlignment TextAlign { get; set; } = ContentAlignment.MiddleLeft;
+
     /// <inheritdoc />
     protected override string ClassName => "STATIC";
 

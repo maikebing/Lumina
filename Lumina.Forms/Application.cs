@@ -70,6 +70,10 @@ public static class Application
         s_compatibleTextRenderingDefault = defaultValue;
     }
 
+    public static void SetHighDpiMode(HighDpiMode mode)
+    {
+    }
+
     /// <summary>
     /// Requests that the current UI thread exit its LuminaForms message loop.
     /// </summary>

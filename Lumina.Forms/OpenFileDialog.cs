@@ -25,6 +25,8 @@ public sealed class OpenFileDialog : IDisposable
     /// </summary>
     public string InitialDirectory { get; set; } = string.Empty;
 
+    public string DefaultExt { get; set; } = string.Empty;
+
     /// <summary>
     /// Gets or sets the dialog box title.
     /// </summary>

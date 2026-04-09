@@ -53,6 +53,12 @@ public class CheckBox : Control
         }
     }
 
+    public CheckState CheckState
+    {
+        get => Checked ? CheckState.Checked : CheckState.Unchecked;
+        set => Checked = value == CheckState.Checked;
+    }
+
     /// <inheritdoc />
     protected override string ClassName => "BUTTON";
 

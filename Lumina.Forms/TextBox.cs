@@ -9,6 +9,12 @@ public class TextBox : Control
 {
     private bool _multiline;
     private bool _readOnly;
+    private bool _acceptsReturn;
+    private bool _acceptsTab;
+    private bool _wordWrap = true;
+    private string _placeholderText = string.Empty;
+    private char _passwordChar;
+    private ScrollBars _scrollBars;
     private int _selectionStart;
     private int _selectionLength;
     private Font? _font = CreateDefaultFont();
@@ -47,6 +53,18 @@ public class TextBox : Control
         set => _multiline = value;
     }
 
+    public bool AcceptsReturn
+    {
+        get => _acceptsReturn;
+        set => _acceptsReturn = value;
+    }
+
+    public bool AcceptsTab
+    {
+        get => _acceptsTab;
+        set => _acceptsTab = value;
+    }
+
     /// <summary>
     /// Gets or sets a value indicating whether the text box is read-only.
     /// </summary>
@@ -63,6 +81,30 @@ public class TextBox : Control
         }
     }
 
+    public string PlaceholderText
+    {
+        get => _placeholderText;
+        set => _placeholderText = value ?? string.Empty;
+    }
+
+    public char PasswordChar
+    {
+        get => _passwordChar;
+        set => _passwordChar = value;
+    }
+
+    public ScrollBars ScrollBars
+    {
+        get => _scrollBars;
+        set => _scrollBars = value;
+    }
+
+    public bool WordWrap
+    {
+        get => _wordWrap;
+        set => _wordWrap = value;
+    }
+
     /// <summary>
     /// Gets the starting position of text selected in the text box.
     /// </summary>
@@ -73,6 +115,7 @@ public class TextBox : Control
             UpdateSelectionFromHandle();
             return _selectionStart;
         }
+        set => Select(value, _selectionLength);
     }
 
     /// <summary>
@@ -85,6 +128,20 @@ public class TextBox : Control
             UpdateSelectionFromHandle();
             return _selectionLength;
         }
+        set => Select(_selectionStart, value);
+    }
+
+    public int TextLength => Text.Length;
+
+    public string[] Lines
+    {
+        get => Text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        set => Text = value is null ? string.Empty : string.Join(Environment.NewLine, value);
+    }
+
+    public new void Clear()
+    {
+        Text = string.Empty;
     }
 
     /// <summary>
@@ -209,6 +266,15 @@ public class TextBox : Control
     /// <inheritdoc />
     protected override bool HandleWindowMessage(uint message, nint wParam, nint lParam, out nint result)
     {
+        if (message == Win32.WM_SETFOCUS)
+        {
+            OnEnter(EventArgs.Empty);
+        }
+        else if (message == Win32.WM_KILLFOCUS)
+        {
+            OnLeave(EventArgs.Empty);
+        }
+
         if (message is Win32.WM_KEYUP or Win32.WM_LBUTTONUP)
         {
             _ = UpdateSelectionFromHandle();

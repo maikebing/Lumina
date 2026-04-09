@@ -24,6 +24,19 @@ public sealed class ToolStripItemCollection : IEnumerable<ToolStripItem>
     /// <param name="index">The zero-based index.</param>
     public ToolStripItem this[int index] => _items[index];
 
+    public int IndexOf(ToolStripItem item)
+    {
+        return _items.IndexOf(item);
+    }
+
+    public void RemoveAt(int index)
+    {
+        ToolStripItem item = _items[index];
+        item.Changed -= OnItemChanged;
+        _items.RemoveAt(index);
+        _itemsChanged?.Invoke();
+    }
+
     /// <summary>
     /// Adds an item to the collection.
     /// </summary>

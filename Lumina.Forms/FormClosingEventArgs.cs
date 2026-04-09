@@ -5,8 +5,15 @@ namespace Lumina.Forms;
 /// </summary>
 public sealed class FormClosingEventArgs : EventArgs
 {
+    public FormClosingEventArgs(CloseReason closeReason = CloseReason.None)
+    {
+        CloseReason = closeReason;
+    }
+
     /// <summary>
     /// Gets or sets a value indicating whether to cancel the close operation.
     /// </summary>
     public bool Cancel { get; set; }
+
+    public CloseReason CloseReason { get; }
 }

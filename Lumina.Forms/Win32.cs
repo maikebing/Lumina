@@ -54,8 +54,13 @@ internal static class Win32
 
     public const int SW_SHOW = 5;
     public const int SW_HIDE = 0;
+    public const int SW_RESTORE = 9;
+    public const int SW_MINIMIZE = 6;
+    public const int SW_MAXIMIZE = 3;
 
     public const int WM_SIZE = 0x0005;
+    public const int WM_SETFOCUS = 0x0007;
+    public const int WM_KILLFOCUS = 0x0008;
     public const int WM_NULL = 0x0000;
     public const int WM_CLOSE = 0x0010;
     public const int WM_SETICON = 0x0080;
@@ -805,6 +810,9 @@ internal static class Win32
     [DllImport("user32.dll", EntryPoint = "MoveWindow", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool MoveWindow(nint hWnd, int x, int y, int nWidth, int nHeight, bool bRepaint);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    internal static extern int GetSystemMetrics(int nIndex);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

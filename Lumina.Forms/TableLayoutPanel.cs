@@ -8,6 +8,7 @@ namespace Lumina.Forms;
 public class TableLayoutPanel : Panel
 {
     private readonly Dictionary<Control, (int Column, int Row)> _cellPositions = [];
+    private readonly Dictionary<Control, int> _columnSpans = [];
 
     /// <summary>
     /// Gets or sets the number of logical columns.
@@ -35,10 +36,18 @@ public class TableLayoutPanel : Panel
         AddChild(control);
     }
 
+    public void SetColumnSpan(Control control, int value)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        _columnSpans[control] = Math.Max(1, value);
+        PerformLayout();
+    }
+
     /// <inheritdoc />
     internal override void OnChildRemoved(Control control)
     {
         _ = _cellPositions.Remove(control);
+        _ = _columnSpans.Remove(control);
         base.OnChildRemoved(control);
     }
 

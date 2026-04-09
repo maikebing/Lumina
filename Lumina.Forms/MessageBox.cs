@@ -31,6 +31,18 @@ public static class MessageBox
     public static DialogResult Show(string text, string caption)
         => Show(null, text, caption, MessageBoxButtons.OK, MessageBoxIcon.None);
 
+    public static DialogResult Show(string text, string caption, MessageBoxButtons buttons)
+        => Show(null, text, caption, buttons, MessageBoxIcon.None);
+
+    public static DialogResult Show(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
+        => Show(null, text, caption, buttons, icon);
+
+    public static DialogResult Show(Form? owner, string text, string caption)
+        => Show(owner, text, caption, MessageBoxButtons.OK, MessageBoxIcon.None);
+
+    public static DialogResult Show(Form? owner, string text, string caption, MessageBoxButtons buttons)
+        => Show(owner, text, caption, buttons, MessageBoxIcon.None);
+
     /// <summary>
     /// Displays a message box with owner, text, caption, buttons and icon.
     /// </summary>

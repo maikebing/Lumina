@@ -288,6 +288,14 @@ public abstract class ContainerControlBase : Control
         /// </summary>
         public int Count => _owner._childControls.Count;
 
+        public void Clear()
+        {
+            foreach (Control control in _owner._childControls.ToArray())
+            {
+                _ = _owner.RemoveChild(control);
+            }
+        }
+
         /// <summary>
         /// Gets the child control at the specified index.
         /// </summary>

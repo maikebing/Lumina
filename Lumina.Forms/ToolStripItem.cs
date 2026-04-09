@@ -13,6 +13,7 @@ public class ToolStripItem : Component
     private string _name = string.Empty;
     private string _text = string.Empty;
     private Size _size;
+    private object? _tag;
     private Image? _image;
     private Color _imageTransparentColor;
     private ToolStripItemDisplayStyle _displayStyle = ToolStripItemDisplayStyle.ImageAndText;
@@ -31,6 +32,12 @@ public class ToolStripItem : Component
     {
         get => _name;
         set => SetValue(ref _name, value ?? string.Empty);
+    }
+
+    public object? Tag
+    {
+        get => _tag;
+        set => SetValue(ref _tag, value);
     }
 
     /// <summary>

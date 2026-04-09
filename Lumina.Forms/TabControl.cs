@@ -81,6 +81,16 @@ public class TabControl : ContainerControlBase
                 ? pages[_selectedIndex]
                 : null;
         }
+        set
+        {
+            if (value is null)
+            {
+                SelectedIndex = -1;
+                return;
+            }
+
+            SelectedIndex = GetTabPages().IndexOf(value);
+        }
     }
 
     /// <inheritdoc />

@@ -43,6 +43,7 @@ public class Form : IDisposable
     private uint _surfaceBackgroundColorRef;
     private uint _controlBackgroundColorRef;
     private Icon? _icon;
+    private FormWindowState _windowState = FormWindowState.Normal;
 
     /// <summary>
     /// Initializes a new top-level LuminaForms window.
@@ -136,6 +137,28 @@ public class Form : IDisposable
     /// Gets or sets the design-time or lookup name of the form.
     /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    public Size MinimumSize { get; set; }
+
+    public FormStartPosition StartPosition { get; set; } = FormStartPosition.Manual;
+
+    public FormWindowState WindowState
+    {
+        get => _windowState;
+        set
+        {
+            _windowState = value;
+            if (Handle != 0)
+            {
+                _ = Win32.ShowWindow(Handle, value switch
+                {
+                    FormWindowState.Minimized => Win32.SW_MINIMIZE,
+                    FormWindowState.Maximized => Win32.SW_MAXIMIZE,
+                    _ => Win32.SW_RESTORE,
+                });
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the form background color. Set <see cref="Color.Empty"/> to follow the active theme.
@@ -322,6 +345,11 @@ public class Form : IDisposable
         ApplyApplicationDefaults();
         RefreshMainMenuStrip();
 
+        if (StartPosition == FormStartPosition.CenterScreen)
+        {
+            CenterToScreen();
+        }
+
         foreach (var control in CollectionsMarshal.AsSpan(_controlList))
         {
             control.CreateHandleRecursive();
@@ -345,6 +373,48 @@ public class Form : IDisposable
         if (Handle != 0)
         {
             _ = Win32.SendMessageW(Handle, Win32.WM_CLOSE, 0, 0);
+        }
+    }
+
+    public void Hide()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.ShowWindow(Handle, Win32.SW_HIDE);
+        }
+    }
+
+    public void Activate()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.SetForegroundWindow(Handle);
+        }
+    }
+
+    public void BringToFront()
+    {
+        if (Handle != 0)
+        {
+            _ = Win32.SetForegroundWindow(Handle);
+        }
+    }
+
+    public void CenterToScreen()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        int screenWidth = Win32.GetSystemMetrics(0);
+        int screenHeight = Win32.GetSystemMetrics(1);
+        int left = Math.Max(0, (screenWidth - Width) / 2);
+        int top = Math.Max(0, (screenHeight - Height) / 2);
+
+        if (Handle != 0)
+        {
+            _ = Win32.MoveWindow(Handle, left, top, Width, Height, true);
         }
     }
 

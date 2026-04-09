@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Lumina.Forms;
 
@@ -20,11 +21,17 @@ public abstract class Control : IDisposable
     private bool _enabled = true;
     private bool _visible = true;
     private bool _disposed;
+    private bool _autoScroll;
+    private bool _autoEllipsis;
+    private AutoSizeMode _autoSizeMode;
     private Padding _padding;
     private Padding _margin = new(3);
     private DockStyle _dock;
+    private AnchorStyles _anchor = AnchorStyles.Top | AnchorStyles.Left;
     private Color _backColor = Color.Empty;
     private Color _foreColor = Color.Empty;
+    private Font? _font;
+    private Size _maximumSize;
     private nint _backgroundBrush;
     private bool _ownsBackgroundBrush;
     private nint _originalWindowProc;
@@ -46,6 +53,10 @@ public abstract class Control : IDisposable
     /// </summary>
     public object? Tag { get; set; }
 
+    public virtual bool IsHandleCreated => Handle != 0;
+
+    public virtual bool InvokeRequired => false;
+
     /// <summary>
     /// Gets or sets the context menu associated with the control.
     /// </summary>
@@ -61,10 +72,46 @@ public abstract class Control : IDisposable
     /// </summary>
     public bool AutoSize { get; set; }
 
+    public AutoSizeMode AutoSizeMode
+    {
+        get => _autoSizeMode;
+        set => _autoSizeMode = value;
+    }
+
+    public bool AutoScroll
+    {
+        get => _autoScroll;
+        set => _autoScroll = value;
+    }
+
+    public bool AutoEllipsis
+    {
+        get => _autoEllipsis;
+        set => _autoEllipsis = value;
+    }
+
+    public AnchorStyles Anchor
+    {
+        get => _anchor;
+        set => _anchor = value;
+    }
+
     /// <summary>
     /// Gets or sets a value indicating whether the user can move the focus to this control with the Tab key.
     /// </summary>
     public bool TabStop { get; set; }
+
+    public Font Font
+    {
+        get => _font ??= SystemFonts.DefaultFont;
+        set => _font = value;
+    }
+
+    public Size MaximumSize
+    {
+        get => _maximumSize;
+        set => _maximumSize = value;
+    }
 
     /// <summary>
     /// Gets or sets the interior spacing between the control border and its content area.
@@ -135,6 +182,9 @@ public abstract class Control : IDisposable
     /// Occurs when the <see cref="Text"/> property changes.
     /// </summary>
     public event EventHandler? TextChanged;
+    public event EventHandler? Enter;
+    public event EventHandler? Leave;
+    public event EventHandler? HandleCreated;
 
     /// <summary>
     /// Occurs when the <see cref="BackColor"/> property changes.
@@ -505,6 +555,26 @@ public abstract class Control : IDisposable
     {
     }
 
+    public virtual object? Invoke(Delegate method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        return method.DynamicInvoke();
+    }
+
+    public virtual IAsyncResult BeginInvoke(Delegate method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        Task<object?> task = Task.Run(() => method.DynamicInvoke());
+        return task;
+    }
+
+    public virtual Task InvokeAsync(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        action();
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// Releases the native child window and marks the control as disposed.
     /// </summary>
@@ -683,6 +753,17 @@ public abstract class Control : IDisposable
     protected virtual void OnHandleCreated()
     {
         ApplyBounds();
+        HandleCreated?.Invoke(this, EventArgs.Empty);
+    }
+
+    protected virtual void OnEnter(EventArgs e)
+    {
+        Enter?.Invoke(this, e);
+    }
+
+    protected virtual void OnLeave(EventArgs e)
+    {
+        Leave?.Invoke(this, e);
     }
 
     /// <summary>
