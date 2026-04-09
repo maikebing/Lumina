@@ -278,7 +278,7 @@ public abstract class ContainerControlBase : Control
             AddRange((IEnumerable<Control>)controls);
         }
 
-        internal bool Remove(Control control)
+        public bool Remove(Control control)
         {
             return _owner.RemoveChild(control);
         }

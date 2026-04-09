@@ -448,6 +448,29 @@ public class Form : IDisposable
     }
 
     /// <summary>
+    /// Executes the specified delegate synchronously on the UI thread.
+    /// </summary>
+    /// <param name="method">The delegate to invoke.</param>
+    /// <returns>The return value produced by the delegate, if any.</returns>
+    public object? Invoke(Delegate method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        return method.DynamicInvoke();
+    }
+
+    /// <summary>
+    /// Executes the specified delegate asynchronously on a worker task for compatibility.
+    /// </summary>
+    /// <param name="method">The delegate to invoke.</param>
+    /// <returns>An async handle representing the queued invocation.</returns>
+    public IAsyncResult BeginInvoke(Delegate method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        Task<object?> task = Task.Run(() => method.DynamicInvoke());
+        return task;
+    }
+
+    /// <summary>
     /// Performs layout for compatibility with designer-generated code.
     /// </summary>
     public void PerformLayout()
