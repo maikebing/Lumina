@@ -238,6 +238,11 @@ public class Form : IDisposable
     /// </summary>
     public nint Handle { get; private set; }
 
+    /// <summary>
+    /// Gets a value indicating whether the form has been disposed.
+    /// </summary>
+    public bool IsDisposed { get; private set; }
+
     internal nint InstanceHandle { get; private set; }
 
     internal nint UiFontHandle { get; private set; }
@@ -429,6 +434,11 @@ public class Form : IDisposable
     /// Resumes layout logic for compatibility with designer-generated code.
     /// </summary>
     /// <param name="performLayout">Whether layout should be performed immediately.</param>
+    public void ResumeLayout()
+    {
+        ResumeLayout(true);
+    }
+
     public void ResumeLayout(bool performLayout)
     {
         if (performLayout)
@@ -812,6 +822,7 @@ public class Form : IDisposable
         }
 
         _disposed = true;
+        IsDisposed = true;
 
         ReleaseMainMenuStrip();
 

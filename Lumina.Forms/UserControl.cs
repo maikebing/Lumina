@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -5,6 +7,16 @@ namespace Lumina.Forms;
 /// </summary>
 public class UserControl : ContainerControlBase
 {
+    /// <summary>
+    /// Gets or sets how the control participates in automatic scaling.
+    /// </summary>
+    public AutoScaleMode AutoScaleMode { get; set; }
+
+    /// <summary>
+    /// Gets or sets the design-time scaling dimensions used as the baseline for automatic scaling.
+    /// </summary>
+    public SizeF AutoScaleDimensions { get; set; }
+
     /// <inheritdoc />
     protected override string ClassName => "STATIC";
 

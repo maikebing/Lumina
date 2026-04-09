@@ -16,6 +16,15 @@ public class RowStyle
     /// Initializes a row style with the specified sizing behavior.
     /// </summary>
     /// <param name="sizeType">The sizing mode.</param>
+    public RowStyle(SizeType sizeType)
+    {
+        SizeType = sizeType;
+    }
+
+    /// <summary>
+    /// Initializes a row style with the specified sizing behavior.
+    /// </summary>
+    /// <param name="sizeType">The sizing mode.</param>
     /// <param name="height">The height value.</param>
     public RowStyle(SizeType sizeType, float height)
     {

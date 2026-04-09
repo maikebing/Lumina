@@ -540,6 +540,14 @@ public abstract class Control : IDisposable
     /// <summary>
     /// Resumes layout logic for compatibility with designer-generated code.
     /// </summary>
+    public virtual void ResumeLayout()
+    {
+        ResumeLayout(true);
+    }
+
+    /// <summary>
+    /// Resumes layout logic for compatibility with designer-generated code.
+    /// </summary>
     /// <param name="performLayout">Whether layout should be performed immediately.</param>
     public virtual void ResumeLayout(bool performLayout)
     {
