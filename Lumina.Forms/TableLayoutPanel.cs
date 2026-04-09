@@ -71,10 +71,17 @@ public class TableLayoutPanel : Panel
 
         foreach (CellAssignment assignment in assignments)
         {
+            int columnSpan = Math.Max(1, _columnSpans.GetValueOrDefault(assignment.Control, 1));
+            int spannedWidth = 0;
+            for (int column = assignment.Column; column < Math.Min(columns, assignment.Column + columnSpan); column++)
+            {
+                spannedWidth += columnWidths[column];
+            }
+
             Rectangle cellBounds = new(
                 columnOffsets[assignment.Column],
                 rowOffsets[assignment.Row],
-                Math.Max(1, columnWidths[assignment.Column]),
+                Math.Max(1, spannedWidth),
                 Math.Max(1, rowHeights[assignment.Row]));
 
             LayoutControlInCell(assignment.Control, cellBounds);

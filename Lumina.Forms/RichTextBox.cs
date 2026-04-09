@@ -1,3 +1,5 @@
+using System.Drawing;
+
 namespace Lumina.Forms;
 
 /// <summary>
@@ -5,6 +7,8 @@ namespace Lumina.Forms;
 /// </summary>
 public class RichTextBox : TextBox
 {
+    private Color _selectionColor = Color.Empty;
+
     /// <summary>
     /// Initializes a multi-line rich text box.
     /// </summary>
@@ -12,6 +16,14 @@ public class RichTextBox : TextBox
         : base(multiline: true)
     {
         _ = DarkModeNative.TryEnableDarkScrollBar();
+    }
+
+    public bool HideSelection { get; set; } = true;
+
+    public Color SelectionColor
+    {
+        get => _selectionColor;
+        set => _selectionColor = value;
     }
 
     /// <inheritdoc />

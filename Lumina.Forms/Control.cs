@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lumina.Forms;
@@ -573,6 +574,12 @@ public abstract class Control : IDisposable
         ArgumentNullException.ThrowIfNull(action);
         action();
         return Task.CompletedTask;
+    }
+
+    public virtual Task InvokeAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        return action(cancellationToken);
     }
 
     /// <summary>

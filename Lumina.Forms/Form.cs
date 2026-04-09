@@ -1246,13 +1246,17 @@ public class Form : IDisposable
                 PerformLayout();
                 return 0;
 
-            case Win32.WM_ERASEBKGND:
-                if (HandleEraseBackground(wParam))
+            case Win32.WM_CLOSE:
+            {
+                FormClosingEventArgs closingArgs = new(CloseReason.UserClosing);
+                OnFormClosing(closingArgs);
+                if (closingArgs.Cancel)
                 {
-                    return (nint)1;
+                    return 0;
                 }
 
                 break;
+            }
 
             case Win32.WM_CONTEXTMENU:
                 if (HandleContextMenu(wParam, lParam))
@@ -1368,18 +1372,6 @@ public class Form : IDisposable
             case Win32.WM_DESTROY:
                 OnClosed();
                 return 0;
-
-            case Win32.WM_CLOSE:
-            {
-                FormClosingEventArgs closingArgs = new();
-                OnFormClosing(closingArgs);
-                if (closingArgs.Cancel)
-                {
-                    return 0;
-                }
-
-                break;
-            }
 
             case Win32.WM_NCDESTROY:
                 ReleaseMainMenuStrip();

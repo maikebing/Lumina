@@ -5,6 +5,8 @@ namespace Lumina.Forms;
 /// </summary>
 public class ListView : Control
 {
+    private readonly ListViewItemCollection _items = new();
+    private readonly ColumnHeaderCollection _columns = new();
     private static readonly Win32.SubclassProc s_listViewSubclassProc = ListViewSubclassProc;
 
     [ThreadStatic]
@@ -28,6 +30,16 @@ public class ListView : Control
     /// Gets or sets a value indicating whether the control should preserve legacy image behavior.
     /// </summary>
     public bool UseCompatibleStateImageBehavior { get; set; } = true;
+
+    public ListViewItemCollection Items => _items;
+
+    public ColumnHeaderCollection Columns => _columns;
+
+    public bool FullRowSelect { get; set; }
+
+    public bool GridLines { get; set; }
+
+    public View View { get; set; } = View.Details;
 
     /// <inheritdoc />
     protected override string ClassName => "SysListView32";
